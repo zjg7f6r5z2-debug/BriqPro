@@ -589,13 +589,14 @@ function rDash(v){
   const calc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M8 15h2M14 11h2v4h-2z"/></svg>';
   const chart='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>';
   const pen='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>';
+  const srch='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-3.5-3.5"/></svg>';
   let alerts='';
   if(fiado>0)alerts+=alertBar('loss',fiado+' cliente(s) com fiado vencido',"setTab('recebiveis')");
   if(parados>0)alerts+=alertBar('warn',parados+' aparelho(s) parado(s) +30 dias',"setTab('estoque')");
   if(garant>0)alerts+=alertBar('warn',garant+' garantia(s) vencendo em 15 dias',"setTab('garantias')");
   v.innerHTML=`
   <div class="dash-head"><div><div style="font-size:12.5px;color:var(--text-2)">Olá,</div><h2>${esc(nome)}! 👋</h2></div>
-    <div style="display:flex;gap:8px"><button class="icon-btn" onclick="openCalc()" aria-label="Calculadora">${calc}</button><button class="icon-btn" onclick="openNotifs()" aria-label="Notificações">${bell}</button></div></div>
+    <div style="display:flex;gap:8px"><button class="icon-btn" onclick="openSearch()" aria-label="Buscar">${srch}</button><button class="icon-btn" onclick="openCalc()" aria-label="Calculadora">${calc}</button><button class="icon-btn" onclick="openNotifs()" aria-label="Notificações">${bell}</button></div></div>
   <div class="seg"><button class="${per==='7d'?'on':''}" onclick="setDashPeriod('7d')">7D</button><button class="${per==='30d'?'on':''}" onclick="setDashPeriod('30d')">30D</button><button class="${per==='mes'?'on':''}" onclick="setDashPeriod('mes')">Mês Atual</button></div>
   <div class="hero2"><div class="lab">LUCRO DO PERÍODO</div><div class="big num ${ps.lucro>=0?'up':'down'}" id="hb">${brl(ps.lucro)}</div></div>
   <div class="kgrid">
@@ -807,7 +808,7 @@ function openDetail(id){
     <div style="display:flex;justify-content:space-between;margin-top:14px"><b style="font-size:13.5px">Despesas</b><b class="num">${brl(d.despesas)}</b></div>
     ${exps.length?exps.map(e=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><span>${esc(e.descricao)} <small style="color:var(--text-3)">${fmtDate(e.data)}</small></span><b class="num">${brl(e.valor)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem despesas.</p>'}
     ${saleB}
-    <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${(p.imei||p.numero_serie)?`<button class="btn btn-ghost" style="width:auto" onclick="openIMEI('${p.id}')">IMEI</button>`:''}${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
+    <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${p.status!=='vendido'?`<button class="btn btn-ghost" style="width:auto" onclick="toggleVitrineProd('${p.id}')">${p.na_vitrine?'Tirar da vitrine':'Pôr na vitrine'}</button>`:''}${(p.imei||p.numero_serie)?`<button class="btn btn-ghost" style="width:auto" onclick="openIMEI('${p.id}')">IMEI</button>`:''}${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
 }
 
 /* ============ VENDA ============ */
@@ -981,6 +982,11 @@ function expCSV(){const head=['Produto','Categoria','Status','Score','Custo','Ve
 /* ============ CONFIG ============ */
 function rConfig(v){
   v.innerHTML=`<div class="card"><h3 style="font-size:16px">Perfil</h3><div class="frow"><div><label class="lbl">Nome</label><input class="input" id="p_name" value="${esc(PROFILE.full_name||'')}"></div><div><label class="lbl">Negócio</label><input class="input" id="p_biz" value="${esc(PROFILE.business_name||'')}"></div><div><label class="lbl">Telefone</label><input class="input" id="p_phone" value="${esc(PROFILE.phone||'')}"></div><div><label class="lbl">Dias p/ "parado"</label><input class="input num" type="number" id="p_stale" value="${S.settings.stale_days||30}"></div></div><div style="margin-top:14px"><button class="btn btn-primary" style="width:auto" onclick="saveProfile()">Salvar perfil</button></div></div>
+  <div class="card" style="margin-top:14px"><h3 style="font-size:16px">Vitrine pública 🛍️</h3>
+  <p style="font-size:12.5px;color:var(--text-2);margin:6px 0 12px">Um catálogo do seu estoque por link, pra mandar no WhatsApp. Mostra só foto, nome, condição e preço — <b>nunca seus custos</b>.</p>
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px"><input type="checkbox" id="vit_on" ${PROFILE.vitrine_ativa?'checked':''} onchange="toggleVitrineLoja(this.checked)"> Vitrine ativa</label>
+  ${PROFILE.vitrine_ativa?`<div style="margin-top:12px"><div style="font-size:12px;color:var(--text-2);margin-bottom:6px">Seu link:</div><div style="display:flex;gap:8px"><input class="input" id="vit_url" readonly value="${location.origin}/loja.html?loja=${PROFILE.vitrine_token||''}"><button class="btn btn-ghost" style="width:auto" onclick="copyVitrineLink()">Copiar</button></div><p style="font-size:11.5px;color:var(--text-2);margin-top:8px">Escolha quais produtos aparecem tocando em <b>"Pôr na vitrine"</b> no detalhe de cada um. Preencha seu <b>telefone</b> no Perfil pro botão de WhatsApp funcionar.</p></div>`:''}
+  </div>
   <div class="card" style="margin-top:14px"><h3 style="font-size:16px">Backup</h3><p style="font-size:13px;color:var(--text-2);margin:6px 0 14px">Seus dados ficam na nuvem (Supabase). Exporte uma cópia local quando quiser.</p><button class="btn btn-ghost" style="width:auto" onclick="backupJSON()">Baixar backup (.json)</button></div>
   <div class="card" style="margin-top:14px"><h3 style="font-size:16px">Conta &amp; segurança</h3><p style="font-size:13px;color:var(--text-2);margin:6px 0 14px">Conectado como <b>${esc(USER.email)}</b>. Sessão segura via Supabase Auth com isolamento total por usuário (RLS).</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-ghost" style="width:auto" onclick="openChangePw()">Alterar senha</button><button class="btn btn-ghost" style="width:auto;color:var(--loss)" onclick="logout()">Sair</button></div></div>
   <p style="text-align:center;color:var(--text-3);font-size:12px;margin-top:22px">BRIQPRO · ${S.products.length} produtos · ${S.negos.length} negociações</p>`;
@@ -1404,6 +1410,43 @@ Object.assign(window,{setDashPeriod,dashPeriodStats,kcard,alertBar});
 /* ===== BLOCO 5: Confiabilidade fornecedor ===== */
 function confBadge(c){const m={confiavel:['Confiável','st-comprado'],atencao:['Atenção','st-manutencao'],problema:['Problema','st-cancelado']};const x=m[c];return x?`<span class="pill ${x[1]}" style="font-size:10px;padding:2px 8px">${x[0]}</span>`:'';}
 Object.assign(window,{confBadge});
+
+/* ===== BLOCO 6: Busca global ===== */
+function bpSearchData(term,prods,contacts,sups){
+  const q=(term||'').trim().toLowerCase();
+  if(q.length<1)return{produtos:[],clientes:[],fornecedores:[]};
+  const m=(...vals)=>vals.some(v=>String(v||'').toLowerCase().includes(q));
+  return {
+    produtos:(prods||[]).filter(p=>m(p.nome,p.marca,p.modelo,p.categoria,p.imei,p.numero_serie)).slice(0,10),
+    clientes:(contacts||[]).filter(c=>m(c.nome,c.telefone,c.whatsapp,c.cidade)).slice(0,10),
+    fornecedores:(sups||[]).filter(x=>m(x.nome,x.categoria,x.whatsapp,x.cidade)).slice(0,10)
+  };
+}
+function openSearch(){openModal(`<div class="modal-head"><h3>Buscar</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <input class="input" id="gq" placeholder="Produto, cliente ou fornecedor…" oninput="bpSearch()">
+  <div id="gres" style="margin-top:12px"></div>`);setTimeout(()=>{const el=$('#gq');if(el)el.focus();},80);bpSearch();}
+function bpSearch(){const q=($('#gq')&&$('#gq').value)||'';const w=$('#gres');if(!w)return;
+  if(!q.trim()){w.innerHTML='<div style="color:var(--text-2);font-size:13px">Digite para buscar produtos, clientes ou fornecedores.</div>';return;}
+  const r=bpSearchData(q,S.products,S.contacts,S.suppliers);
+  const tot=r.produtos.length+r.clientes.length+r.fornecedores.length;
+  if(!tot){w.innerHTML='<div style="color:var(--text-2);font-size:13px">Nada encontrado para “'+esc(q)+'”.</div>';return;}
+  const sec=(t)=>`<div class="sec-title" style="margin-top:8px"><h3>${t}</h3></div>`;
+  const item=(title,sub,action)=>`<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="${action}"><b>${esc(title)}</b>${sub?`<div style="font-size:12px;color:var(--text-2)">${esc(sub)}</div>`:''}</div>`;
+  let h='';
+  if(r.produtos.length){h+=sec('Produtos')+r.produtos.map(p=>item(p.nome,[p.marca,p.modelo,p.categoria].filter(Boolean).join(' · '),"closeModal();openDetail('"+p.id+"')")).join('');}
+  if(r.clientes.length){h+=sec('Clientes')+r.clientes.map(c=>item(c.nome,c.cidade||c.whatsapp||'',"closeModal();openContact('"+c.id+"')")).join('');}
+  if(r.fornecedores.length){h+=sec('Fornecedores')+r.fornecedores.map(x=>item(x.nome,x.categoria||'',"closeModal();openSup('"+x.id+"')")).join('');}
+  w.innerHTML=h;
+}
+Object.assign(window,{openSearch,bpSearch,bpSearchData});
+
+/* ===== BLOCO 7: Vitrine pública (gestão) ===== */
+async function toggleVitrineProd(id){const p=S.products.find(x=>x.id===id);if(!p)return;const nv=!p.na_vitrine;const r=await sb.from('products').update({na_vitrine:nv}).eq('id',id);if(r.error){toast('Erro: '+r.error.message);return;}S.products=(await sb.from('products').select('*').order('data_compra',{ascending:false})).data||S.products;closeModal();toast(nv?'Adicionado à vitrine':'Removido da vitrine');render();}
+async function toggleVitrineLoja(on){const r=await sb.from('profiles').update({vitrine_ativa:on}).eq('id',USER.id);if(r.error){toast('Erro: '+r.error.message);return;}PROFILE.vitrine_ativa=on;toast(on?'Vitrine ativada':'Vitrine desativada');render();}
+function copyVitrineLink(){const el=$('#vit_url');if(el)bpCopy(el.value);}
+Object.assign(window,{toggleVitrineProd,toggleVitrineLoja,copyVitrineLink});
+
+
 
 
 /* ============ BOOT ============ */

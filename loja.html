@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Catálogo</title>
+<link rel="icon" href="icon-192.png"/>
+<style>
+:root{--bg:#000;--surface:#0c100e;--surface2:#131815;--border:#222a25;--text:#f3f6f4;--text2:#9aa6a0;--brand:#01E377}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.head img{width:42px;height:42px;border-radius:10px;object-fit:contain;background:#000;border:1px solid var(--border)}
+.head h1{font-size:21px;margin:0;letter-spacing:-.5px}
+.sub{color:var(--text2);font-size:13px;margin:0 0 20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:680px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:980px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.ph{aspect-ratio:1/1;background:var(--surface2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:12px}
+.bd{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.nm{font-weight:700;font-size:14px;line-height:1.25}
+.meta{font-size:11.5px;color:var(--text2)}
+.badge{align-self:flex-start;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(1,227,119,.14);color:var(--brand);text-transform:capitalize}
+.price{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-top:2px}
+.wa{margin-top:auto;display:block;text-align:center;background:var(--brand);color:#000;font-weight:800;text-decoration:none;border-radius:10px;padding:9px;font-size:13px}
+.state{text-align:center;color:var(--text2);padding:80px 20px}
+.foot{text-align:center;color:var(--text2);font-size:11px;margin-top:28px}
+.foot b{color:var(--brand)}
+.skel{height:230px;border-radius:16px;background:linear-gradient(90deg,var(--surface),var(--surface2),var(--surface));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="grid" id="skeleton">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://qkrrngvedziaijpnssjw.supabase.co';
+const SUPABASE_KEY='sb_publishable_VLkwob7uJicbpe4FFRa3xw_fgN4Kv0W';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false}});
+const app=document.getElementById('app');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const brl=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+function state(msg){app.innerHTML='<div class="state"><h2 style="color:var(--brand);font-size:20px">BRIQ PRO</h2><p>'+esc(msg)+'</p></div>';}
+function waDigits(n){return (n||'').replace(/\D/g,'');}
+
+(async function(){
+  const tok=new URLSearchParams(location.search).get('loja');
+  if(!tok){state('Link inválido. Peça o link do catálogo ao vendedor.');return;}
+  let data=null;
+  try{const r=await sb.rpc('vitrine_loja',{tok});if(r.error)throw r.error;data=r.data;}
+  catch(e){state('Não foi possível carregar o catálogo agora. Tente novamente em instantes.');return;}
+  if(!data){state('Catálogo não encontrado ou indisponível no momento.');return;}
+  const loja=data.loja||{};const prods=data.produtos||[];
+  const waBase=waDigits(loja.whatsapp);
+  let html='<div class="head"><img src="icon-192.png" alt=""><h1>'+esc(loja.nome||'Catálogo')+'</h1></div>';
+  html+='<p class="sub">'+(prods.length?prods.length+' produto(s) disponível(is)':'Sem produtos disponíveis no momento.')+'</p>';
+  if(prods.length){
+    html+='<div class="grid">'+prods.map(p=>{
+      const meta=[p.marca,p.modelo,p.cor].filter(Boolean).join(' · ');
+      const wa=waBase?('https://wa.me/'+(waBase.length<=11?'55'+waBase:waBase)+'?text='+encodeURIComponent('Olá! Tenho interesse no '+(p.nome||'produto')+(p.preco?(' ('+brl(p.preco)+')'):'')+'.')):'';
+      return '<div class="card">'+
+        '<div class="ph"'+(p.cover?(' style="background-image:url(\''+encodeURI(p.cover)+'\')"'):'')+'>'+(p.cover?'':'sem foto')+'</div>'+
+        '<div class="bd">'+
+          (p.condicao?'<span class="badge">'+esc(p.condicao)+'</span>':'')+
+          '<div class="nm">'+esc(p.nome)+'</div>'+
+          (meta?'<div class="meta">'+esc(meta)+'</div>':'')+
+          (p.cidade?'<div class="meta">📍 '+esc(p.cidade)+'</div>':'')+
+          (p.garantia?'<div class="meta">✅ '+esc(p.garantia)+'</div>':'')+
+          (p.preco?'<div class="price">'+brl(p.preco)+'</div>':'')+
+          (wa?'<a class="wa" href="'+wa+'" target="_blank" rel="noopener">Tenho interesse</a>':'')+
+        '</div></div>';
+    }).join('')+'</div>';
+  }
+  html+='<div class="foot">Catálogo gerado por <b>BRIQ PRO</b></div>';
+  app.innerHTML=html;
+  document.title=(loja.nome||'Catálogo')+' — Catálogo';
+})();
+</script>
+</body>
+</html>
