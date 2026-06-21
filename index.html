@@ -626,7 +626,7 @@ function openProductForm(id){
   const ed=id?S.products.find(p=>p.id===id):null;
   draft=ed?{...ed,_exp:S.expenses.filter(e=>e.product_id===id).map(e=>({...e})),_newPhotos:[]}
           :{id:null,nome:'',categoria:'Videogame',marca:'',modelo:'',numero_serie:'',imei:'',cor:'',condicao:'usado',garantia:'',fornecedor:'',origem:'Marketplace',cidade:'',link_anuncio:'',status:'comprado',data_compra:todayISO(),data_anuncio:'',preco_pago:'',preco_anunciado:'',preco_minimo:'',preco_ideal:'',valor_mercado:'',observacoes:'',cover_url:'',_exp:[],_newPhotos:[]};
-  openModal(productFormHTML(!!ed));bindForm();
+  window.bpOnde=new Set((ed&&Array.isArray(ed.onde_anunciado))?ed.onde_anunciado:[]);openModal(productFormHTML(!!ed));bindForm();paintOnde();
 }
 function liveScore(){
   const pago=numf($('#f_pago')?.value),merc=numf($('#f_merc')?.value),cond=$('#f_cond')?.value,cat=$('#f_cat')?.value;
@@ -649,6 +649,7 @@ function productFormHTML(ed){
     <div><label class="lbl">Categoria</label><select class="input" id="f_cat" onchange="liveScore()">${opt(CATS,p.categoria)}</select></div>
     <div><label class="lbl">Condição</label><select class="input" id="f_cond" onchange="liveScore()">${opt(COND,p.condicao)}</select></div>
     <div><label class="lbl">Marca</label><input class="input" id="f_marca" value="${esc(p.marca)}"></div>
+    <div><label class="lbl">Onde anunciado</label><div id="onde_plat" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div><button type="button" class="btn btn-ghost btn-sm" style="width:auto" onclick="toggleOnde()">+ Plataforma</button></div>
     <div><label class="lbl">Modelo</label><input class="input" id="f_modelo" value="${esc(p.modelo)}"></div>
     <div><label class="lbl">Cor</label><input class="input" id="f_cor" value="${esc(p.cor)}"></div>
     <div><label class="lbl">Nº de série</label><input class="input" id="f_serial" value="${esc(p.numero_serie)}"></div>
@@ -750,7 +751,7 @@ function openDetail(id){
     <div style="display:flex;justify-content:space-between;margin-top:14px"><b style="font-size:13.5px">Despesas</b><b class="num">${brl(d.despesas)}</b></div>
     ${exps.length?exps.map(e=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><span>${esc(e.descricao)} <small style="color:var(--text-3)">${fmtDate(e.data)}</small></span><b class="num">${brl(e.valor)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem despesas.</p>'}
     ${saleB}
-    <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
+    <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${(p.imei||p.numero_serie)?`<button class="btn btn-ghost" style="width:auto" onclick="openIMEI('${p.id}')">IMEI</button>`:''}${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
 }
 
 /* ============ VENDA ============ */
