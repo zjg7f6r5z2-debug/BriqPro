@@ -203,6 +203,27 @@ textarea.input{resize:vertical;min-height:70px}
 .menu-only{display:grid}@media(min-width:920px){.menu-only{display:none}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(min-width:760px){#recvList,#supList,#oppList,#watchList,#muList{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;align-items:start}#recvList>.card,#supList>.card,#oppList>.card,#watchList>.card,#muList>.card{margin-bottom:0!important}}@media(min-width:1280px){.content{max-width:1320px}}@media(min-width:1280px){#oppList,#watchList,#recvList,#supList,#muList{grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}}</style>
+<style id="bp-premium">
+.coach{position:relative;border-radius:18px;padding:18px;background:linear-gradient(160deg,rgba(1,227,119,.10),rgba(1,227,119,.02));border:1px solid rgba(1,227,119,.28);box-shadow:0 12px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+.coach.warn{background:linear-gradient(160deg,rgba(255,176,32,.10),rgba(255,176,32,.02));border-color:rgba(255,176,32,.30)}
+.coach-tag{font-size:10.5px;letter-spacing:1.6px;font-weight:800;color:var(--brand);opacity:.95}
+.coach.warn .coach-tag{color:#FFB020}
+.coach-num{font-size:40px;font-weight:800;letter-spacing:-1.5px;line-height:1.04;margin-top:6px;color:#fff;text-shadow:0 0 26px rgba(1,227,119,.22)}
+.coach-num.up{color:var(--brand)}.coach-num.down{color:var(--loss)}
+.coach-badge{display:inline-block;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:999px;background:rgba(1,227,119,.16);color:var(--brand);margin-top:6px}
+.coach-badge.warn{background:rgba(255,176,32,.16);color:#FFB020}
+.coach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.coach-grid>div{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:9px 10px}
+.coach-k{font-size:10.5px;color:var(--text-2)}
+.coach-v{font-size:15px;font-weight:800;margin-top:2px}
+.coach-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-top:6px}
+.coach-tip{margin-top:12px;font-size:12.5px;line-height:1.5;background:rgba(255,255,255,.03);border:1px dashed var(--border);border-radius:12px;padding:10px 12px}
+#view{animation:bpfade .28s ease}
+@keyframes bpfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.btn,.icon-btn{transition:transform .14s ease,box-shadow .2s ease,background .2s ease,border-color .2s ease,opacity .15s}
+.btn:active,.icon-btn:active{transform:scale(.96)}
+.card{transition:border-color .2s ease,box-shadow .2s ease,transform .14s ease}
+</style>
 </head>
 <body>
 
@@ -309,7 +330,7 @@ function derive(p){
   if(sale){
     o.vendido=true;o.receita=numf(sale.valor_vendido);
     o.lucroBruto=o.receita-numf(p.preco_pago);
-    o.lucroLiq=o.receita-custo;
+    o.taxa=numf(sale.taxa_venda);o.lucroLiq=o.receita-custo-o.taxa;
     o.roi=custo>0?o.lucroLiq/custo*100:0;
     o.margem=o.receita>0?o.lucroLiq/o.receita*100:0;
     o.diasVenda=Math.max(0,Math.floor((new Date(sale.data_venda)-new Date(p.data_compra))/86400000));
@@ -729,7 +750,7 @@ function openDetail(id){
     <div style="display:flex;justify-content:space-between;margin-top:14px"><b style="font-size:13.5px">Despesas</b><b class="num">${brl(d.despesas)}</b></div>
     ${exps.length?exps.map(e=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><span>${esc(e.descricao)} <small style="color:var(--text-3)">${fmtDate(e.data)}</small></span><b class="num">${brl(e.valor)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem despesas.</p>'}
     ${saleB}
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
+    <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
 }
 
 /* ============ VENDA ============ */
@@ -738,14 +759,14 @@ function openSale(id){
   window.permItems=[];const v=existing||{data_venda:todayISO(),valor_vendido:'',forma_pagamento:'Pix',comprador:''};const ct=derive(p).custo;
   openModal(`<div class="modal-head"><h3>Registrar venda</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
   <p style="font-size:13.5px;color:var(--text-2);margin-top:4px">${esc(p.nome)} · custo ${brl(ct)}</p>
-  <div class="frow"><div><label class="lbl">Data</label><input class="input" type="date" id="s_data" value="${v.data_venda}"></div><div><label class="lbl">Valor vendido (R$)</label><input class="input num" type="number" step="0.01" id="s_val" value="${v.valor_vendido}"></div><div><label class="lbl">Forma</label><select class="input" id="s_forma">${['Pix','Dinheiro','Cartão','Transferência','Outro'].map(x=>`<option ${x===v.forma_pagamento?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="lbl">Comprador</label><input class="input" id="s_comp" value="${esc(v.comprador||'')}"></div></div>
+  <div class="frow"><div><label class="lbl">Data</label><input class="input" type="date" id="s_data" value="${v.data_venda}"></div><div><label class="lbl">Valor vendido (R$)</label><input class="input num" type="number" step="0.01" id="s_val" value="${v.valor_vendido}"></div><div><label class="lbl">Forma</label><select class="input" id="s_forma">${['Pix','Dinheiro','Cartão','Transferência','Outro'].map(x=>`<option ${x===v.forma_pagamento?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="lbl">Taxa plataforma (R$)</label><input class="input num" type="number" step="0.01" id="s_taxa" value="${v.taxa_venda||''}" placeholder="0,00"></div><div><label class="lbl">Comprador</label><input class="input" id="s_comp" value="${esc(v.comprador||'')}"></div></div>
   <div class="card" style="margin-top:12px;padding:14px"><label style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer"><span><b style="font-size:13.5px">Recebi um produto na venda</b><br><small style="color:var(--text-2)">Cliente pagou parte ou tudo com um item</small></span><input type="checkbox" id="s_permuta" onchange="togglePermuta()"></label><div id="permWrap" style="display:none;margin-top:10px"><div id="permList"></div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="addPermItem()">+ Adicionar item</button><div id="permResumo" style="font-size:12px;color:var(--text-2);margin-top:8px"></div></div></div><div class="card" id="sPrev" style="margin-top:14px;padding:14px"></div>
   <div class="modal-foot">${existing?`<button class="btn btn-ghost" style="flex:0 0 auto" onclick="undoSale('${id}','${existing.id}')">Desfazer</button>`:''}<button class="btn btn-primary" id="saveSale">Confirmar</button></div>`);
   const upd=()=>{const val=numf($('#s_val').value),ll=val-ct,roi=ct>0?ll/ct*100:0,mg=val>0?ll/val*100:0;$('#sPrev').innerHTML=`<div class="dt-grid" style="margin:0"><div><div class="k">Lucro líquido</div><div class="v num ${ll>=0?'up':'down'}">${brl(ll)}</div></div><div><div class="k">ROI</div><div class="v num">${roi.toFixed(1)}%</div></div><div><div class="k">Margem</div><div class="v num">${mg.toFixed(1)}%</div></div><div><div class="k">Lucro bruto</div><div class="v num">${brl(val-numf(p.preco_pago))}</div></div></div>`;};
   $('#s_val').oninput=()=>{upd();permResumo();};upd();
   $('#saveSale').onclick=async()=>{
     const val=numf($('#s_val').value);if(val<=0){toast('Informe o valor');return;}
-    const _po=$('#s_permuta')&&$('#s_permuta').checked;const _pit=_po?window.permItems.filter(it=>(it.nome||'').trim()):[];const _pv=_pit.reduce((a,it)=>a+numf(it.valor),0);const payload={product_id:id,data_venda:$('#s_data').value,valor_vendido:val,forma_pagamento:$('#s_forma').value,comprador:$('#s_comp').value.trim(),permuta_valor:_pv,permuta_itens:_pit.map(it=>({nome:(it.nome||'').trim(),valor:numf(it.valor)}))};
+    const _po=$('#s_permuta')&&$('#s_permuta').checked;const _pit=_po?window.permItems.filter(it=>(it.nome||'').trim()):[];const _pv=_pit.reduce((a,it)=>a+numf(it.valor),0);const payload={product_id:id,data_venda:$('#s_data').value,valor_vendido:val,forma_pagamento:$('#s_forma').value,comprador:$('#s_comp').value.trim(),taxa_venda:numf($('#s_taxa')?$('#s_taxa').value:0),permuta_valor:_pv,permuta_itens:_pit.map(it=>({nome:(it.nome||'').trim(),valor:numf(it.valor)}))};
     if(existing)await sb.from('sales').update(payload).eq('id',existing.id);
     else await sb.from('sales').insert(payload);
     await sb.from('products').update({status:'vendido'}).eq('id',id);
@@ -832,7 +853,9 @@ function rMetas(v){
   const fatAno=s.sold.filter(p=>derive(p).sale.data_venda.slice(0,4)==yr).reduce((a,p)=>a+derive(p).receita,0);
   const vendasMes=s.sold.filter(p=>monthKey(derive(p).sale.data_venda)===monthKey(todayISO())).length;
   const bar=(l,cur,tgt,fmt)=>{const p=tgt>0?Math.min(100,cur/tgt*100):0;return `<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><b style="font-size:14.5px">${l}</b><span class="num" style="font-weight:600;color:var(--text-2)">${fmt(cur)} / ${fmt(tgt)}</span></div><div class="prog"><i style="width:${p}%"></i></div><div style="font-size:12px;color:var(--text-2);margin-top:6px">${p.toFixed(0)}%${p>=100?' · batida 🎉':''}</div></div>`;};
-  v.innerHTML=`<div class="toolbar"><button class="btn btn-ghost" onclick="openGoals()">Editar metas</button></div>
+  v.innerHTML=`<div class="toolbar"><button class="btn btn-primary" style="width:auto" onclick="openCalc()">Calculadora</button><button class="btn btn-ghost" style="width:auto" onclick="openGoals()">Editar metas</button></div>
+  ${metaCoach(s,g)}
+  <div class="sec-title" style="margin-top:16px"><h3>Indicadores</h3></div>
   ${bar('Lucro mensal',s.lucroMes,numf(g.lucro_mensal),brl)}${bar('Lucro anual',lucroAno,numf(g.lucro_anual),brl)}${bar('Faturamento anual',fatAno,numf(g.faturamento_mensal),brl)}${bar('Vendas no mês',vendasMes,numf(g.vendas_qtd),x=>x+'')}${bar('ROI médio',s.roiMedio,numf(g.roi_alvo),x=>x.toFixed(0)+'%')}${bar('Margem média',s.margemMedia,numf(g.margem_alvo),x=>x.toFixed(0)+'%')}`;
 }
 function openGoals(){const g=S.goals;openModal(`<div class="modal-head"><h3>Metas</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div><div class="frow"><div><label class="lbl">Lucro mensal (R$)</label><input class="input num" type="number" id="g_m" value="${g.lucro_mensal||''}"></div><div><label class="lbl">Lucro anual (R$)</label><input class="input num" type="number" id="g_a" value="${g.lucro_anual||''}"></div><div><label class="lbl">Faturamento anual (R$)</label><input class="input num" type="number" id="g_f" value="${g.faturamento_mensal||''}"></div><div><label class="lbl">Vendas/mês</label><input class="input num" type="number" id="g_v" value="${g.vendas_qtd||''}"></div><div><label class="lbl">ROI alvo (%)</label><input class="input num" type="number" id="g_r" value="${g.roi_alvo||''}"></div><div><label class="lbl">Margem alvo (%)</label><input class="input num" type="number" id="g_mg" value="${g.margem_alvo||''}"></div></div><div class="modal-foot"><button class="btn btn-primary" onclick="saveGoals()">Salvar</button></div>`);}
@@ -1059,6 +1082,135 @@ async function saveQuote(id){const titulo=$('#q_tit').value.trim();const sup=$('
 async function setQuoteStatus(id,st){await sb.from('quotes').update({status:st}).eq('id',id);S.quotes=(await sb.from('quotes').select('*').order('created_at',{ascending:false})).data||[];render();}
 async function delQuote(id){await sb.from('quotes').delete().eq('id',id);S.quotes=(await sb.from('quotes').select('*').order('created_at',{ascending:false})).data||[];render();}
 Object.assign(window,{togglePermuta,addPermItem,permDel,permSet,permResumo,favSup,openQuote,qAddItem,qDel,qSet,saveQuote,setQuoteStatus,delQuote,paintQuotes});
+
+/* ===== BRIQPRO: Coach de Metas + Calculadora de lucro ===== */
+function bpDaysSince(d){if(!d)return 0;const t=new Date(d);if(isNaN(t))return 0;return Math.floor((Date.now()-t.getTime())/86400000);}
+function metaCoach(s,g){
+  const meta=numf(g&&g.lucro_mensal);
+  if(meta<=0){return `<div class="coach"><div class="coach-tag">COACH DE METAS</div><b style="font-size:15px;display:block;margin-top:6px">Defina sua meta de lucro do mês</b><p style="color:var(--text-2);font-size:13px;margin:6px 0 12px">Toque em "Editar metas" e diga quanto quer lucrar (ex: R$ 4.000). Eu monto seu plano semana a semana e te mostro o que falta.</p><button class="btn btn-primary" style="width:auto" onclick="openGoals()">Definir meta</button></div>`;}
+  const now=new Date(),yr=now.getFullYear(),mo=now.getMonth(),today=now.getDate();
+  const dim=new Date(yr,mo+1,0).getDate();
+  const atual=s.lucroMes||0, mk=monthKey(todayISO());
+  const weeks=[0,0,0,0,0,0];
+  (s.sold||[]).forEach(p=>{const d=derive(p).sale.data_venda;if(d&&monthKey(d)===mk){const day=Number(d.slice(8,10));const wi=Math.max(0,Math.min(5,Math.floor((day-1)/7)));weeks[wi]+=derive(p).lucroLiq;}});
+  const tw=Math.floor((today-1)/7), lastWeek=tw>0?weeks[tw-1]:0;
+  const pct=Math.min(100,atual/meta*100);
+  const remaining=Math.max(1,dim-today+1);
+  const pace=today>0?atual/today:0, proj=pace*dim;
+  const need=Math.max(0,meta-atual);
+  const perDay=need/remaining, perWeek=perDay*7;
+  const weeksInMonth=Math.ceil(dim/7), weeklyPar=meta/weeksInMonth;
+  const weeksRemaining=Math.max(1,Math.ceil(remaining/7)), thisWeekTarget=need/weeksRemaining;
+  let badge,msg,cls;
+  if(atual>=meta){cls='';badge='🎉 Meta batida!';msg=`Você já lucrou <b>${brl(atual)}</b> este mês. Que tal superar?`;}
+  else if(proj>=meta){cls='';badge='🔥 No ritmo de bater';msg=`Mantendo o ritmo, você fecha em <b>${brl(proj)}</b> (${(proj/meta*100).toFixed(0)}% da meta).`;}
+  else{cls='warn';badge='⚠️ Precisa acelerar';msg=`No ritmo atual fecha em <b>${brl(proj)}</b> (${(proj/meta*100).toFixed(0)}%). Pra virar, mire <b>${brl(perDay)}/dia</b>.`;}
+  let weekLine;
+  if(today>7){const okw=lastWeek>=weeklyPar;weekLine=`<div class="coach-row"><span style="color:var(--text-2)">Semana passada</span><b class="${okw?'up':'down'}">${brl(lastWeek)} ${okw?'✅':'⚠️'}</b></div><div style="font-size:12px;color:var(--text-2);margin-top:3px">${okw?'Acima do alvo semanal — mandou bem!':`Abaixo do alvo de ${brl(weeklyPar)}.`} Esta semana, mire <b>${brl(thisWeekTarget)}</b>.</div>`;}
+  else{weekLine=`<div style="font-size:12.5px;color:var(--text-2)">Alvo desta semana: <b>${brl(thisWeekTarget)}</b> pra seguir no trilho rumo aos ${brl(meta)}.</div>`;}
+  const parados=(S.products||[]).filter(p=>p.status!=='vendido'&&bpDaysSince(p.data_compra)>30);
+  const paradoVal=parados.reduce((a,p)=>a+numf(p.preco_pago),0);
+  const tip=parados.length?`<div class="coach-tip">💡 Você tem <b>${parados.length}</b> aparelho(s) parado(s) há +30 dias (${brl(paradoVal)} de capital preso). Girar esses já te empurra pra meta.</div>`:'';
+  return `<div class="coach ${cls}">
+    <div class="coach-tag">COACH DE METAS · ALVO ${brl(meta)}</div>
+    <div class="coach-num ${atual>=0?'up':'down'}">${brl(atual)}</div>
+    <div style="font-size:12.5px;color:var(--text-2);margin-top:2px">faltam <b>${brl(need)}</b> · ${remaining} dia(s) restantes</div>
+    <div class="prog" style="margin:12px 0 4px"><i style="width:${pct}%"></i></div>
+    <div style="font-size:11.5px;color:var(--text-2)">${pct.toFixed(0)}% da meta</div>
+    <div class="coach-badge ${cls}">${badge}</div>
+    <p style="font-size:13px;margin:9px 0 4px;line-height:1.5">${msg}</p>
+    <div class="coach-grid"><div><div class="coach-k">Por dia</div><div class="coach-v">${brl(perDay)}</div></div><div><div class="coach-k">Por semana</div><div class="coach-v">${brl(perWeek)}</div></div><div><div class="coach-k">Projeção</div><div class="coach-v">${brl(proj)}</div></div></div>
+    <div style="margin-top:12px">${weekLine}</div>
+    ${tip}
+  </div>`;
+}
+function openCalc(){openModal(`<div class="modal-head"><h3>Calculadora de lucro</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+ <div class="frow">
+  <div><label class="lbl">Preço de compra</label><input class="input num" type="number" step="0.01" id="c_compra" oninput="calcRun()" placeholder="R$"></div>
+  <div><label class="lbl">Custos extras</label><input class="input num" type="number" step="0.01" id="c_extras" oninput="calcRun()" placeholder="conserto, frete..."></div>
+  <div><label class="lbl">Taxa plataforma (%)</label><input class="input num" type="number" step="0.01" id="c_taxa" oninput="calcRun()" placeholder="ex: 14"></div>
+  <div><label class="lbl">Preço de venda</label><input class="input num" type="number" step="0.01" id="c_venda" oninput="calcRun()" placeholder="R$"></div>
+  <div class="full"><label class="lbl">…ou margem desejada (%)</label><input class="input num" type="number" step="0.01" id="c_margem" oninput="calcRun()" placeholder="ex: 25"></div>
+ </div>
+ <div id="calcOut" style="margin-top:6px"></div>`);calcRun();}
+function calcRun(){
+  const compra=numf($('#c_compra').value),extras=numf($('#c_extras').value),taxa=numf($('#c_taxa').value),venda=numf($('#c_venda').value),md=numf($('#c_margem').value);
+  const custo=compra+extras;let out='';
+  if(venda>0){const tx=venda*taxa/100;const lucro=venda-custo-tx;const m=venda>0?lucro/venda*100:0;
+    out+=`<div class="card" style="margin-top:10px;text-align:center"><div style="font-size:12px;color:var(--text-2)">Vendendo por ${brl(venda)}</div><div class="coach-num ${lucro>=0?'up':'down'}" style="font-size:32px">${brl(lucro)}</div><div style="font-size:12.5px;color:var(--text-2)">lucro líquido · margem ${m.toFixed(1)}%${taxa>0?` · taxa ${brl(tx)}`:''}</div></div>`;}
+  if(md>0){const den=1-(taxa+md)/100;const sug=den>0?custo/den:0;
+    out+=`<div class="card" style="margin-top:10px;text-align:center"><div style="font-size:12px;color:var(--text-2)">Pra ter ${md.toFixed(0)}% de margem${taxa>0?' (após taxa)':''}</div><div class="coach-num" style="font-size:32px">${den>0?brl(sug):'—'}</div><div style="font-size:12.5px;color:var(--text-2)">preço de venda sugerido</div></div>`;}
+  if(!out)out='<div style="color:var(--text-2);font-size:13px;margin-top:10px;text-align:center">Preencha <b>preço de venda</b> (pra ver o lucro) ou <b>margem desejada</b> (pra ver o preço).</div>';
+  $('#calcOut').innerHTML=out;
+}
+Object.assign(window,{openCalc,calcRun,metaCoach});
+
+/* ===== BRIQPRO: Venda profissional (anúncio, recibo, reserva, msgs) ===== */
+function bpCopy(t){t=t||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast('Copiado!')).catch(()=>toast('Copie manualmente'));return;}try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Copiado!');}catch(e){toast('Copie manualmente');}}
+function bpShareWA(t){window.open('https://wa.me/?text='+encodeURIComponent(t||''),'_blank');}
+function gerarAnuncio(id){const p=S.products.find(x=>x.id===id);if(!p)return;
+  const preco=numf(p.preco_anunciado)||numf(p.preco_ideal)||numf(p.valor_mercado);
+  const L=[];L.push(`🔥 ${p.nome}${p.condicao?' — '+p.condicao:''}`);
+  const specs=[p.marca,p.modelo,p.cor].filter(Boolean).join(' · ');if(specs)L.push(specs);
+  if(p.observacoes)L.push(p.observacoes);
+  if(p.garantia)L.push('✅ Garantia: '+p.garantia);
+  if(preco>0)L.push('💰 '+brl(preco));
+  if(p.cidade)L.push('📍 '+p.cidade);
+  L.push('📲 Chama no WhatsApp pra garantir o seu!');
+  const txt=L.join('\n');
+  openModal(`<div class="modal-head"><h3>Anúncio gerado</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+   <p style="font-size:12.5px;color:var(--text-2);margin:0 0 8px">Edite se quiser e copie pra colar no OLX, Mercado Livre, Facebook ou WhatsApp.</p>
+   <textarea class="input" id="adTxt" rows="9" style="font-size:13.5px;line-height:1.5">${esc(txt)}</textarea>
+   <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCopy(document.getElementById('adTxt').value)">Copiar</button><button class="btn btn-primary" onclick="bpShareWA(document.getElementById('adTxt').value)">WhatsApp</button></div>`);
+}
+function msgRapida(id){const p=S.products.find(x=>x.id===id);const nome=p?p.nome:'produto';const preco=p?(numf(p.preco_anunciado)||numf(p.valor_mercado)):0;
+  window.bpMsgs=[
+   `Olá! O ${nome} ainda está disponível, sim. 😊`,
+   `O ${nome} está ${preco>0?brl(preco):'no valor combinado'}. Aceito Pix. Tem interesse?`,
+   `Consigo fazer um valor especial pra fechar hoje. Qual sua proposta?`,
+   `Posso te mandar mais fotos e um vídeo do ${nome}. Quer ver?`,
+   `Acompanha garantia e está revisado, pode comprar tranquilo! 👍`,
+   `A gente combina a melhor forma de entrega. De onde você fala?`];
+  const labels=['Disponível','Valor','Negociar','Mais fotos','Garantia','Entrega'];
+  openModal(`<div class="modal-head"><h3>Respostas rápidas</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+   <p style="font-size:12.5px;color:var(--text-2);margin:0 0 10px">Toque em copiar e cole no WhatsApp do cliente.</p>
+   ${window.bpMsgs.map((t,i)=>`<div class="card" style="margin-bottom:8px"><div style="font-size:10.5px;color:var(--brand);font-weight:800;text-transform:uppercase;letter-spacing:.6px">${labels[i]}</div><div style="font-size:13.5px;margin:5px 0 9px;line-height:1.45">${esc(t)}</div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="bpCopyMsg(${i})">Copiar</button></div>`).join('')}`);
+}
+function bpCopyMsg(i){bpCopy((window.bpMsgs||[])[i]||'');}
+function reciboPDF(id){const p=S.products.find(x=>x.id===id);if(!p)return;const d=derive(p);if(!d.vendido){toast('Produto ainda não vendido');return;}
+  if(!window.jspdf){toast('PDF indisponível');return;}
+  const {jsPDF}=window.jspdf;const doc=new jsPDF();const M=18;let y=22;
+  const biz=(typeof PROFILE!=='undefined'&&(PROFILE.business_name||PROFILE.full_name))||'Vendedor';
+  doc.setFontSize(16);doc.setFont(undefined,'bold');doc.text('RECIBO DE VENDA',M,y);y+=9;
+  doc.setFontSize(10);doc.setFont(undefined,'normal');
+  doc.text('Vendedor: '+biz,M,y);y+=5;
+  if(typeof PROFILE!=='undefined'&&PROFILE.phone){doc.text('Contato: '+PROFILE.phone,M,y);y+=5;}
+  doc.text('Data: '+fmtDate(d.sale.data_venda),M,y);y+=8;
+  doc.setDrawColor(200);doc.line(M,y,192,y);y+=9;
+  doc.setFont(undefined,'bold');doc.text('Produto',M,y);y+=6;doc.setFont(undefined,'normal');
+  doc.text(String(p.nome||''),M,y);y+=5;
+  const det=[p.marca,p.modelo,p.cor,p.condicao].filter(Boolean).join(' / ');if(det){doc.text(det,M,y);y+=5;}
+  if(p.imei||p.numero_serie){doc.text('IMEI/Série: '+(p.imei||p.numero_serie),M,y);y+=5;}
+  y+=3;doc.setFont(undefined,'bold');doc.text('Pagamento',M,y);y+=6;doc.setFont(undefined,'normal');
+  doc.text('Valor: '+brl(d.receita),M,y);y+=5;
+  doc.text('Forma: '+(d.sale.forma_pagamento||'—'),M,y);y+=5;
+  if(d.sale.comprador){doc.text('Comprador: '+d.sale.comprador,M,y);y+=5;}
+  y+=7;doc.setFontSize(8.5);doc.setTextColor(110);
+  const clause='Produto usado, vendido no estado em que se encontra, testado e conferido pelo comprador no ato da entrega. Eventual garantia limita-se ao prazo informado pelo vendedor.';
+  doc.text(doc.splitTextToSize(clause,174),M,y);y+=18;
+  doc.setTextColor(0);doc.setFontSize(10);
+  doc.text('___________________________',M,y+12);doc.text('Vendedor',M,y+17);
+  doc.text('___________________________',112,y+12);doc.text('Comprador',112,y+17);
+  doc.save('recibo-'+String(p.nome||'venda').replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.pdf');
+  toast('Recibo gerado');
+}
+async function toggleReserva(id){const p=S.products.find(x=>x.id===id);if(!p)return;const ns=p.status==='reservado'?'anunciado':'reservado';
+  const r=await sb.from('products').update({status:ns}).eq('id',id);if(r.error){toast('Erro: '+r.error.message);return;}
+  S.products=(await sb.from('products').select('*').order('data_compra',{ascending:false})).data||S.products;
+  closeModal();toast(ns==='reservado'?'Produto reservado':'Reserva cancelada');render();}
+Object.assign(window,{gerarAnuncio,msgRapida,bpCopyMsg,bpCopy,bpShareWA,reciboPDF,toggleReserva});
+
+
 
 
 /* ===== BRIQPRO Fase 3: Radar de Oportunidades ===== */
