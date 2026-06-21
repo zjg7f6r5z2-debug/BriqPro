@@ -704,7 +704,7 @@ async function saveProduct(){
   const g=id=>$('#'+id)?.value;
   if(!g('f_nome').trim()){toast('Dê um nome ao produto');return;}
   const btn=$('#saveProd');btn.textContent='Salvando…';btn.disabled=true;
-  const row={nome:g('f_nome').trim(),categoria:g('f_cat'),condicao:g('f_cond'),marca:g('f_marca'),modelo:g('f_modelo'),cor:g('f_cor'),numero_serie:g('f_serial'),imei:g('f_imei'),garantia:g('f_gar'),status:g('f_status'),origem:g('f_origem'),fornecedor:g('f_forn'),cidade:g('f_cidade'),data_compra:g('f_data')||todayISO(),data_anuncio:g('f_dataAn')||null,preco_pago:numf(g('f_pago')),valor_mercado:numf(g('f_merc')),preco_anunciado:numf(g('f_anun')),preco_minimo:numf(g('f_min')),preco_ideal:numf(g('f_ideal')),link_anuncio:g('f_link'),observacoes:g('f_obs'),supplier_id:($('#f_supplier')&&$('#f_supplier').value)||null,garantia_ate:($('#f_gar_ate')&&$('#f_gar_ate').value)||null};
+  const onde=Array.from(window.bpOnde||new Set());const row={nome:g('f_nome').trim(),onde_anunciado:onde,categoria:g('f_cat'),condicao:g('f_cond'),marca:g('f_marca'),modelo:g('f_modelo'),cor:g('f_cor'),numero_serie:g('f_serial'),imei:g('f_imei'),garantia:g('f_gar'),status:g('f_status'),origem:g('f_origem'),fornecedor:g('f_forn'),cidade:g('f_cidade'),data_compra:g('f_data')||todayISO(),data_anuncio:g('f_dataAn')||null,preco_pago:numf(g('f_pago')),valor_mercado:numf(g('f_merc')),preco_anunciado:numf(g('f_anun')),preco_minimo:numf(g('f_min')),preco_ideal:numf(g('f_ideal')),link_anuncio:g('f_link'),observacoes:g('f_obs'),supplier_id:($('#f_supplier')&&$('#f_supplier').value)||null,garantia_ate:($('#f_gar_ate')&&$('#f_gar_ate').value)||null};
   try{
     let pid=draft.id;
     if(pid){await sb.from('products').update(row).eq('id',pid);}
@@ -1164,7 +1164,7 @@ function gerarAnuncio(id){const p=S.products.find(x=>x.id===id);if(!p)return;
    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCopy(document.getElementById('adTxt').value)">Copiar</button><button class="btn btn-primary" onclick="bpShareWA(document.getElementById('adTxt').value)">WhatsApp</button></div>`);
 }
 function msgRapida(id){const p=S.products.find(x=>x.id===id);const nome=p?p.nome:'produto';const preco=p?(numf(p.preco_anunciado)||numf(p.valor_mercado)):0;
-  window.bpMsgs=[
+  const msgs=[
    `Olá! O ${nome} ainda está disponível, sim. 😊`,
    `O ${nome} está ${preco>0?brl(preco):'no valor combinado'}. Aceito Pix. Tem interesse?`,
    `Consigo fazer um valor especial pra fechar hoje. Qual sua proposta?`,
@@ -1174,18 +1174,18 @@ function msgRapida(id){const p=S.products.find(x=>x.id===id);const nome=p?p.nome
   const labels=['Disponível','Valor','Negociar','Mais fotos','Garantia','Entrega'];
   openModal(`<div class="modal-head"><h3>Respostas rápidas</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
    <p style="font-size:12.5px;color:var(--text-2);margin:0 0 10px">Toque em copiar e cole no WhatsApp do cliente.</p>
-   ${window.bpMsgs.map((t,i)=>`<div class="card" style="margin-bottom:8px"><div style="font-size:10.5px;color:var(--brand);font-weight:800;text-transform:uppercase;letter-spacing:.6px">${labels[i]}</div><div style="font-size:13.5px;margin:5px 0 9px;line-height:1.45">${esc(t)}</div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="bpCopyMsg(${i})">Copiar</button></div>`).join('')}`);
+   ${msgs.map((t,i)=>`<div class="card" style="margin-bottom:8px"><div style="font-size:10.5px;color:var(--brand);font-weight:800;text-transform:uppercase;letter-spacing:.6px">${labels[i]}</div><div style="font-size:13.5px;margin:5px 0 9px;line-height:1.45">${esc(t)}</div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="bpCopy('${esc(t).replace(/'/g,"\\'")}')"Copiar</button></div>`).join('')}`);
 }
-function bpCopyMsg(i){bpCopy((window.bpMsgs||[])[i]||'');}
 function reciboPDF(id){const p=S.products.find(x=>x.id===id);if(!p)return;const d=derive(p);if(!d.vendido){toast('Produto ainda não vendido');return;}
   if(!window.jspdf){toast('PDF indisponível');return;}
-  const {jsPDF}=window.jspdf;const doc=new jsPDF();const M=18;let y=22;
-  const biz=(typeof PROFILE!=='undefined'&&(PROFILE.business_name||PROFILE.full_name))||'Vendedor';
+  const {jsPDF}=window.jspdf;const doc=new jsPDF('p','mm','a4');const M=18;let y=22;
+  const biz=(PROFILE&&(PROFILE.business_name||PROFILE.full_name))||'Vendedor';
   doc.setFontSize(16);doc.setFont(undefined,'bold');doc.text('RECIBO DE VENDA',M,y);y+=9;
   doc.setFontSize(10);doc.setFont(undefined,'normal');
   doc.text('Vendedor: '+biz,M,y);y+=5;
-  if(typeof PROFILE!=='undefined'&&PROFILE.phone){doc.text('Contato: '+PROFILE.phone,M,y);y+=5;}
-  doc.text('Data: '+fmtDate(d.sale.data_venda),M,y);y+=8;
+  if(PROFILE&&PROFILE.phone){doc.text('Contato: '+PROFILE.phone,M,y);y+=5;}
+  const dataStr=d.sale.data_venda?new Date(d.sale.data_venda+'T00:00:00').toLocaleDateString('pt-BR'):'—';
+  doc.text('Data: '+dataStr,M,y);y+=8;
   doc.setDrawColor(200);doc.line(M,y,192,y);y+=9;
   doc.setFont(undefined,'bold');doc.text('Produto',M,y);y+=6;doc.setFont(undefined,'normal');
   doc.text(String(p.nome||''),M,y);y+=5;
@@ -1201,14 +1201,15 @@ function reciboPDF(id){const p=S.products.find(x=>x.id===id);if(!p)return;const 
   doc.setTextColor(0);doc.setFontSize(10);
   doc.text('___________________________',M,y+12);doc.text('Vendedor',M,y+17);
   doc.text('___________________________',112,y+12);doc.text('Comprador',112,y+17);
-  doc.save('recibo-'+String(p.nome||'venda').replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.pdf');
-  toast('Recibo gerado');
+  const fname='recibo-'+String(p.nome||'venda').replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.pdf';
+  doc.save(fname);toast('Recibo gerado');closeModal();
 }
 async function toggleReserva(id){const p=S.products.find(x=>x.id===id);if(!p)return;const ns=p.status==='reservado'?'anunciado':'reservado';
   const r=await sb.from('products').update({status:ns}).eq('id',id);if(r.error){toast('Erro: '+r.error.message);return;}
   S.products=(await sb.from('products').select('*').order('data_compra',{ascending:false})).data||S.products;
   closeModal();toast(ns==='reservado'?'Produto reservado':'Reserva cancelada');render();}
-Object.assign(window,{gerarAnuncio,msgRapida,bpCopyMsg,bpCopy,bpShareWA,reciboPDF,toggleReserva});
+Object.assign(window,{gerarAnuncio,msgRapida,bpCopy,bpShareWA,reciboPDF,toggleReserva});
+;
 
 
 
@@ -1322,7 +1323,15 @@ Object.assign(window,{rMaster,mBlock,mPlan,mReset});
 
 
 
-Object.assign(window,{openProductForm,openDetail,openSale,undoSale,delProduct,liveScore,paintExps,rmCover,rmNew,openNego,delNego,openContact,delContact,openCapital,saveCapital,openMov,saveMov,delMov,openGoals,saveGoals,openNotifs,markAllRead,expPDF,expXLS,expCSV,saveProfile,openChangePw,changePw,backupJSON,closeModal,logout,setTab,openMenu});
+
+/* ===== BLOCO 3: IMEI + Onde anunciado ===== */
+function imeiCheck(imei){if(!imei||imei.length<10){return {ok:false,msg:'IMEI/série muito curto'};} return {ok:true,msg:'IMEI: '+imei,links:{apple:'https://checkmyapple.com/?imei='+imei,anatel:'https://www2.anatel.gov.br/consumidor/consultarrobouoroubo.asp?imei='+imei}};}
+function openIMEI(id){const p=S.products.find(x=>x.id===id);if(!p)return;const ch=imeiCheck(p.imei||p.numero_serie);openModal(`<div class="modal-head"><h3>Verificação de IMEI</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div><p style="font-size:13px;margin:10px 0">${ch.ok?`<b>${ch.msg}</b><p style="font-size:12px;color:var(--text-2);margin-top:8px">Confira se não está roubado ou bloqueado:</p>`:ch.msg}</p>${ch.ok?`<div style="display:flex;gap:8px;margin-top:12px"><a href="${ch.links.apple}" target="_blank" class="btn btn-ghost btn-sm" style="width:auto">Verificar Apple</a><a href="${ch.links.anatel}" target="_blank" class="btn btn-ghost btn-sm" style="width:auto">Verificar Anatel</a></div>`:''}`);} 
+window.bpOnde=new Set();
+function toggleOnde(plat){if(!plat){const plats=['OLX','Mercado Livre','Facebook','WhatsApp','Shopee','Enjoei'];openModal(`<div class="modal-head"><h3>Onde está anunciado</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div><div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px">${plats.map(p=>`<button class="btn btn-ghost btn-sm" style="width:auto" onclick="toggleOnde('${p}');closeModal()">${p}</button>`).join('')}</div>`);return;} if(window.bpOnde.has(plat)){window.bpOnde.delete(plat);}else{window.bpOnde.add(plat);} paintOnde();} 
+function paintOnde(){const w=$('#onde_plat');if(!w)return;const items=Array.from(window.bpOnde);w.innerHTML=items.length?items.map(p=>`<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(1,227,119,.12);border:1px solid var(--brand);border-radius:6px;padding:6px 10px;font-size:12px;margin:0 4px 4px 0">${p}<button class="icon-btn" onclick="toggleOnde('${p}')" style="width:14px;height:14px;padding:0;margin:0">${xicon()}</button></span>`).join(''):'<span style="font-size:12px;color:var(--text-2)">nenhuma</span>';}
+
+Object.assign(window,{openProductForm,openDetail,openSale,undoSale,delProduct,liveScore,paintExps,rmCover,rmNew,openNego,delNego,openContact,delContact,openCapital,saveCapital,openMov,saveMov,delMov,openGoals,saveGoals,openNotifs,markAllRead,expPDF,expXLS,expCSV,saveProfile,openChangePw,changePw,backupJSON,imeiCheck,openIMEI,toggleOnde,paintOnde,closeModal,logout,setTab,openMenu});
 Object.assign(window,{briqAssinar,briqJaAssinei,showPaywall});
 Object.defineProperty(window,'draft',{get:()=>draft,set:v=>{draft=v;}});
 
