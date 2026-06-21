@@ -326,7 +326,7 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:s
 
 /* ============ STATE ============ */
 let USER=null, PROFILE=null;
-const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[]};
+const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[]};
 const charts={};
 let filters={status:'todos',q:''};
 let draft=null;
@@ -418,7 +418,7 @@ async function loadAll(){
   if(st.data)S.settings=st.data; if(go.data)S.goals=go.data;
   S.products=pr.data||[];S.expenses=ex.data||[];S.sales=sa.data||[];S.cash=ca.data||[];
   S.contacts=co.data||[];S.negos=ne.data||[];S.notifs=no.data||[];
-  try{const [sp_f2,rc_f2,in_f2]=await Promise.all([sb.from('suppliers').select('*').order('created_at',{ascending:false}),sb.from('receivables').select('*').order('created_at',{ascending:false}),sb.from('receivable_installments').select('*')]);S.suppliers=sp_f2.data||[];S.receivables=rc_f2.data||[];S.installments=in_f2.data||[];}catch(e){}
+  try{const [sp_f2,rc_f2,in_f2,ag_f2]=await Promise.all([sb.from('suppliers').select('*').order('created_at',{ascending:false}),sb.from('receivables').select('*').order('created_at',{ascending:false}),sb.from('receivable_installments').select('*'),sb.from('agenda').select('*').order('data',{ascending:true})]);S.suppliers=sp_f2.data||[];S.receivables=rc_f2.data||[];S.installments=in_f2.data||[];S.agenda=ag_f2.data||[];}catch(e){}
   try{const [wl,op]=await Promise.all([sb.from('watchlist').select('*').order('created_at',{ascending:false}),sb.from('opportunities').select('*').order('created_at',{ascending:false})]);S.watch=wl.data||[];S.opps=op.data||[];}catch(e){}
   try{S.quotes=(await sb.from('quotes').select('*').order('created_at',{ascending:false})).data||[];}catch(e){}
 }
@@ -427,6 +427,7 @@ async function refresh(part){
   if(!part||part==='expenses')S.expenses=(await sb.from('product_expenses').select('*')).data||[];
   if(!part||part==='sales')S.sales=(await sb.from('sales').select('*')).data||[];
   if(!part||part==='cash')S.cash=(await sb.from('cash_flow').select('*').order('data',{ascending:false})).data||[];
+  if(!part||part==='agenda')S.agenda=(await sb.from('agenda').select('*').order('data',{ascending:true})).data||[];
   if(!part||part==='negos')S.negos=(await sb.from('negotiations').select('*').order('updated_at',{ascending:false})).data||[];
   if(!part||part==='notifs')S.notifs=(await sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(40)).data||[];
 }
@@ -594,31 +595,77 @@ function rDash(v){
   if(fiado>0)alerts+=alertBar('loss',fiado+' cliente(s) com fiado vencido',"setTab('recebiveis')");
   if(parados>0)alerts+=alertBar('warn',parados+' aparelho(s) parado(s) +30 dias',"setTab('estoque')");
   if(garant>0)alerts+=alertBar('warn',garant+' garantia(s) vencendo em 15 dias',"setTab('garantias')");
+  if(window.bpWeek===undefined)window.bpWeek=0;
+  const wk=window.bpWeek;
+  const isoAdd=(iso,d)=>{const x=new Date(iso+'T00:00:00');x.setDate(x.getDate()+d);return x.toISOString().slice(0,10);};
+  const fmtShort=(iso)=>{if(!iso)return'';const p=String(iso).split('-');return p.length===3?p[2]+'/'+p[1]:iso;};
+  const startISO=isoAdd(today,wk*7),endISO=isoAdd(startISO,6);
+  const agP=(S.agenda||[]).filter(a=>!a.realizado);
+  const inWeek=agP.filter(a=>a.data>=startISO&&a.data<=endISO).sort((a,b)=>a.data<b.data?-1:1);
+  const upto=agP.filter(a=>a.data<=endISO);
+  const futIn=upto.filter(a=>a.tipo==='entrada').reduce((x,a)=>x+numf(a.valor),0);
+  const futOut=upto.filter(a=>a.tipo==='saida').reduce((x,a)=>x+numf(a.valor),0);
+  const projetado=s.caixa+futIn-futOut;
+  const weekLabel=wk===0?'Esta semana':fmtShort(startISO)+'–'+fmtShort(endISO);
+  const movs=(S.cash||[]).slice(0,6);
+  const agItem=(a)=>{const isIn=a.tipo==='entrada';return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:12px 14px"><div style="min-width:0"><div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.descricao||(isIn?'Recebimento':'Gasto'))}</div><div style="font-size:11.5px;color:var(--text-2)">${fmtShort(a.data)}</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><b class="num ${isIn?'up':'down'}">${isIn?'+':'\u2212'}${brl(a.valor)}</b><button class="icon-btn" onclick="realizarAgenda('${a.id}')" aria-label="Realizar" style="color:var(--brand)">\u2713</button><button class="icon-btn" onclick="delAgenda('${a.id}')" aria-label="Remover">\u00d7</button></div></div>`;};
+  const movItem=(m)=>{const isOut=m.kind==='retirada';return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:12px 14px"><div style="min-width:0"><div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.nota||(isOut?'Sa\u00edda':'Entrada'))}</div><div style="font-size:11px;color:var(--text-2)">${fmtShort(m.data)}</div></div><b class="num ${isOut?'down':'up'}" style="flex-shrink:0">${isOut?'\u2212':'+'}${brl(m.valor)}</b></div>`;};
   v.innerHTML=`
   <div class="dash-head"><div><div style="font-size:12.5px;color:var(--text-2)">Olá,</div><h2>${esc(nome)}! 👋</h2></div>
     <div style="display:flex;gap:8px"><button class="icon-btn" onclick="openSearch()" aria-label="Buscar">${srch}</button><button class="icon-btn" onclick="openCalc()" aria-label="Calculadora">${calc}</button><button class="icon-btn" onclick="openNotifs()" aria-label="Notificações">${bell}</button></div></div>
-  <div class="seg"><button class="${per==='7d'?'on':''}" onclick="setDashPeriod('7d')">7D</button><button class="${per==='30d'?'on':''}" onclick="setDashPeriod('30d')">30D</button><button class="${per==='mes'?'on':''}" onclick="setDashPeriod('mes')">Mês Atual</button></div>
-  <div class="hero2"><div class="lab">LUCRO DO PERÍODO</div><div class="big num ${ps.lucro>=0?'up':'down'}" id="hb">${brl(ps.lucro)}</div></div>
-  <div class="kgrid">
-    ${kcard('Investido em estoque',brl(s.estCusto),'blue')}
-    ${kcard('Total vendido',brl(ps.receita),'green')}
-    ${kcard('Gasto nas vendas',brl(ps.custo),'red')}
-    ${kcard('Qtd. vendas',ps.qtd,'dark')}
+
+  <div class="hero2"><div class="lab">PATRIMÔNIO TOTAL</div><div class="big num up" id="hb">${brl(s.patrimonio)}</div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <div style="flex:1"><div style="font-size:11px;color:var(--text-2)">Em caixa</div><b class="num" style="font-size:15px">${brl(s.caixa)}</b></div>
+      <div style="flex:1;border-left:1px solid var(--border);padding-left:10px"><div style="font-size:11px;color:var(--text-2)">Lucro do mês</div><b class="num ${s.lucroMes>=0?'up':'down'}" style="font-size:15px">${brl(s.lucroMes)}</b></div>
+      <div style="flex:1;border-left:1px solid var(--border);padding-left:10px"><div style="font-size:11px;color:var(--text-2)">Em estoque</div><b class="num" style="font-size:15px">${brl(s.estCusto)}</b></div>
+    </div>
   </div>
   ${alerts}
-  <div class="card metacard">
+
+  <div class="sec-title"><h3>Agenda financeira</h3>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="icon-btn" onclick="setWeek(-1)" style="opacity:${wk===0?'.35':'1'}" aria-label="Semana anterior">\u25c0</button>
+      <span style="font-size:11.5px;color:var(--text-2);min-width:92px;text-align:center">${weekLabel}</span>
+      <button class="icon-btn" onclick="setWeek(1)" aria-label="Próxima semana">\u25b6</button>
+    </div>
+  </div>
+  <div class="card" style="padding:16px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div><div style="font-size:11.5px;color:var(--text-2)">Saldo projetado até ${fmtShort(endISO)}</div><div class="big num ${projetado>=0?'up':'down'}" style="font-size:25px;margin-top:2px">${brl(projetado)}</div></div>
+      <div style="text-align:right;font-size:11.5px;line-height:1.7"><div style="color:var(--text-2)">Caixa hoje <b class="num" style="color:var(--text)">${brl(s.caixa)}</b></div><div class="up">+ ${brl(futIn)} a receber</div><div class="down">\u2212 ${brl(futOut)} a pagar</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('entrada')">+ Recebimento</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('saida')">+ Gasto</button></div>
+  </div>
+  ${inWeek.length?inWeek.map(agItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nada agendado para este período. Use “+ Recebimento” ou “+ Gasto”.</div>'}
+
+  <div class="sec-title"><h3>Entradas e saídas</h3><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('aporte')">+ Entrada</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('retirada')">+ Saída</button></div></div>
+  ${movs.length?movs.map(movItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nenhum registro de caixa ainda.</div>'}
+
+  <div class="card metacard" style="margin-top:4px">
     <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:8px;align-items:center"><span style="font-size:17px">🎯</span><b style="font-size:15px">Meta do Mês</b></div><div style="display:flex;gap:4px"><button class="icon-btn" onclick="setTab('metas')" aria-label="Detalhe">${chart}</button><button class="icon-btn" onclick="openGoals()" aria-label="Editar">${pen}</button></div></div>
-    <div class="big num" style="font-size:28px;margin-top:8px;letter-spacing:-1px">${meta>0?brl(meta):'Defina sua meta'}</div>
+    <div class="big num" style="font-size:26px;margin-top:8px;letter-spacing:-1px">${meta>0?brl(meta):'Defina sua meta'}</div>
     <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-2);margin-top:8px"><span>Lucro atual</span><b class="num" style="color:var(--text)">${brl(s.lucroMes)}</b></div>
     <div class="prog" style="margin:8px 0"><i style="width:${pm}%"></i></div>
     <div style="display:flex;justify-content:space-between;font-size:12.5px"><span class="down">Falta ${brl(falta)}</span><span style="color:var(--text-2)">Progresso <b style="color:var(--text)">${pm.toFixed(0)}%</b></span></div>
   </div>
-  <div class="card" style="margin-bottom:16px;padding:16px">
+
+  <div class="card" style="margin:14px 0 16px;padding:16px">
     <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:8px;align-items:center"><span style="font-size:17px">🧾</span><b style="font-size:15px">Faturamento MEI ${anoAtual}</b></div><span style="font-size:12px;color:var(--text-2)">limite R$ 81.000</span></div>
-    <div class="big num" style="font-size:26px;margin-top:8px;letter-spacing:-1px">${brl(meiFat)}</div>
+    <div class="big num" style="font-size:24px;margin-top:8px;letter-spacing:-1px">${brl(meiFat)}</div>
     <div class="prog" style="margin:8px 0"><i style="width:${meiPct}%;${meiPct>=100?'background:var(--loss)':(meiPct>=80?'background:#FFB020':'')}"></i></div>
     <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text-2)">${meiPct.toFixed(0)}% do limite</span><span style="${meiPct>=100?'color:var(--loss)':(meiPct>=80?'color:#FFB020':'color:var(--text-2)')};font-weight:700">${meiPct>=100?'Acima do limite!':(meiPct>=80?'Perto do limite':'Dentro do limite')}</span></div>
   </div>
+
+  <div class="sec-title"><h3>Resultado do período</h3><span class="hint">vendas</span></div>
+  <div class="seg"><button class="${per==='7d'?'on':''}" onclick="setDashPeriod('7d')">7D</button><button class="${per==='30d'?'on':''}" onclick="setDashPeriod('30d')">30D</button><button class="${per==='mes'?'on':''}" onclick="setDashPeriod('mes')">Mês Atual</button></div>
+  <div class="kgrid">
+    ${kcard('Lucro do período',brl(ps.lucro),ps.lucro>=0?'green':'red')}
+    ${kcard('Total vendido',brl(ps.receita),'blue')}
+    ${kcard('Gasto nas vendas',brl(ps.custo),'red')}
+    ${kcard('Qtd. vendas',ps.qtd,'dark')}
+  </div>
+
   <div class="sec-title"><h3>Análise visual</h3><span class="hint">tempo real</span></div>
   <div class="grid charts">
     <div class="card chart-card"><h4>Patrimônio mensal</h4><div class="chart-wrap"><canvas id="cPat"></canvas></div></div>
@@ -626,9 +673,8 @@ function rDash(v){
     <div class="card chart-card"><h4>ROI por categoria</h4><div class="chart-wrap"><canvas id="cRoi"></canvas></div></div>
     <div class="card chart-card"><h4>Produtos mais lucrativos</h4><div class="chart-wrap"><canvas id="cTop"></canvas></div></div>
   </div>`;
-  countUp($('#hb'),ps.lucro);drawCharts(s);if(PROFILE&&PROFILE.is_master)setTimeout(renderMasterCard,40);
+  countUp($('#hb'),s.patrimonio);drawCharts(s);if(PROFILE&&PROFILE.is_master)setTimeout(renderMasterCard,40);
 }
-
 function ctheme(){const c=getComputedStyle(document.documentElement);return{grid:c.getPropertyValue('--border').trim(),text:c.getPropertyValue('--text-2').trim(),profit:c.getPropertyValue('--profit').trim(),brand:c.getPropertyValue('--brand').trim(),amber:c.getPropertyValue('--amber').trim(),loss:c.getPropertyValue('--loss').trim(),surface:c.getPropertyValue('--surface').trim()};}
 function mLabel(k){if(!k)return'';const[y,m]=k.split('-');return['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][+m-1]+'/'+y.slice(2);}
 function patrimSeries(){
@@ -814,17 +860,18 @@ function openDetail(id){
 /* ============ VENDA ============ */
 function openSale(id){
   const p=S.products.find(x=>x.id===id);if(!p)return;const existing=S.sales.find(s=>s.product_id===id);
-  window.permItems=[];const v=existing||{data_venda:todayISO(),valor_vendido:'',forma_pagamento:'Pix',comprador:''};const ct=derive(p).custo;
+  window.permItems=[];window.saleProof=null;const v=existing||{data_venda:todayISO(),valor_vendido:'',forma_pagamento:'Pix',comprador:''};const ct=derive(p).custo;
   openModal(`<div class="modal-head"><h3>Registrar venda</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
   <p style="font-size:13.5px;color:var(--text-2);margin-top:4px">${esc(p.nome)} · custo ${brl(ct)}</p>
   <div class="frow"><div><label class="lbl">Data</label><input class="input" type="date" id="s_data" value="${v.data_venda}"></div><div><label class="lbl">Valor vendido (R$)</label><input class="input num" type="number" step="0.01" id="s_val" value="${v.valor_vendido}"></div><div><label class="lbl">Forma</label><select class="input" id="s_forma">${['Pix','Dinheiro','Cartão','Transferência','Outro'].map(x=>`<option ${x===v.forma_pagamento?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="lbl">Taxa plataforma (R$)</label><input class="input num" type="number" step="0.01" id="s_taxa" value="${v.taxa_venda||''}" placeholder="0,00"></div><div><label class="lbl">Comprador</label><input class="input" id="s_comp" value="${esc(v.comprador||'')}"></div></div>
-  <div class="card" style="margin-top:12px;padding:14px"><label style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer"><span><b style="font-size:13.5px">Recebi um produto na venda</b><br><small style="color:var(--text-2)">Cliente pagou parte ou tudo com um item</small></span><input type="checkbox" id="s_permuta" onchange="togglePermuta()"></label><div id="permWrap" style="display:none;margin-top:10px"><div id="permList"></div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="addPermItem()">+ Adicionar item</button><div id="permResumo" style="font-size:12px;color:var(--text-2);margin-top:8px"></div></div></div><div class="card" id="sPrev" style="margin-top:14px;padding:14px"></div>
+  <div class="card" style="margin-top:12px;padding:14px"><label style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer"><span><b style="font-size:13.5px">Recebi um produto na venda</b><br><small style="color:var(--text-2)">Cliente pagou parte ou tudo com um item</small></span><input type="checkbox" id="s_permuta" onchange="togglePermuta()"></label><div id="permWrap" style="display:none;margin-top:10px"><div id="permList"></div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="addPermItem()">+ Adicionar item</button><div id="permResumo" style="font-size:12px;color:var(--text-2);margin-top:8px"></div></div></div><div class="card" style="margin-top:12px;padding:14px"><b style="font-size:13.5px">📸 Foto-comprovante do estado</b><br><small style="color:var(--text-2)">Registre o aparelho na hora da venda — sua proteção contra "veio com defeito".</small><div id="sProofPrev" style="margin-top:10px">${existing&&existing.foto_comprovante?`<img src="${existing.foto_comprovante}" style="max-width:150px;border-radius:10px;border:1px solid var(--border)">`:''}</div><button type="button" class="btn btn-ghost btn-sm" style="width:auto;margin-top:8px" onclick="pickSaleProof()">Anexar foto</button></div><div class="card" id="sPrev" style="margin-top:14px;padding:14px"></div>
   <div class="modal-foot">${existing?`<button class="btn btn-ghost" style="flex:0 0 auto" onclick="undoSale('${id}','${existing.id}')">Desfazer</button>`:''}<button class="btn btn-primary" id="saveSale">Confirmar</button></div>`);
   const upd=()=>{const val=numf($('#s_val').value),ll=val-ct,roi=ct>0?ll/ct*100:0,mg=val>0?ll/val*100:0;$('#sPrev').innerHTML=`<div class="dt-grid" style="margin:0"><div><div class="k">Lucro líquido</div><div class="v num ${ll>=0?'up':'down'}">${brl(ll)}</div></div><div><div class="k">ROI</div><div class="v num">${roi.toFixed(1)}%</div></div><div><div class="k">Margem</div><div class="v num">${mg.toFixed(1)}%</div></div><div><div class="k">Lucro bruto</div><div class="v num">${brl(val-numf(p.preco_pago))}</div></div></div>`;};
   $('#s_val').oninput=()=>{upd();permResumo();};upd();
   $('#saveSale').onclick=async()=>{
     const val=numf($('#s_val').value);if(val<=0){toast('Informe o valor');return;}
     const _po=$('#s_permuta')&&$('#s_permuta').checked;const _pit=_po?window.permItems.filter(it=>(it.nome||'').trim()):[];const _pv=_pit.reduce((a,it)=>a+numf(it.valor),0);const payload={product_id:id,data_venda:$('#s_data').value,valor_vendido:val,forma_pagamento:$('#s_forma').value,comprador:$('#s_comp').value.trim(),taxa_venda:numf($('#s_taxa')?$('#s_taxa').value:0),permuta_valor:_pv,permuta_itens:_pit.map(it=>({nome:(it.nome||'').trim(),valor:numf(it.valor)}))};
+    try{if(window.saleProof&&window.saleProof.blob){const fpath=`${USER.id}/sale_${id}/${uidStr()}.jpg`;const fup=await sb.storage.from('product-images').upload(fpath,window.saleProof.blob,{contentType:'image/jpeg',upsert:false});if(!fup.error){payload.foto_comprovante=sb.storage.from('product-images').getPublicUrl(fpath).data.publicUrl;}}else if(existing&&existing.foto_comprovante){payload.foto_comprovante=existing.foto_comprovante;}}catch(e){}
     if(existing)await sb.from('sales').update(payload).eq('id',existing.id);
     else await sb.from('sales').insert(payload);
     await sb.from('products').update({status:'vendido'}).eq('id',id);
@@ -880,9 +927,9 @@ function delNego(id){confirmBox('Excluir negociação?','',async()=>{await sb.fr
 function openContact(id){
   const ed=id?S.contacts.find(c=>c.id===id):null;const c=ed||{nome:'',tipo:'lead',telefone:'',whatsapp:'',cidade:'',estado:'',observacoes:''};
   openModal(`<div class="modal-head"><h3>${ed?'Contato':'Novo contato'}</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
-  <div class="frow"><div class="full"><label class="lbl">Nome</label><input class="input" id="c_nome" value="${esc(c.nome)}"></div><div><label class="lbl">Tipo</label><select class="input" id="c_tipo">${[['lead','Lead'],['fornecedor','Fornecedor'],['comprador','Comprador'],['outro','Outro']].map(x=>`<option value="${x[0]}" ${x[0]===c.tipo?'selected':''}>${x[1]}</option>`).join('')}</select></div><div><label class="lbl">WhatsApp</label><input class="input" id="c_wpp" value="${esc(c.whatsapp)}"></div><div><label class="lbl">Telefone</label><input class="input" id="c_tel" value="${esc(c.telefone)}"></div><div><label class="lbl">Cidade</label><input class="input" id="c_cid" value="${esc(c.cidade)}"></div><div><label class="lbl">Estado</label><input class="input" id="c_est" value="${esc(c.estado)}"></div><div class="full"><label class="lbl">Observações</label><textarea class="input" id="c_obs">${esc(c.observacoes)}</textarea></div></div>
+  <div class="frow"><div class="full"><label class="lbl">Nome</label><input class="input" id="c_nome" value="${esc(c.nome)}"></div><div><label class="lbl">Tipo</label><select class="input" id="c_tipo">${[['lead','Lead'],['fornecedor','Fornecedor'],['comprador','Comprador'],['outro','Outro']].map(x=>`<option value="${x[0]}" ${x[0]===c.tipo?'selected':''}>${x[1]}</option>`).join('')}</select></div><div><label class="lbl">WhatsApp</label><input class="input" id="c_wpp" value="${esc(c.whatsapp)}"></div><div><label class="lbl">Telefone</label><input class="input" id="c_tel" value="${esc(c.telefone)}"></div><div><label class="lbl">Cidade</label><input class="input" id="c_cid" value="${esc(c.cidade)}"></div><div><label class="lbl">Estado</label><input class="input" id="c_est" value="${esc(c.estado)}"></div><div class="full"><label class="lbl">Confiabilidade do cliente</label><select class="input" id="c_conf"><option value="" ${!c.confianca?'selected':''}>Não avaliado</option><option value="confiavel" ${c.confianca==='confiavel'?'selected':''}>✅ Bom pagador</option><option value="atencao" ${c.confianca==='atencao'?'selected':''}>⚠️ Atenção</option><option value="problema" ${c.confianca==='problema'?'selected':''}>⛔ Problema</option></select></div><div class="full"><label class="lbl">Observações</label><textarea class="input" id="c_obs">${esc(c.observacoes)}</textarea></div></div>
   <div class="modal-foot">${ed?`<button class="btn btn-ghost" style="flex:0 0 auto;color:var(--loss)" onclick="delContact('${id}')">Excluir</button>`:''}<button class="btn btn-primary" id="saveC">Salvar</button></div>`);
-  $('#saveC').onclick=async()=>{const g=i=>$('#'+i).value;const row={nome:g('c_nome'),tipo:g('c_tipo'),whatsapp:g('c_wpp'),telefone:g('c_tel'),cidade:g('c_cid'),estado:g('c_est'),observacoes:g('c_obs')};if(!row.nome){toast('Informe o nome');return;}if(ed)await sb.from('contacts').update(row).eq('id',id);else await sb.from('contacts').insert(row);S.contacts=(await sb.from('contacts').select('*').order('created_at',{ascending:false})).data||[];closeModal();toast('Contato salvo');};
+  $('#saveC').onclick=async()=>{const g=i=>$('#'+i).value;const row={nome:g('c_nome'),tipo:g('c_tipo'),whatsapp:g('c_wpp'),telefone:g('c_tel'),cidade:g('c_cid'),estado:g('c_est'),observacoes:g('c_obs'),confianca:g('c_conf')};if(!row.nome){toast('Informe o nome');return;}if(ed)await sb.from('contacts').update(row).eq('id',id);else await sb.from('contacts').insert(row);S.contacts=(await sb.from('contacts').select('*').order('created_at',{ascending:false})).data||[];closeModal();toast('Contato salvo');};
 }
 function delContact(id){confirmBox('Excluir contato?','',async()=>{await sb.from('contacts').delete().eq('id',id);S.contacts=(await sb.from('contacts').select('*')).data||[];closeModal();});}
 
@@ -1434,7 +1481,7 @@ function bpSearch(){const q=($('#gq')&&$('#gq').value)||'';const w=$('#gres');if
   const item=(title,sub,action)=>`<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="${action}"><b>${esc(title)}</b>${sub?`<div style="font-size:12px;color:var(--text-2)">${esc(sub)}</div>`:''}</div>`;
   let h='';
   if(r.produtos.length){h+=sec('Produtos')+r.produtos.map(p=>item(p.nome,[p.marca,p.modelo,p.categoria].filter(Boolean).join(' · '),"closeModal();openDetail('"+p.id+"')")).join('');}
-  if(r.clientes.length){h+=sec('Clientes')+r.clientes.map(c=>item(c.nome,c.cidade||c.whatsapp||'',"closeModal();openContact('"+c.id+"')")).join('');}
+  if(r.clientes.length){h+=sec('Clientes')+r.clientes.map(c=>`<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="closeModal();openContact('${c.id}')"><b>${esc(c.nome)}</b> ${confBadge(c.confianca)}${(c.cidade||c.whatsapp)?`<div style="font-size:12px;color:var(--text-2)">${esc(c.cidade||c.whatsapp)}</div>`:''}</div>`).join('');}
   if(r.fornecedores.length){h+=sec('Fornecedores')+r.fornecedores.map(x=>item(x.nome,x.categoria||'',"closeModal();openSup('"+x.id+"')")).join('');}
   w.innerHTML=h;
 }
@@ -1445,6 +1492,20 @@ async function toggleVitrineProd(id){const p=S.products.find(x=>x.id===id);if(!p
 async function toggleVitrineLoja(on){const r=await sb.from('profiles').update({vitrine_ativa:on}).eq('id',USER.id);if(r.error){toast('Erro: '+r.error.message);return;}PROFILE.vitrine_ativa=on;toast(on?'Vitrine ativada':'Vitrine desativada');render();}
 function copyVitrineLink(){const el=$('#vit_url');if(el)bpCopy(el.value);}
 Object.assign(window,{toggleVitrineProd,toggleVitrineLoja,copyVitrineLink});
+
+/* ===== BLOCO 8: Agenda financeira + navegação ===== */
+function setWeek(delta){window.bpWeek=Math.max(0,(window.bpWeek||0)+delta);render();}
+function openAgenda(tipo){const isIn=tipo==='entrada';const d=new Date();d.setDate(d.getDate()+7);const def=d.toISOString().slice(0,10);openModal(`<div class="modal-head"><h3>${isIn?'Recebimento futuro':'Gasto futuro'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div><div class="frow"><div><label class="lbl">Valor (R$)</label><input class="input num" type="number" step="0.01" id="ag_val"></div><div><label class="lbl">Data</label><input class="input" type="date" id="ag_data" value="${def}"></div><div class="full"><label class="lbl">Descrição</label><input class="input" id="ag_desc" placeholder="${isIn?'Ex: Receber do cliente João':'Ex: Pagar fornecedor'}"></div></div><div class="modal-foot"><button class="btn btn-primary" onclick="saveAgenda('${tipo}')">Agendar</button></div>`);}
+async function saveAgenda(tipo){const val=numf($('#ag_val').value);if(val<=0){toast('Informe um valor');return;}const data=$('#ag_data').value;if(!data){toast('Informe a data');return;}const r=await sb.from('agenda').insert({tipo,valor:val,data,descricao:$('#ag_desc').value.trim()});if(r.error){toast('Erro: '+r.error.message);return;}await refresh('agenda');closeModal();toast('Agendado');render();}
+async function realizarAgenda(id){const a=(S.agenda||[]).find(x=>x.id===id);if(!a)return;const kind=a.tipo==='entrada'?'aporte':'retirada';const r1=await sb.from('cash_flow').insert({kind,valor:numf(a.valor),data:todayISO(),nota:'Agenda: '+(a.descricao||(a.tipo==='entrada'?'Recebimento':'Gasto'))});if(r1.error){toast('Erro: '+r1.error.message);return;}await sb.from('agenda').update({realizado:true}).eq('id',id);await refresh('agenda');await refresh('cash');toast(a.tipo==='entrada'?'Recebimento lançado no caixa':'Gasto lançado no caixa');render();}
+async function delAgenda(id){if(typeof confirm==='function'&&!confirm('Remover este item da agenda?'))return;await sb.from('agenda').delete().eq('id',id);await refresh('agenda');toast('Removido');render();}
+Object.assign(window,{setWeek,openAgenda,saveAgenda,realizarAgenda,delAgenda});
+
+/* ===== BLOCO 9: Foto-comprovante da venda ===== */
+function pickSaleProof(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;try{const b=await compressBlob(f,1280,.72);const url=URL.createObjectURL(b);window.saleProof={blob:b,url};const pv=$('#sProofPrev');if(pv)pv.innerHTML=`<img src="${url}" style="max-width:150px;border-radius:10px;border:1px solid var(--border)">`;toast('Foto anexada');}catch(e){toast('Erro na imagem');}};document.body.appendChild(inp);inp.click();setTimeout(()=>{try{inp.remove();}catch(e){}},2000);}
+Object.assign(window,{pickSaleProof});
+
+
 
 
 
