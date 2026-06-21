@@ -231,7 +231,7 @@ textarea.input{resize:vertical;min-height:70px}
 .seg{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:14px}
 .seg button{flex:1;border:0;background:transparent;color:var(--text-2);font-weight:600;font-size:13px;padding:9px 4px;border-radius:9px;cursor:pointer;transition:.15s}
 .seg button.on{background:var(--brand);color:#000}
-.hero2{background:linear-gradient(135deg,rgba(1,227,119,.16),rgba(1,227,119,.03));border:1px solid rgba(1,227,119,.30);border-radius:16px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.45);margin-bottom:14px}
+.hero2{background:linear-gradient(135deg,rgba(1,227,119,.16),rgba(1,227,119,.03));border:1px solid rgba(1,227,119,.30);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:stretch;box-shadow:0 12px 32px rgba(0,0,0,.45);margin-bottom:14px}
 .hero2 .lab{font-size:11.5px;letter-spacing:1.2px;font-weight:800;color:var(--text-2)}
 .hero2 .big{font-size:30px;font-weight:800;letter-spacing:-1px}
 .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
@@ -246,12 +246,19 @@ textarea.input{resize:vertical;min-height:70px}
 <style id="bp-mobile">
 html,body{overflow-x:hidden}
 @media(max-width:919px){
-  .content{padding:16px 14px calc(92px + env(safe-area-inset-bottom))}
+  .content{padding:14px 14px calc(94px + env(safe-area-inset-bottom))}
   .input,select.input,textarea.input{font-size:16px}
   .modal{max-height:90vh}
   .seg button{padding:10px 4px}
   .btn{min-height:46px}
   .icon-btn{min-width:40px;min-height:40px}
+  .seg button{flex:1;text-align:center}
+  .hero2 .big{font-size:26px}.dash-head h2{font-size:20px}
+  .sec-title{margin:22px 2px 10px}.sec-title h3{font-size:15px}
+  .kcard{padding:13px}.kgrid{gap:9px}
+  .chart-wrap{height:210px}.card.chart-card{padding:14px}
+  .metacard,.card{border-radius:16px}
+  .hero2 .num{font-size:14px!important}
 }
 </style>
 </head>
