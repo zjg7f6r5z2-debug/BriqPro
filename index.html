@@ -778,6 +778,7 @@ function productFormHTML(ed){
     <div><label class="lbl">Preço ideal (R$)</label><input class="input num" type="number" step="0.01" id="f_ideal" value="${p.preco_ideal}"></div>
     <div class="full"><label class="lbl">Link do anúncio</label><input class="input" id="f_link" value="${esc(p.link_anuncio)}" placeholder="https://"></div>
     <div class="full"><label class="lbl">Observações</label><textarea class="input" id="f_obs">${esc(p.observacoes)}</textarea></div>
+    <div class="full"><label class="lbl">Descrição da vitrine pública 🛍️</label><textarea class="input" id="f_vdesc" placeholder="Texto que aparece no anúncio público: estado, acessórios, motivo da venda...">${esc(p.vitrine_desc||'')}</textarea></div>
   </div>
   <label class="lbl" style="margin-top:16px">Fotos</label><div class="photos" id="photos"></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px"><label class="lbl" style="margin:0">Despesas</label><button class="btn btn-ghost btn-sm" id="addExp">+ Adicionar</button></div>
@@ -815,7 +816,7 @@ async function saveProduct(){
   const g=id=>$('#'+id)?.value;
   if(!g('f_nome').trim()){toast('Dê um nome ao produto');return;}
   const btn=$('#saveProd');btn.textContent='Salvando…';btn.disabled=true;
-  const onde=Array.from(window.bpOnde||new Set());const row={nome:g('f_nome').trim(),onde_anunciado:onde,categoria:g('f_cat'),condicao:g('f_cond'),marca:g('f_marca'),modelo:g('f_modelo'),cor:g('f_cor'),numero_serie:g('f_serial'),imei:g('f_imei'),garantia:g('f_gar'),status:g('f_status'),origem:g('f_origem'),fornecedor:g('f_forn'),cidade:g('f_cidade'),data_compra:g('f_data')||todayISO(),data_anuncio:g('f_dataAn')||null,preco_pago:numf(g('f_pago')),valor_mercado:numf(g('f_merc')),preco_anunciado:numf(g('f_anun')),preco_minimo:numf(g('f_min')),preco_ideal:numf(g('f_ideal')),link_anuncio:g('f_link'),observacoes:g('f_obs'),supplier_id:($('#f_supplier')&&$('#f_supplier').value)||null,garantia_ate:($('#f_gar_ate')&&$('#f_gar_ate').value)||null};
+  const onde=Array.from(window.bpOnde||new Set());const row={nome:g('f_nome').trim(),onde_anunciado:onde,categoria:g('f_cat'),condicao:g('f_cond'),marca:g('f_marca'),modelo:g('f_modelo'),cor:g('f_cor'),numero_serie:g('f_serial'),imei:g('f_imei'),garantia:g('f_gar'),status:g('f_status'),origem:g('f_origem'),fornecedor:g('f_forn'),cidade:g('f_cidade'),data_compra:g('f_data')||todayISO(),data_anuncio:g('f_dataAn')||null,preco_pago:numf(g('f_pago')),valor_mercado:numf(g('f_merc')),preco_anunciado:numf(g('f_anun')),preco_minimo:numf(g('f_min')),preco_ideal:numf(g('f_ideal')),link_anuncio:g('f_link'),observacoes:g('f_obs'),supplier_id:($('#f_supplier')&&$('#f_supplier').value)||null,garantia_ate:($('#f_gar_ate')&&$('#f_gar_ate').value)||null,vitrine_desc:($('#f_vdesc')&&$('#f_vdesc').value.trim())||''};
   try{
     let pid=draft.id;
     if(pid){await sb.from('products').update(row).eq('id',pid);}
