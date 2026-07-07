@@ -584,11 +584,15 @@ function rDash(v){
   if(!S.products.length&&!S.cash.length&&!s.capIni){
     v.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg><b>Bem-vindo ao BRIQPRO</b><p>Defina seu capital e cadastre o primeiro produto para o app ganhar vida.</p><div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="openCapital()">Definir capital</button><button class="btn btn-primary" style="width:auto" onclick="openProductForm()">+ Produto</button></div></div>`;return;
   }
-  const nome=(PROFILE&&(PROFILE.full_name||'').trim().split(' ')[0])||'vendedor';
+  const nome=(PROFILE&&(PROFILE.full_name||'').trim().split(' ').slice(0,2).join(' '))||'vendedor';
   const per=window.bpDashPeriod||'mes';
   const ps=dashPeriodStats(s.sold,per);
   const meta=numf(S.goals.lucro_mensal),pm=meta>0?Math.min(100,s.lucroMes/meta*100):0,falta=Math.max(0,meta-s.lucroMes);
   const today=todayISO();
+  const isoAdd=(iso,d)=>{const x=new Date(iso+'T00:00:00');x.setDate(x.getDate()+d);return x.toISOString().slice(0,10);};
+  const fmtShort=(iso)=>{if(!iso)return'';const p=String(iso).split('-');return p.length===3?p[2]+'/'+p[1]:iso;};
+  const rlStart=per==='7d'?isoAdd(today,-6):(per==='30d'?isoAdd(today,-29):today.slice(0,7)+'-01');
+  const rangeLabel=fmtShort(rlStart)+' – '+fmtShort(today);
   const fiado=new Set((S.installments||[]).filter(it=>!it.pago&&it.vencimento&&it.vencimento<today).map(it=>it.receivable_id)).size;
   const parados=(S.products||[]).filter(p=>p.status!=='vendido'&&bpDaysSince(p.data_compra)>30).length;
   const garant=(S.products||[]).filter(p=>{if(!p.garantia_ate||p.status==='vendido')return false;const d=bpDaysSince(p.garantia_ate);return d<=0&&d>=-15;}).length;
@@ -599,13 +603,11 @@ function rDash(v){
   const pen='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>';
   const srch='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-3.5-3.5"/></svg>';
   let alerts='';
+  if(parados>0)alerts+=alertBar('warn',parados+' produto(s) parado(s) há mais de 30 dias (sem venda)',"setTab('estoque')");
   if(fiado>0)alerts+=alertBar('loss',fiado+' cliente(s) com fiado vencido',"setTab('recebiveis')");
-  if(parados>0)alerts+=alertBar('warn',parados+' aparelho(s) parado(s) +30 dias',"setTab('estoque')");
   if(garant>0)alerts+=alertBar('warn',garant+' garantia(s) vencendo em 15 dias',"setTab('garantias')");
-  if(window.bpWeek===undefined)window.bpWeek=0;
-  const wk=window.bpWeek;
-  const isoAdd=(iso,d)=>{const x=new Date(iso+'T00:00:00');x.setDate(x.getDate()+d);return x.toISOString().slice(0,10);};
-  const fmtShort=(iso)=>{if(!iso)return'';const p=String(iso).split('-');return p.length===3?p[2]+'/'+p[1]:iso;};
+  // agenda
+  if(window.bpWeek===undefined)window.bpWeek=0;const wk=window.bpWeek;
   const startISO=isoAdd(today,wk*7),endISO=isoAdd(startISO,6);
   const agP=(S.agenda||[]).filter(a=>!a.realizado);
   const inWeek=agP.filter(a=>a.data>=startISO&&a.data<=endISO).sort((a,b)=>a.data<b.data?-1:1);
@@ -619,35 +621,25 @@ function rDash(v){
   const movItem=(m)=>{const isOut=m.kind==='retirada';return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:12px 14px"><div style="min-width:0"><div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.nota||(isOut?'Sa\u00edda':'Entrada'))}</div><div style="font-size:11px;color:var(--text-2)">${fmtShort(m.data)}</div></div><b class="num ${isOut?'down':'up'}" style="flex-shrink:0">${isOut?'\u2212':'+'}${brl(m.valor)}</b></div>`;};
   v.innerHTML=`
   <div class="dash-head"><div><div style="font-size:12.5px;color:var(--text-2)">Olá,</div><h2>${esc(nome)}! 👋</h2></div>
-    <div style="display:flex;gap:8px"><button class="icon-btn" onclick="openSearch()" aria-label="Buscar">${srch}</button><button class="icon-btn" onclick="openCalc()" aria-label="Calculadora">${calc}</button><button class="icon-btn" onclick="openNotifs()" aria-label="Notificações">${bell}</button></div></div>
+    <div style="display:flex;gap:8px"><button class="icon-btn" onclick="openSearch()" aria-label="Buscar">${srch}</button><button class="icon-btn" onclick="openIMEIConsulta()" aria-label="Consulta IMEI"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></button><button class="icon-btn" onclick="openCalc()" aria-label="Calculadora">${calc}</button><button class="icon-btn" onclick="openNotifs()" aria-label="Notificações">${bell}</button></div></div>
 
-  <div class="hero2"><div class="lab">PATRIMÔNIO TOTAL</div><div class="big num up" id="hb">${brl(s.patrimonio)}</div>
-    <div style="display:flex;gap:10px;margin-top:14px">
-      <div style="flex:1"><div style="font-size:11px;color:var(--text-2)">Em caixa</div><b class="num" style="font-size:15px">${brl(s.caixa)}</b></div>
-      <div style="flex:1;border-left:1px solid var(--border);padding-left:10px"><div style="font-size:11px;color:var(--text-2)">Lucro do mês</div><b class="num ${s.lucroMes>=0?'up':'down'}" style="font-size:15px">${brl(s.lucroMes)}</b></div>
-      <div style="flex:1;border-left:1px solid var(--border);padding-left:10px"><div style="font-size:11px;color:var(--text-2)">Em estoque</div><b class="num" style="font-size:15px">${brl(s.estCusto)}</b></div>
-    </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">
+    <div class="seg" style="margin:0;flex-shrink:0"><button class="${per==='7d'?'on':''}" onclick="setDashPeriod('7d')">7D</button><button class="${per==='30d'?'on':''}" onclick="setDashPeriod('30d')">30D</button><button class="${per==='mes'?'on':''}" onclick="setDashPeriod('mes')">Mês Atual</button></div>
+    <div style="flex-shrink:0;border:1px solid var(--border);border-radius:999px;padding:9px 14px;font-size:12.5px;color:var(--text-2);display:flex;align-items:center;gap:7px;white-space:nowrap">📅 ${rangeLabel}</div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#F6CB4B,#E3A417);border-radius:16px;padding:17px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 12px 30px rgba(227,164,23,.22);margin-bottom:14px">
+    <div style="font-size:12.5px;font-weight:800;letter-spacing:.8px;color:#5a3d00">LUCRO DO PERÍODO</div>
+    <div class="num" id="hb" style="font-size:26px;font-weight:800;letter-spacing:-.5px;color:${ps.lucro>=0?'#0a3d1e':'#7a1020'}">${brl(ps.lucro)}</div>
+  </div>
+
+  <div class="kgrid">
+    ${kcard('Total Investimento',brl(s.estCusto),'blue')}
+    ${kcard('Total Vendido',brl(ps.receita),'green')}
+    ${kcard('Total Gasto em Vendas',brl(ps.custo),'red')}
+    ${kcard('Qtd. Vendas',ps.qtd,'dark')}
   </div>
   ${alerts}
-
-  <div class="sec-title"><h3>Agenda financeira</h3>
-    <div style="display:flex;align-items:center;gap:6px">
-      <button class="icon-btn" onclick="setWeek(-1)" style="opacity:${wk===0?'.35':'1'}" aria-label="Semana anterior">\u25c0</button>
-      <span style="font-size:11.5px;color:var(--text-2);min-width:92px;text-align:center">${weekLabel}</span>
-      <button class="icon-btn" onclick="setWeek(1)" aria-label="Próxima semana">\u25b6</button>
-    </div>
-  </div>
-  <div class="card" style="padding:16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div><div style="font-size:11.5px;color:var(--text-2)">Saldo projetado até ${fmtShort(endISO)}</div><div class="big num ${projetado>=0?'up':'down'}" style="font-size:25px;margin-top:2px">${brl(projetado)}</div></div>
-      <div style="text-align:right;font-size:11.5px;line-height:1.7"><div style="color:var(--text-2)">Caixa hoje <b class="num" style="color:var(--text)">${brl(s.caixa)}</b></div><div class="up">+ ${brl(futIn)} a receber</div><div class="down">\u2212 ${brl(futOut)} a pagar</div></div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('entrada')">+ Recebimento</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('saida')">+ Gasto</button></div>
-  </div>
-  ${inWeek.length?inWeek.map(agItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nada agendado para este período. Use “+ Recebimento” ou “+ Gasto”.</div>'}
-
-  <div class="sec-title"><h3>Entradas e saídas</h3><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('aporte')">+ Entrada</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('retirada')">+ Saída</button></div></div>
-  ${movs.length?movs.map(movItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nenhum registro de caixa ainda.</div>'}
 
   <div class="card metacard" style="margin-top:4px">
     <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:8px;align-items:center"><span style="font-size:17px">🎯</span><b style="font-size:15px">Meta do Mês</b></div><div style="display:flex;gap:4px"><button class="icon-btn" onclick="setTab('metas')" aria-label="Detalhe">${chart}</button><button class="icon-btn" onclick="openGoals()" aria-label="Editar">${pen}</button></div></div>
@@ -657,30 +649,36 @@ function rDash(v){
     <div style="display:flex;justify-content:space-between;font-size:12.5px"><span class="down">Falta ${brl(falta)}</span><span style="color:var(--text-2)">Progresso <b style="color:var(--text)">${pm.toFixed(0)}%</b></span></div>
   </div>
 
+  <div class="sec-title"><h3>Performance de Vendas</h3><span class="hint">tempo real</span></div>
+  <div class="card chart-card" style="margin-bottom:12px"><div class="chart-wrap" style="height:230px"><canvas id="cMes"></canvas></div></div>
+  <div class="grid charts">
+    <div class="card chart-card"><h4>Patrimônio mensal</h4><div class="chart-wrap"><canvas id="cPat"></canvas></div></div>
+    <div class="card chart-card"><h4>ROI por categoria</h4><div class="chart-wrap"><canvas id="cRoi"></canvas></div></div>
+    <div class="card chart-card"><h4>Produtos mais lucrativos</h4><div class="chart-wrap"><canvas id="cTop"></canvas></div></div>
+  </div>
+
+  <div class="sec-title"><h3>Agenda financeira</h3>
+    <div style="display:flex;align-items:center;gap:6px"><button class="icon-btn" onclick="setWeek(-1)" style="opacity:${wk===0?'.35':'1'}" aria-label="Semana anterior">\u25c0</button><span style="font-size:11.5px;color:var(--text-2);min-width:92px;text-align:center">${weekLabel}</span><button class="icon-btn" onclick="setWeek(1)" aria-label="Próxima semana">\u25b6</button></div>
+  </div>
+  <div class="card" style="padding:16px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div><div style="font-size:11.5px;color:var(--text-2)">Saldo projetado até ${fmtShort(endISO)}</div><div class="big num ${projetado>=0?'up':'down'}" style="font-size:25px;margin-top:2px">${brl(projetado)}</div></div>
+      <div style="text-align:right;font-size:11.5px;line-height:1.7"><div style="color:var(--text-2)">Caixa hoje <b class="num" style="color:var(--text)">${brl(s.caixa)}</b></div><div class="up">+ ${brl(futIn)} a receber</div><div class="down">\u2212 ${brl(futOut)} a pagar</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('entrada')">+ Recebimento</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('saida')">+ Gasto</button></div>
+  </div>
+  ${inWeek.length?inWeek.map(agItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nada agendado para este período.</div>'}
+
+  <div class="sec-title"><h3>Entradas e saídas</h3><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('aporte')">+ Entrada</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('retirada')">+ Saída</button></div></div>
+  ${movs.length?movs.map(movItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nenhum registro de caixa ainda.</div>'}
+
   <div class="card" style="margin:14px 0 16px;padding:16px">
     <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:8px;align-items:center"><span style="font-size:17px">🧾</span><b style="font-size:15px">Faturamento MEI ${anoAtual}</b></div><span style="font-size:12px;color:var(--text-2)">limite R$ 81.000</span></div>
     <div class="big num" style="font-size:24px;margin-top:8px;letter-spacing:-1px">${brl(meiFat)}</div>
     <div class="prog" style="margin:8px 0"><i style="width:${meiPct}%;${meiPct>=100?'background:var(--loss)':(meiPct>=80?'background:#FFB020':'')}"></i></div>
     <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text-2)">${meiPct.toFixed(0)}% do limite</span><span style="${meiPct>=100?'color:var(--loss)':(meiPct>=80?'color:#FFB020':'color:var(--text-2)')};font-weight:700">${meiPct>=100?'Acima do limite!':(meiPct>=80?'Perto do limite':'Dentro do limite')}</span></div>
-  </div>
-
-  <div class="sec-title"><h3>Resultado do período</h3><span class="hint">vendas</span></div>
-  <div class="seg"><button class="${per==='7d'?'on':''}" onclick="setDashPeriod('7d')">7D</button><button class="${per==='30d'?'on':''}" onclick="setDashPeriod('30d')">30D</button><button class="${per==='mes'?'on':''}" onclick="setDashPeriod('mes')">Mês Atual</button></div>
-  <div class="kgrid">
-    ${kcard('Lucro do período',brl(ps.lucro),ps.lucro>=0?'green':'red')}
-    ${kcard('Total vendido',brl(ps.receita),'blue')}
-    ${kcard('Gasto nas vendas',brl(ps.custo),'red')}
-    ${kcard('Qtd. vendas',ps.qtd,'dark')}
-  </div>
-
-  <div class="sec-title"><h3>Análise visual</h3><span class="hint">tempo real</span></div>
-  <div class="grid charts">
-    <div class="card chart-card"><h4>Patrimônio mensal</h4><div class="chart-wrap"><canvas id="cPat"></canvas></div></div>
-    <div class="card chart-card"><h4>Lucro por mês</h4><div class="chart-wrap"><canvas id="cMes"></canvas></div></div>
-    <div class="card chart-card"><h4>ROI por categoria</h4><div class="chart-wrap"><canvas id="cRoi"></canvas></div></div>
-    <div class="card chart-card"><h4>Produtos mais lucrativos</h4><div class="chart-wrap"><canvas id="cTop"></canvas></div></div>
   </div>`;
-  countUp($('#hb'),s.patrimonio);drawCharts(s);if(PROFILE&&PROFILE.is_master)setTimeout(renderMasterCard,40);
+  countUp($('#hb'),ps.lucro);drawCharts(s);if(PROFILE&&PROFILE.is_master)setTimeout(renderMasterCard,40);
 }
 function ctheme(){const c=getComputedStyle(document.documentElement);return{grid:c.getPropertyValue('--border').trim(),text:c.getPropertyValue('--text-2').trim(),profit:c.getPropertyValue('--profit').trim(),brand:c.getPropertyValue('--brand').trim(),amber:c.getPropertyValue('--amber').trim(),loss:c.getPropertyValue('--loss').trim(),surface:c.getPropertyValue('--surface').trim()};}
 function mLabel(k){if(!k)return'';const[y,m]=k.split('-');return['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][+m-1]+'/'+y.slice(2);}
@@ -1444,8 +1442,20 @@ Object.assign(window,{rMaster,mBlock,mPlan,mReset});
 
 
 /* ===== BLOCO 3: IMEI + Onde anunciado ===== */
-function imeiCheck(imei){if(!imei||imei.length<10){return {ok:false,msg:'IMEI/série muito curto'};} return {ok:true,msg:'IMEI: '+imei,links:{info:'https://www.imei.info/?imei='+encodeURIComponent(imei),busca:'https://www.google.com/search?q='+encodeURIComponent('IMEI '+imei+' roubado bloqueado')}};}
-function openIMEI(id){const p=S.products.find(x=>x.id===id);if(!p)return;const ch=imeiCheck(p.imei||p.numero_serie);openModal(`<div class="modal-head"><h3>Verificação de IMEI</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div><p style="font-size:13px;margin:10px 0">${ch.ok?`<b>${ch.msg}</b><p style="font-size:12px;color:var(--text-2);margin-top:8px">Confira se não está roubado ou bloqueado:</p>`:ch.msg}</p>${ch.ok?`<div style="display:flex;gap:8px;margin-top:12px"><a href="${ch.links.info}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="width:auto">Dados do aparelho</a><a href="${ch.links.busca}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="width:auto">Pesquisar roubo/bloqueio</a></div>`:''}`);} 
+function luhnOK(d){let sum=0;for(let i=0;i<d.length;i++){let n=+d[d.length-1-i];if(i%2===1){n*=2;if(n>9)n-=9;}sum+=n;}return sum%10===0;}
+function imeiCheck(raw){const d=String(raw||'').replace(/\D/g,'');if(!d||d.length<10){return {ok:false,msg:'IMEI/série muito curto'};}
+  const is15=d.length===15;const valido=is15?luhnOK(d):null;
+  return {ok:true,imei:d,is15,valido,tac:is15?d.slice(0,8):'',serial:is15?d.slice(8,14):'',dv:is15?d.slice(14):'',
+    links:{info:'https://www.imei.info/?imei='+encodeURIComponent(d),busca:'https://www.google.com/search?q='+encodeURIComponent('IMEI '+d+' roubado bloqueado')}};}
+function imeiResultHTML(ch){if(!ch.ok)return `<p style="font-size:13px;color:var(--text-2)">${ch.msg}</p>`;
+  const badge=ch.is15?(ch.valido?`<span class="pill st-comprado" style="font-size:11px">✓ IMEI matematicamente válido</span>`:`<span class="pill st-cancelado" style="font-size:11px">✗ IMEI inválido — confira os dígitos</span>`):`<span class="pill st-manutencao" style="font-size:11px">Nº de série (não é IMEI de 15 dígitos)</span>`;
+  return `<div style="font-size:14px;font-weight:700;font-family:'Space Grotesk';letter-spacing:.5px;word-break:break-all">${esc(ch.imei)}</div><div style="margin:8px 0">${badge}</div>
+  ${ch.is15?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;font-size:11.5px;color:var(--text-2)"><span style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:5px 9px">TAC ${ch.tac}</span><span style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:5px 9px">Série ${ch.serial}</span><span style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:5px 9px">Verificador ${ch.dv}</span></div>`:''}
+  <p style="font-size:12px;color:var(--text-2);margin:10px 0 8px">Confira roubo/bloqueio nas fontes:</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><a href="${ch.links.info}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="width:auto">Dados do aparelho</a><a href="${ch.links.busca}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="width:auto">Pesquisar roubo/bloqueio</a></div>`;}
+function openIMEI(id){const p=S.products.find(x=>x.id===id);if(!p)return;const ch=imeiCheck(p.imei||p.numero_serie);openModal(`<div class="modal-head"><h3>Verificação de IMEI</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>${imeiResultHTML(ch)}`);}
+function openIMEIConsulta(){openModal(`<div class="modal-head"><h3>Consulta de IMEI</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div><p style="font-size:12.5px;color:var(--text-2);margin:4px 0 10px">Digite o IMEI (disque *#06# no aparelho) para validar e consultar antes de comprar.</p><div style="display:flex;gap:8px"><input class="input num" id="imq" inputmode="numeric" placeholder="15 dígitos" oninput="bpIMEIrun()"></div><div id="imres" style="margin-top:14px"></div>`);setTimeout(()=>{const el=$('#imq');if(el)el.focus();},80);}
+function bpIMEIrun(){const v=($('#imq')&&$('#imq').value)||'';const w=$('#imres');if(!w)return;const d=v.replace(/\D/g,'');if(d.length<10){w.innerHTML='<div style="font-size:12.5px;color:var(--text-3)">Digite ao menos 10 dígitos…</div>';return;}w.innerHTML=imeiResultHTML(imeiCheck(d));} 
 window.bpOnde=new Set();
 const ONDE_PLATS=['OLX','Mercado Livre','Facebook','WhatsApp','Shopee','Enjoei'];
 function toggleOnde(plat){if(!plat)return;if(window.bpOnde.has(plat)){window.bpOnde.delete(plat);}else{window.bpOnde.add(plat);}paintOnde();}
@@ -1459,7 +1469,7 @@ Object.defineProperty(window,'draft',{get:()=>draft,set:v=>{draft=v;}});
 function dashPeriodStats(sold,per){const inP=(d)=>{if(!d)return false;if(per==='mes')return monthKey(d)===monthKey(todayISO());const dd=bpDaysSince(d);return per==='7d'?(dd>=0&&dd<=7):(dd>=0&&dd<=30);};let rec=0,luc=0,q=0;(sold||[]).forEach(p=>{const dv=derive(p);if(dv.sale&&inP(dv.sale.data_venda)){rec+=dv.receita;luc+=dv.lucroLiq;q++;}});return{receita:rec,lucro:luc,custo:rec-luc,qtd:q};}
 function setDashPeriod(p){window.bpDashPeriod=p;render();}
 function kcard(lab,val,color){const map={blue:'linear-gradient(145deg,#1c3aa0,#2a5bd7)',green:'linear-gradient(145deg,#04734a,#01b365)',red:'linear-gradient(145deg,#7c1522,#d12a3e)',dark:'var(--surface-2)'};const tcol=color==='dark'?'var(--text)':'#fff';return `<div class="kcard" style="background:${map[color]||map.dark};color:${tcol}"><div class="kl">${lab}</div><div class="kv num">${val}</div></div>`;}
-function alertBar(kind,txt,action){const c=kind==='loss'?'var(--loss)':'#FFB020';return `<div class="alertbar" style="border-color:${c};background:${c}1f"><span style="color:${c}">⚠ ${txt}</span><button class="lnk" onclick="${action}">Ver</button></div>`;}
+function alertBar(kind,txt,action){const c=kind==='loss'?'var(--loss)':'#FFB020';return `<div class="alertbar" style="border-color:${c};background:${c}1f"><span style="color:${c}">⚠ ${txt}</span><button class="lnk" onclick="${action}">Visualizar</button></div>`;}
 Object.assign(window,{setDashPeriod,dashPeriodStats,kcard,alertBar});
 
 /* ===== BLOCO 5: Confiabilidade fornecedor ===== */
@@ -1512,6 +1522,7 @@ Object.assign(window,{setWeek,openAgenda,saveAgenda,realizarAgenda,delAgenda});
 /* ===== BLOCO 9: Foto-comprovante da venda ===== */
 function pickSaleProof(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;try{const b=await compressBlob(f,1280,.72);const url=URL.createObjectURL(b);window.saleProof={blob:b,url};const pv=$('#sProofPrev');if(pv)pv.innerHTML=`<img src="${url}" style="max-width:150px;border-radius:10px;border:1px solid var(--border)">`;toast('Foto anexada');}catch(e){toast('Erro na imagem');}};document.body.appendChild(inp);inp.click();setTimeout(()=>{try{inp.remove();}catch(e){}},2000);}
 Object.assign(window,{pickSaleProof});
+Object.assign(window,{openIMEIConsulta,bpIMEIrun,imeiResultHTML,luhnOK});
 
 
 
