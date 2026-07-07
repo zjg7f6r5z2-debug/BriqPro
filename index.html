@@ -20,15 +20,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#000000;--bg-grad:radial-gradient(1200px 600px at 80% -10%,rgba(1,227,119,.10),transparent 60%),radial-gradient(900px 500px at -10% 10%,rgba(45,212,167,.08),transparent 55%);
-  --surface:#0C100E;--surface-2:#131815;--surface-3:#1B221D;
-  --border:rgba(255,255,255,.07);--border-strong:rgba(255,255,255,.12);
-  --text:#E8ECF4;--text-2:#8A94A6;--text-3:#5B6577;
-  --profit:#2DD4A7;--profit-soft:rgba(45,212,167,.14);
-  --brand:#01E377;--brand-soft:rgba(1,227,119,.14);
-  --amber:#F5B544;--amber-soft:rgba(245,181,68,.14);
-  --loss:#F26D6D;--loss-soft:rgba(242,109,109,.14);
-  --shadow:0 18px 40px -18px rgba(0,0,0,.6);
+  --bg:#131417;--bg-grad:radial-gradient(1100px 560px at 84% -14%,rgba(1,227,119,.06),transparent 62%);
+  --surface:#1A1C20;--surface-2:#212429;--surface-3:#2A2E34;
+  --border:rgba(255,255,255,.08);--border-strong:rgba(255,255,255,.15);
+  --text:#ECEEF1;--text-2:#98A1AD;--text-3:#606874;
+  --profit:#2DD4A7;--profit-soft:rgba(45,212,167,.12);
+  --brand:#01E377;--brand-soft:rgba(1,227,119,.12);
+  --amber:#E7B15A;--amber-soft:rgba(231,177,90,.12);
+  --loss:#EC7A7A;--loss-soft:rgba(236,122,122,.12);
+  --shadow:0 14px 34px -20px rgba(0,0,0,.5);
 }
 :root.light{
   --bg:#F4F6FA;--bg-grad:radial-gradient(1100px 560px at 85% -10%,rgba(1,227,119,.10),transparent 60%),radial-gradient(820px 460px at -8% 8%,rgba(45,212,167,.10),transparent 55%);
@@ -333,7 +333,7 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:s
 
 /* ============ STATE ============ */
 let USER=null, PROFILE=null;
-const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[]};
+const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[],fixed:[]};
 const charts={};
 let filters={status:'todos',q:''};
 let draft=null;
@@ -425,7 +425,7 @@ async function loadAll(){
   if(st.data)S.settings=st.data; if(go.data)S.goals=go.data;
   S.products=pr.data||[];S.expenses=ex.data||[];S.sales=sa.data||[];S.cash=ca.data||[];
   S.contacts=co.data||[];S.negos=ne.data||[];S.notifs=no.data||[];
-  try{const [sp_f2,rc_f2,in_f2,ag_f2]=await Promise.all([sb.from('suppliers').select('*').order('created_at',{ascending:false}),sb.from('receivables').select('*').order('created_at',{ascending:false}),sb.from('receivable_installments').select('*'),sb.from('agenda').select('*').order('data',{ascending:true})]);S.suppliers=sp_f2.data||[];S.receivables=rc_f2.data||[];S.installments=in_f2.data||[];S.agenda=ag_f2.data||[];}catch(e){}
+  try{const [sp_f2,rc_f2,in_f2,ag_f2,fx_f2]=await Promise.all([sb.from('suppliers').select('*').order('created_at',{ascending:false}),sb.from('receivables').select('*').order('created_at',{ascending:false}),sb.from('receivable_installments').select('*'),sb.from('agenda').select('*').order('data',{ascending:true}),sb.from('fixed_expenses').select('*').order('dia',{ascending:true})]);S.suppliers=sp_f2.data||[];S.receivables=rc_f2.data||[];S.installments=in_f2.data||[];S.agenda=ag_f2.data||[];S.fixed=fx_f2.data||[];}catch(e){}
   try{const [wl,op]=await Promise.all([sb.from('watchlist').select('*').order('created_at',{ascending:false}),sb.from('opportunities').select('*').order('created_at',{ascending:false})]);S.watch=wl.data||[];S.opps=op.data||[];}catch(e){}
   try{S.quotes=(await sb.from('quotes').select('*').order('created_at',{ascending:false})).data||[];}catch(e){}
 }
@@ -435,6 +435,7 @@ async function refresh(part){
   if(!part||part==='sales')S.sales=(await sb.from('sales').select('*')).data||[];
   if(!part||part==='cash')S.cash=(await sb.from('cash_flow').select('*').order('data',{ascending:false})).data||[];
   if(!part||part==='agenda')S.agenda=(await sb.from('agenda').select('*').order('data',{ascending:true})).data||[];
+  if(!part||part==='fixed')S.fixed=(await sb.from('fixed_expenses').select('*').order('dia',{ascending:true})).data||[];
   if(!part||part==='negos')S.negos=(await sb.from('negotiations').select('*').order('updated_at',{ascending:false})).data||[];
   if(!part||part==='notifs')S.notifs=(await sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(40)).data||[];
 }
@@ -628,9 +629,9 @@ function rDash(v){
     <div style="flex-shrink:0;border:1px solid var(--border);border-radius:999px;padding:9px 14px;font-size:12.5px;color:var(--text-2);display:flex;align-items:center;gap:7px;white-space:nowrap">📅 ${rangeLabel}</div>
   </div>
 
-  <div style="background:linear-gradient(135deg,#F6CB4B,#E3A417);border-radius:16px;padding:17px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 12px 30px rgba(227,164,23,.22);margin-bottom:14px">
-    <div style="font-size:12.5px;font-weight:800;letter-spacing:.8px;color:#5a3d00">LUCRO DO PERÍODO</div>
-    <div class="num" id="hb" style="font-size:26px;font-weight:800;letter-spacing:-.5px;color:${ps.lucro>=0?'#0a3d1e':'#7a1020'}">${brl(ps.lucro)}</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand);border-radius:16px;padding:17px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.6px;color:var(--text-2)">LUCRO DO PERÍODO</div>
+    <div class="num" id="hb" style="font-size:26px;font-weight:800;letter-spacing:-.5px;color:${ps.lucro>=0?'var(--brand)':'var(--loss)'}">${brl(ps.lucro)}</div>
   </div>
 
   <div class="kgrid">
@@ -677,6 +678,11 @@ function rDash(v){
     <div class="big num" style="font-size:24px;margin-top:8px;letter-spacing:-1px">${brl(meiFat)}</div>
     <div class="prog" style="margin:8px 0"><i style="width:${meiPct}%;${meiPct>=100?'background:var(--loss)':(meiPct>=80?'background:#FFB020':'')}"></i></div>
     <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text-2)">${meiPct.toFixed(0)}% do limite</span><span style="${meiPct>=100?'color:var(--loss)':(meiPct>=80?'color:#FFB020':'color:var(--text-2)')};font-weight:700">${meiPct>=100?'Acima do limite!':(meiPct>=80?'Perto do limite':'Dentro do limite')}</span></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openFixed()">
+    <div><div style="display:flex;gap:8px;align-items:center"><span style="font-size:16px">📌</span><b style="font-size:15px">Despesas fixas</b></div><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${(S.fixed||[]).filter(f=>f.ativo!==false).length} conta(s) recorrente(s) · toque para gerenciar</div></div>
+    <div style="text-align:right"><div class="num down" style="font-size:19px;font-weight:800">${brl(fixedTotal())}</div><div style="font-size:10.5px;color:var(--text-2)">por mês</div></div>
   </div>`;
   countUp($('#hb'),ps.lucro);drawCharts(s);if(PROFILE&&PROFILE.is_master)setTimeout(renderMasterCard,40);
 }
@@ -1468,7 +1474,7 @@ Object.defineProperty(window,'draft',{get:()=>draft,set:v=>{draft=v;}});
 /* ===== BLOCO 4: Dashboard estilo cockpit ===== */
 function dashPeriodStats(sold,per){const inP=(d)=>{if(!d)return false;if(per==='mes')return monthKey(d)===monthKey(todayISO());const dd=bpDaysSince(d);return per==='7d'?(dd>=0&&dd<=7):(dd>=0&&dd<=30);};let rec=0,luc=0,q=0;(sold||[]).forEach(p=>{const dv=derive(p);if(dv.sale&&inP(dv.sale.data_venda)){rec+=dv.receita;luc+=dv.lucroLiq;q++;}});return{receita:rec,lucro:luc,custo:rec-luc,qtd:q};}
 function setDashPeriod(p){window.bpDashPeriod=p;render();}
-function kcard(lab,val,color){const map={blue:'linear-gradient(145deg,#1c3aa0,#2a5bd7)',green:'linear-gradient(145deg,#04734a,#01b365)',red:'linear-gradient(145deg,#7c1522,#d12a3e)',dark:'var(--surface-2)'};const tcol=color==='dark'?'var(--text)':'#fff';return `<div class="kcard" style="background:${map[color]||map.dark};color:${tcol}"><div class="kl">${lab}</div><div class="kv num">${val}</div></div>`;}
+function kcard(lab,val,color){const map={blue:'#6C8CFF',green:'var(--brand)',red:'var(--loss)',dark:'var(--text-3)'};const c=map[color]||map.dark;return `<div class="kcard" style="background:var(--surface)"><div class="kl" style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${c};flex-shrink:0"></span>${lab}</div><div class="kv num" style="color:var(--text)">${val}</div></div>`;}
 function alertBar(kind,txt,action){const c=kind==='loss'?'var(--loss)':'#FFB020';return `<div class="alertbar" style="border-color:${c};background:${c}1f"><span style="color:${c}">⚠ ${txt}</span><button class="lnk" onclick="${action}">Visualizar</button></div>`;}
 Object.assign(window,{setDashPeriod,dashPeriodStats,kcard,alertBar});
 
@@ -1523,6 +1529,26 @@ Object.assign(window,{setWeek,openAgenda,saveAgenda,realizarAgenda,delAgenda});
 function pickSaleProof(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;try{const b=await compressBlob(f,1280,.72);const url=URL.createObjectURL(b);window.saleProof={blob:b,url};const pv=$('#sProofPrev');if(pv)pv.innerHTML=`<img src="${url}" style="max-width:150px;border-radius:10px;border:1px solid var(--border)">`;toast('Foto anexada');}catch(e){toast('Erro na imagem');}};document.body.appendChild(inp);inp.click();setTimeout(()=>{try{inp.remove();}catch(e){}},2000);}
 Object.assign(window,{pickSaleProof});
 Object.assign(window,{openIMEIConsulta,bpIMEIrun,imeiResultHTML,luhnOK});
+
+/* ===== BLOCO 10: Despesas fixas mensais ===== */
+function fixedTotal(){return (S.fixed||[]).filter(f=>f.ativo!==false).reduce((a,f)=>a+numf(f.valor),0);}
+function openFixed(){const list=(S.fixed||[]).slice().sort((a,b)=>(a.dia||0)-(b.dia||0));const tot=fixedTotal();
+  openModal(`<div class="modal-head"><h3>Despesas fixas do mês</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div style="font-size:12.5px;color:var(--text-2);margin:2px 0 12px">Contas que se repetem todo mês (aluguel, internet, etc.). Total: <b class="num" style="color:var(--text)">${brl(tot)}</b>/mês</div>
+  <div id="fxlist">${list.length?list.map(f=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:11px 13px"><div><div style="font-weight:700;font-size:13.5px">${esc(f.nome)}</div><div style="font-size:11.5px;color:var(--text-2)">vence dia ${f.dia||1}</div></div><div style="display:flex;align-items:center;gap:8px"><b class="num down">${brl(f.valor)}</b><button class="icon-btn" onclick="delFixed('${f.id}')" aria-label="Remover">\u00d7</button></div></div>`).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:6px 0 12px">Nenhuma despesa fixa cadastrada.</div>'}</div>
+  <div class="frow" style="margin-top:6px"><div class="full"><label class="lbl">Nome</label><input class="input" id="fx_nome" placeholder="Ex: Aluguel, Internet"></div><div><label class="lbl">Valor (R$)</label><input class="input num" type="number" step="0.01" id="fx_val"></div><div><label class="lbl">Dia do venc.</label><input class="input num" type="number" min="1" max="31" id="fx_dia" value="5"></div></div>
+  <div class="modal-foot" style="flex-wrap:wrap;gap:8px"><button class="btn btn-ghost" style="width:auto" onclick="addFixed()">+ Adicionar</button><button class="btn btn-primary" style="width:auto" onclick="agendarFixas()">Lançar na agenda deste mês</button></div>`);}
+async function addFixed(){const nome=($('#fx_nome')&&$('#fx_nome').value.trim())||'';const val=numf($('#fx_val')&&$('#fx_val').value);let dia=parseInt(($('#fx_dia')&&$('#fx_dia').value)||'5',10);if(!nome){toast('Informe o nome');return;}if(val<=0){toast('Informe o valor');return;}if(!(dia>=1&&dia<=31))dia=5;const r=await sb.from('fixed_expenses').insert({nome,valor:val,dia,ativo:true});if(r.error){toast('Erro: '+r.error.message);return;}await refresh('fixed');toast('Despesa fixa adicionada');openFixed();}
+async function delFixed(id){await sb.from('fixed_expenses').delete().eq('id',id);await refresh('fixed');toast('Removida');openFixed();}
+async function agendarFixas(){const ativos=(S.fixed||[]).filter(f=>f.ativo!==false);if(!ativos.length){toast('Nenhuma despesa fixa');return;}
+  const mk=todayISO().slice(0,7);let add=0,skip=0;
+  for(const f of ativos){const dia=String(Math.min(28,Math.max(1,f.dia||1))).padStart(2,'0');const data=mk+'-'+dia;const desc='Fixa: '+f.nome;
+    const existe=(S.agenda||[]).some(a=>a.descricao===desc&&String(a.data).slice(0,7)===mk);
+    if(existe){skip++;continue;}
+    const r=await sb.from('agenda').insert({tipo:'saida',valor:numf(f.valor),data,descricao:desc});if(!r.error)add++;}
+  await refresh('agenda');closeModal();toast(add+' lançada(s)'+(skip?', '+skip+' já existia(m)':''));render();}
+Object.assign(window,{openFixed,addFixed,delFixed,agendarFixas,fixedTotal});
+
 
 
 
