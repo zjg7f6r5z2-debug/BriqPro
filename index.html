@@ -104,6 +104,8 @@ textarea.input{resize:vertical;min-height:70px}
 @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 .grid{display:grid;gap:14px}
+.grid>*{min-width:0}
+.kpi .val{overflow-wrap:anywhere}
 .kpis{grid-template-columns:repeat(2,1fr)}
 @media(min-width:680px){.kpis{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:1000px){.kpis{grid-template-columns:repeat(4,1fr)}}
@@ -121,7 +123,7 @@ textarea.input{resize:vertical;min-height:70px}
 .hero .row{display:flex;gap:20px;flex-wrap:wrap;margin-top:13px}
 .hero .mini b{font-family:'Space Grotesk';font-size:16px;display:block}.hero .mini span{font-size:11px;color:var(--text-2)}
 .dot{width:8px;height:8px;border-radius:50%}
-.sec-title{display:flex;align-items:center;justify-content:space-between;margin:24px 2px 12px}
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin:24px 2px 12px;flex-wrap:wrap;gap:4px}
 .sec-title h3{font-size:15.5px}.sec-title .hint{font-size:12px;color:var(--text-3)}
 .charts{grid-template-columns:1fr}@media(min-width:880px){.charts{grid-template-columns:1fr 1fr}}
 .chart-card h4{font-size:13px;color:var(--text-2);font-weight:600;margin-bottom:12px}
@@ -289,6 +291,12 @@ html,body{overflow-x:hidden}
   .btn{min-height:44px;font-size:14px}
   .btn-sm{min-height:38px;font-size:12.5px}
   .prog{height:8px}
+  .kpi .val{font-size:18px;letter-spacing:-.3px}
+  .card.kpi{padding:13px}
+  .grid.kpis{gap:9px}
+  .tbl{font-size:12.5px}
+  .tbl th,.tbl td{padding:9px 8px}
+  .tbl-stock th:nth-child(3),.tbl-stock td:nth-child(3),.tbl-stock th:nth-child(4),.tbl-stock td:nth-child(4){display:none}
 }
 /* Atalhos rápidos (dashboard) */
 .qa{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
@@ -976,10 +984,10 @@ function rEstoque(v){
   const tiers=[15,30,60,90,120];const counts=tiers.map(t=>stock.filter(p=>derive(p).dias>=t).length);
   v.innerHTML=`<div class="grid kpis" style="grid-template-columns:repeat(2,1fr)">${kpi('Produtos em posse',stock.length)}${kpi('Investido',brl(s.estCusto))}${kpi('Valor de mercado',brl(s.estMercado))}${kpi('Lucro potencial',`<span class="${s.lucroPot>=0?'up':'down'}">${brl(s.lucroPot)}</span>`)}</div>
   <div class="sec-title"><h3>Alertas de parado</h3></div>
-  <div class="grid kpis" style="grid-template-columns:repeat(5,1fr)">${tiers.map((t,i)=>`<div class="card kpi" style="padding:13px"><div class="lab">+${t} dias</div><div class="val num" style="font-size:20px;color:${counts[i]?'var(--loss)':'var(--text)'}">${counts[i]}</div></div>`).join('')}</div>
+  <div class="grid kpis" style="grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:9px">${tiers.map((t,i)=>`<div class="card kpi" style="padding:13px"><div class="lab">+${t} dias</div><div class="val num" style="font-size:20px;color:${counts[i]?'var(--loss)':'var(--text)'}">${counts[i]}</div></div>`).join('')}</div>
   <div class="sec-title"><h3>Estoque</h3><span class="hint">vermelho = parado +${s.tmEstoque?Math.round(S.settings.stale_days||30):30}d</span></div>`;
   if(!stock.length){v.innerHTML+=`<div class="empty"><b>Estoque vazio</b><p>Nada parado no momento.</p></div>`;return;}
-  v.innerHTML+=`<div class="card scroll-x" style="padding:6px"><table class="tbl"><thead><tr><th>Produto</th><th>Score</th><th>Investido</th><th>Mercado</th><th>Lucro pot.</th><th>Dias</th></tr></thead><tbody>${stock.map(p=>{const d=derive(p);return `<tr ${d.stale?'style="color:var(--loss)"':''} onclick="openDetail('${p.id}')" style="cursor:pointer"><td><b>${esc(p.nome)}</b><br><small style="color:var(--text-3)"><span class="pill ${stClass(p.status)}">${stLabel(p.status)}</span></small></td><td><span class="pill sc-${p.opportunity_label}">${p.opportunity_score}</span></td><td class="num">${brl(d.custo)}</td><td class="num">${brl(p.valor_mercado)}</td><td class="num ${d.lucroPot>=0?'up':'down'}">${brl(d.lucroPot)}</td><td class="num"><b>${d.dias}</b></td></tr>`;}).join('')}</tbody></table></div>`;
+  v.innerHTML+=`<div class="card scroll-x" style="padding:6px"><table class="tbl tbl-stock"><thead><tr><th>Produto</th><th>Score</th><th>Investido</th><th>Mercado</th><th>Lucro pot.</th><th>Dias</th></tr></thead><tbody>${stock.map(p=>{const d=derive(p);return `<tr ${d.stale?'style="color:var(--loss)"':''} onclick="openDetail('${p.id}')" style="cursor:pointer"><td><b>${esc(p.nome)}</b><br><small style="color:var(--text-3)"><span class="pill ${stClass(p.status)}">${stLabel(p.status)}</span></small></td><td><span class="pill sc-${p.opportunity_label}">${p.opportunity_score}</span></td><td class="num">${brl(d.custo)}</td><td class="num">${brl(p.valor_mercado)}</td><td class="num ${d.lucroPot>=0?'up':'down'}">${brl(d.lucroPot)}</td><td class="num"><b>${d.dias}</b></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 
 /* ============ CRM ============ */
