@@ -43,7 +43,8 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);background-image:var(--bg-grad);background-attachment:fixed;color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5;transition:background-color .4s,color .25s}
+body::before{content:'';position:fixed;inset:0;background:var(--bg-grad);pointer-events:none;z-index:-1}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5;transition:background-color .4s,color .25s}
 .num{font-variant-numeric:tabular-nums}
 .display,h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;letter-spacing:-.02em;margin:0}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
