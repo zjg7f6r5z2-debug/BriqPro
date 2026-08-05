@@ -989,14 +989,112 @@ function undoSale(pid,sid){confirmBox('Desfazer venda?','O produto volta ao esto
 
 /* ============ ESTOQUE ============ */
 function rEstoque(v){
-  const s=stats();const stock=s.stock.slice().sort((a,b)=>derive(b).dias-derive(a).dias);
-  const tiers=[15,30,60,90,120];const counts=tiers.map(t=>stock.filter(p=>derive(p).dias>=t).length);
-  v.innerHTML=`<div class="grid kpis" style="grid-template-columns:repeat(2,1fr)">${kpi('Produtos em posse',stock.length)}${kpi('Investido',brl(s.estCusto))}${kpi('Valor de mercado',brl(s.estMercado))}${kpi('Lucro potencial',`<span class="${s.lucroPot>=0?'up':'down'}">${brl(s.lucroPot)}</span>`)}</div>
-  <div class="sec-title"><h3>Alertas de parado</h3></div>
-  <div class="grid kpis" style="grid-template-columns:repeat(5,1fr);gap:8px">${tiers.map((t,i)=>`<div class="card kpi" style="padding:11px 8px"><div class="lab" style="white-space:nowrap">+${t}d</div><div class="val num" style="font-size:20px;color:${counts[i]?'var(--loss)':'var(--text)'}">${counts[i]}</div></div>`).join('')}</div>
-  <div class="sec-title"><h3>Estoque</h3><span class="hint">vermelho = parado +${s.tmEstoque?Math.round(S.settings.stale_days||30):30}d</span></div>`;
-  if(!stock.length){v.innerHTML+=`<div class="empty"><b>Estoque vazio</b><p>Nada parado no momento.</p></div>`;return;}
-  v.innerHTML+=`<div class="card scroll-x" style="padding:6px"><table class="tbl tbl-stock"><thead><tr><th>Produto</th><th>Score</th><th>Investido</th><th>Mercado</th><th>Lucro pot.</th><th>Dias</th></tr></thead><tbody>${stock.map(p=>{const d=derive(p);return `<tr ${d.stale?'style="color:var(--loss)"':''} onclick="openDetail('${p.id}')" style="cursor:pointer"><td><b>${esc(p.nome)}</b><br><small style="color:var(--text-3)"><span class="pill ${stClass(p.status)}">${stLabel(p.status)}</span></small></td><td><span class="pill sc-${p.opportunity_label}">${p.opportunity_score}</span></td><td class="num">${brl(d.custo)}</td><td class="num">${brl(p.valor_mercado)}</td><td class="num ${d.lucroPot>=0?'up':'down'}">${brl(d.lucroPot)}</td><td class="num"><b>${d.dias}</b></td></tr>`;}).join('')}</tbody></table></div>`;
+  const s=stats();
+  const sd=numf(S.settings.stale_days)||30;
+  const stock=s.stock.slice().sort((a,b)=>derive(b).dias-derive(a).dias);
+  const n=stock.length;
+
+  if(!n){
+    v.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg><b>Nada em estoque</b><p>Cadastre uma compra para acompanhar capital investido, dias parados e lucro potencial.</p><button class="btn btn-primary" style="width:auto;margin-top:18px" onclick="openProductForm()">+ Cadastrar produto</button></div>`;
+    return;
+  }
+
+  /* --- números --- */
+  const inv=Math.max(0,s.estCusto), lp=Math.max(0,s.lucroPot);
+  const base=(inv+lp)||1;
+  const wInv=inv/base*100, wLp=lp/base*100;
+  const margem=s.estMercado>0?lp/s.estMercado*100:0;
+  const maisAntigo=derive(stock[0]).dias;
+  const tmEst=Math.round(s.tmEstoque||0);
+  const parados=stock.filter(p=>derive(p).dias>sd);
+  const capParado=parados.reduce((a,p)=>a+derive(p).custo,0);
+
+  const tiers=[15,30,60,90,120];
+  const chips=tiers.map(t=>({t,q:stock.filter(p=>derive(p).dias>=t).length})).filter(x=>x.q>0);
+
+  const byCat={};
+  stock.forEach(p=>{const c=p.categoria||'Outros';const d=derive(p);byCat[c]=byCat[c]||{q:0,cu:0};byCat[c].q++;byCat[c].cu+=d.custo;});
+  const cats=Object.entries(byCat).sort((a,b)=>b[1].cu-a[1].cu);
+  const maxCu=Math.max(1,...cats.map(c=>c[1].cu));
+
+  const dot=c=>`<i style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${c};margin-right:5px;vertical-align:1px"></i>`;
+
+  /* --- hero: onde está o dinheiro --- */
+  const hero=`
+  <div class="hero" style="margin-bottom:12px">
+    <div class="lab">${dot('var(--profit)')} Valor de mercado do estoque</div>
+    <div class="big num" style="font-size:32px;letter-spacing:-1px;margin-top:3px">${brl(s.estMercado)}</div>
+    <div style="display:flex;height:11px;border-radius:6px;overflow:hidden;gap:2px;margin:16px 0 13px;background:var(--surface-3)">
+      <i style="display:block;height:100%;width:${wInv}%;background:var(--amber)"></i>
+      <i style="display:block;height:100%;width:${wLp}%;background:var(--profit)"></i>
+    </div>
+    <div class="row">
+      <div class="mini"><b class="num">${brl(inv)}</b><span>${dot('var(--amber)')}Investido</span></div>
+      <div class="mini"><b class="num">${brl(lp)}</b><span>${dot('var(--profit)')}Lucro potencial</span></div>
+      <div class="mini"><b class="num">${margem.toFixed(0)}%</b><span>Margem esperada</span></div>
+    </div>
+  </div>`;
+
+  /* --- três medidas de tempo --- */
+  const mini=(k,val,sub)=>`<div class="card" style="padding:13px 14px"><div style="font-size:11px;color:var(--text-2);font-weight:600">${k}</div><div class="num" style="font-family:'Space Grotesk';font-size:19px;font-weight:700;margin-top:5px">${val}</div><div style="font-size:10.5px;color:var(--text-3);margin-top:2px">${sub}</div></div>`;
+  const minis=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
+    ${mini('Em posse',n,n===1?'produto':'produtos')}
+    ${mini('Tempo médio',tmEst+'d','em estoque')}
+    ${mini('Mais antigo',maisAntigo+'d','sem vender')}
+  </div>`;
+
+  /* --- termômetro de giro: só aparece o que importa --- */
+  const chipsHTML=chips.length?`<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px">${chips.map(c=>`<div style="flex:0 0 auto;border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-size:12px;color:var(--text-2);white-space:nowrap">parado +${c.t}d <b style="color:${c.t>=sd?'var(--loss)':'var(--amber)'};margin-left:3px">${c.q}</b></div>`).join('')}</div>`:'';
+
+  const giro=parados.length
+    ? `<div class="alertbar" style="border-color:var(--loss);background:rgba(236,122,122,.12)"><span style="color:var(--loss)">⚠ ${parados.length} produto(s) parado(s) · ${brl(capParado)} de capital preso</span></div>`+chipsHTML
+    : `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:15px 16px;margin-bottom:14px;border-left:3px solid var(--brand)">
+        <div><b style="font-size:14px">Giro saudável</b><div style="font-size:12px;color:var(--text-2);margin-top:3px">Nenhum produto passou de ${sd} dias.</div></div>
+        <div style="text-align:right;flex-shrink:0"><div class="num" style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--brand)">${maisAntigo}d</div><div style="font-size:10.5px;color:var(--text-2)">mais antigo</div></div>
+      </div>`;
+
+  /* --- onde o capital está alocado --- */
+  const catsHTML=cats.length>1?`<div class="sec-title"><h3>Capital por categoria</h3></div>
+    <div class="card">${cats.map(([c,d])=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+      <span style="font-size:13px;flex:0 0 96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c)}</span>
+      <div class="prog" style="flex:1;margin:0"><i style="width:${Math.round(d.cu/maxCu*100)}%"></i></div>
+      <b class="num" style="font-size:13px;flex:0 0 auto">${brl(d.cu)}</b></div>`).join('')}</div>`:'';
+
+  /* --- cada produto, com a barra de dias --- */
+  const pcard=p=>{
+    const d=derive(p);
+    const pct=Math.min(100,Math.round(d.dias/sd*100));
+    const cor=d.dias>=sd?'var(--loss)':(d.dias>=sd*0.6?'var(--amber)':'var(--brand)');
+    const thumb=p.cover_url
+      ? `<div style="width:54px;height:54px;flex:0 0 54px;border-radius:13px;background-image:url('${esc(p.cover_url)}');background-size:cover;background-position:center;border:1px solid var(--border)"></div>`
+      : `<div style="width:54px;height:54px;flex:0 0 54px;border-radius:13px;background:var(--surface-3);display:grid;place-items:center;color:var(--text-3)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg></div>`;
+    return `<div class="card hover" style="cursor:pointer;padding:15px" onclick="openDetail('${p.id}')">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        ${thumb}
+        <div style="min-width:0;flex:1">
+          <b style="font-size:14.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.nome)}</b>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
+            <span class="pill ${stClass(p.status)}">${stLabel(p.status)}</span>
+            <span class="pill sc-${p.opportunity_label}">score ${p.opportunity_score}</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-top:14px">
+        <span style="color:var(--text-2)">${d.dias} dia(s) em estoque</span>
+        <span style="color:${cor};font-weight:700">${d.dias>=sd?'parado':'no prazo'} · limite ${sd}d</span>
+      </div>
+      <div class="prog" style="margin-top:6px"><i style="width:${pct}%;background:${cor}"></i></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <div><div style="font-size:10.5px;color:var(--text-2)">Investido</div><b class="num" style="font-size:13.5px">${brl(d.custo)}</b></div>
+        <div style="text-align:center"><div style="font-size:10.5px;color:var(--text-2)">Mercado</div><b class="num" style="font-size:13.5px">${brl(p.valor_mercado)}</b></div>
+        <div style="text-align:right"><div style="font-size:10.5px;color:var(--text-2)">Lucro pot.</div><b class="num ${d.lucroPot>=0?'up':'down'}" style="font-size:13.5px">${brl(d.lucroPot)}</b></div>
+      </div>
+    </div>`;
+  };
+
+  v.innerHTML=hero+minis+giro+catsHTML+
+    `<div class="sec-title"><h3>Produtos em posse</h3><span class="hint">${n} · mais parado primeiro</span></div>
+     <div class="plist">${stock.map(pcard).join('')}</div>`;
 }
 
 /* ============ CRM ============ */
@@ -1390,7 +1488,7 @@ function msgRapida(id){const p=S.products.find(x=>x.id===id);const nome=p?p.nome
   const labels=['Disponível','Valor','Negociar','Mais fotos','Garantia','Entrega'];
   openModal(`<div class="modal-head"><h3>Respostas rápidas</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
    <p style="font-size:12.5px;color:var(--text-2);margin:0 0 10px">Toque em copiar e cole no WhatsApp do cliente.</p>
-   ${msgs.map((t,i)=>`<div class="card" style="margin-bottom:8px"><div style="font-size:10.5px;color:var(--brand);font-weight:800;text-transform:uppercase;letter-spacing:.6px">${labels[i]}</div><div style="font-size:13.5px;margin:5px 0 9px;line-height:1.45">${esc(t)}</div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="bpCopy('${esc(t).replace(/'/g,"\\'")}')"Copiar</button></div>`).join('')}`);
+   ${msgs.map((t,i)=>`<div class="card" style="margin-bottom:8px"><div style="font-size:10.5px;color:var(--brand);font-weight:800;text-transform:uppercase;letter-spacing:.6px">${labels[i]}</div><div style="font-size:13.5px;margin:5px 0 9px;line-height:1.45">${esc(t)}</div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="bpCopy('${esc(t).replace(/'/g,"\\'")}')">Copiar</button></div>`).join('')}`);
 }
 function reciboPDF(id){const p=S.products.find(x=>x.id===id);if(!p)return;const d=derive(p);if(!d.vendido){toast('Produto ainda não vendido');return;}
   if(!window.jspdf){toast('PDF indisponível');return;}
