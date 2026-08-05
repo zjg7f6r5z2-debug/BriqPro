@@ -137,7 +137,7 @@ textarea.input{resize:vertical;min-height:70px}
 .toolbar .input{flex:1;min-width:150px;padding:10px 12px}
 .seg{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:4px;overflow-x:auto}
 .seg button{padding:7px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--text-2);white-space:nowrap}
-.seg button.on{background:var(--brand);color:#fff}
+.seg button.on{background:var(--brand);color:#03170C}
 .plist{display:grid;gap:12px;grid-template-columns:1fr}
 @media(min-width:680px){.plist{grid-template-columns:1fr 1fr}}@media(min-width:1040px){.plist{grid-template-columns:1fr 1fr 1fr}}
 .pcard{display:flex;flex-direction:column;cursor:pointer}
@@ -241,16 +241,16 @@ textarea.input{resize:vertical;min-height:70px}
 .dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .dash-head h2{font-size:22px;margin:0;line-height:1.1}
 .dash-head .icon-btn{width:40px;height:40px}
-.seg{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:14px}
-.seg button{flex:1;border:0;background:transparent;color:var(--text-2);font-weight:600;font-size:13px;padding:9px 4px;border-radius:9px;cursor:pointer;transition:.15s}
-.seg button.on{background:var(--brand);color:#000}
+.seg-fill{gap:6px;background:var(--surface);border-radius:12px;margin-bottom:14px}
+.seg-fill button{flex:1;border:0;background:transparent;font-size:13px;padding:9px 4px;border-radius:9px;transition:.15s}
+.seg-fill button.on{background:var(--brand);color:#000}
 .hero2{background:linear-gradient(135deg,rgba(1,227,119,.16),rgba(1,227,119,.03));border:1px solid rgba(1,227,119,.30);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:stretch;box-shadow:0 12px 32px rgba(0,0,0,.45);margin-bottom:14px}
 .hero2 .lab{font-size:11.5px;letter-spacing:1.2px;font-weight:800;color:var(--text-2)}
 .hero2 .big{font-size:30px;font-weight:800;letter-spacing:-1px}
 .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.kcard{border-radius:14px;padding:14px;min-height:88px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--border)}
-.kcard .kl{font-size:12.5px;opacity:.92;font-weight:600}
-.kcard .kv{font-size:21px;font-weight:800;margin-top:8px;letter-spacing:-.5px}
+.kstat{border-radius:14px;padding:14px;min-height:88px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--border)}
+.kstat .kl{font-size:12.5px;opacity:.92;font-weight:600}
+.kstat .kv{font-size:21px;font-weight:800;margin-top:8px;letter-spacing:-.5px}
 .alertbar{display:flex;justify-content:space-between;align-items:center;border:1px solid;border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:13px;font-weight:600}
 .alertbar .lnk{background:none;border:0;color:var(--brand);font-weight:800;cursor:pointer;text-decoration:underline;font-size:13px}
 .metacard{margin-bottom:16px;padding:16px}
@@ -268,7 +268,7 @@ html,body{overflow-x:hidden}
   .seg-fill button{flex:1;text-align:center}
   .hero2 .big{font-size:26px}.dash-head h2{font-size:20px}
   .sec-title{margin:22px 2px 10px}.sec-title h3{font-size:15px}
-  .kcard{padding:13px}.kgrid{gap:9px}
+  .kstat{padding:13px}.kgrid{gap:9px}
   .chart-wrap{height:210px}.card.chart-card{padding:14px}
   .metacard,.card{border-radius:16px}
   .hero2 .num{font-size:14px!important}
@@ -281,8 +281,8 @@ html,body{overflow-x:hidden}
   .hero .big{font-size:29px}
   .hero .mini b{font-size:14px}.hero .mini span{font-size:10px}
   .hero .row{gap:8px;margin-top:10px}
-  .kcard{min-height:76px;padding:12px}
-  .kcard .kv{font-size:18px;margin-top:5px}.kcard .kl{font-size:11.5px}
+  .kstat{min-height:76px;padding:12px}
+  .kstat .kv{font-size:18px;margin-top:5px}.kstat .kl{font-size:11.5px}
   .kgrid{gap:8px;margin-bottom:11px}
   .metacard{padding:14px;margin-bottom:12px}
   .dash-head{margin-bottom:10px}.dash-head h2{font-size:19px}
@@ -313,6 +313,39 @@ html,body{overflow-x:hidden}
 .qa button:active svg{stroke:var(--brand)}
 .qa span{font-size:10.5px;font-weight:600;color:var(--text-2);letter-spacing:.1px}
 @media(min-width:920px){.qa{max-width:440px}}
+</style>
+<style id="bp-polish">
+/* profundidade: o gradiente de fundo já existia como token e nunca era usado */
+body{background-image:var(--bg-grad);background-attachment:fixed;background-repeat:no-repeat}
+
+/* o botão flutuante cobria o último card da lista */
+@media(max-width:919px){.content{padding-bottom:calc(142px + env(safe-area-inset-bottom))}}
+
+/* foco visível para navegação por teclado */
+:where(button,a,input,select,textarea):focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* hierarquia: card comum discreto, card clicável reage */
+.card{box-shadow:0 1px 2px rgba(0,0,0,.16)}
+.card.hover{cursor:pointer}
+.card.hover:hover{box-shadow:var(--shadow)}
+.hero{box-shadow:var(--shadow)}
+
+/* marcador de seção */
+.sec-title h3{position:relative;padding-left:11px}
+.sec-title h3::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:13px;border-radius:2px;background:var(--brand);opacity:.8}
+
+/* aba ativa da barra inferior ganha corpo */
+.bnav{transition:color .18s,background .18s}
+.bnav.active{background:var(--brand-soft)}
+
+/* alça do modal, como as folhas nativas do iOS */
+@media(max-width:619px){.modal::before{content:"";display:block;width:38px;height:4px;border-radius:99px;background:var(--border-strong);margin:-6px auto 14px}}
+
+/* seções do formulário de produto */
+.fsec{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-3);border-top:1px solid var(--border);padding-top:14px;margin-top:2px}
+.frow .fsec:first-child{border-top:0;padding-top:0}
+
+::selection{background:var(--brand-soft);color:var(--text)}
 </style>
 </head>
 <body>
@@ -852,28 +885,36 @@ function productFormHTML(ed){
   return `<div class="modal-head"><h3>${ed?'Editar produto':'Novo produto'}</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
   <div class="card" style="display:flex;align-items:center;gap:14px;margin-top:12px;padding:14px"><div class="gauge sc-${p.opportunity_label||'Bom'}" id="scoreGauge">${p.opportunity_score||0}</div><div><div class="lbl" style="margin:0">Score de oportunidade</div><b class="display" id="scoreLabel" style="font-size:16px">${p.opportunity_label||'—'}</b></div></div>
   <div class="frow">
+    <div class="full fsec">Identificação</div>
     <div class="full"><label class="lbl">Nome</label><input class="input" id="f_nome" value="${esc(p.nome)}" placeholder="Ex: PlayStation 4 Slim 1TB"></div>
     <div><label class="lbl">Categoria</label><select class="input" id="f_cat" onchange="liveScore()">${opt(CATS,p.categoria)}</select></div>
     <div><label class="lbl">Condição</label><select class="input" id="f_cond" onchange="liveScore()">${opt(COND,p.condicao)}</select></div>
     <div><label class="lbl">Marca</label><input class="input" id="f_marca" value="${esc(p.marca)}"></div>
-    <div><label class="lbl">Onde anunciado</label><div id="onde_plat" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>
     <div><label class="lbl">Modelo</label><input class="input" id="f_modelo" value="${esc(p.modelo)}"></div>
     <div><label class="lbl">Cor</label><input class="input" id="f_cor" value="${esc(p.cor)}"></div>
-    <div><label class="lbl">Nº de série</label><input class="input" id="f_serial" value="${esc(p.numero_serie)}"></div>
-    <div><label class="lbl">IMEI</label><input class="input" id="f_imei" value="${esc(p.imei)}"></div>
-    <div><label class="lbl">Garantia</label><input class="input" id="f_gar" value="${esc(p.garantia)}" placeholder="Ex: 3 meses"></div><div><label class="lbl">Fornecedor</label><select class="input" id="f_supplier"><option value="">Sem fornecedor</option>${S.suppliers.map(sp=>'<option value="'+sp.id+'" '+(p.supplier_id===sp.id?'selected':'')+'>'+esc(sp.nome)+'</option>').join('')}</select></div><div><label class="lbl">Garantia até</label><input class="input" type="date" id="f_gar_ate" value="${p.garantia_ate||''}"></div>
+    <div class="full fsec">Compra</div>
     <div><label class="lbl">Status</label><select class="input" id="f_status">${opt(STATUS,p.status)}</select></div>
     <div><label class="lbl">Origem</label><select class="input" id="f_origem">${opt(['Marketplace','OLX','Grupo de venda','Loja física','Fornecedor','Outro'],p.origem)}</select></div>
+    <div><label class="lbl">Fornecedor</label><select class="input" id="f_supplier"><option value="">Sem fornecedor</option>${S.suppliers.map(sp=>'<option value="'+sp.id+'" '+(p.supplier_id===sp.id?'selected':'')+'>'+esc(sp.nome)+'</option>').join('')}</select></div>
     <div><label class="lbl">Fornecedor</label><input class="input" id="f_forn" value="${esc(p.fornecedor)}"></div>
     <div><label class="lbl">Cidade</label><input class="input" id="f_cidade" value="${esc(p.cidade)}"></div>
     <div><label class="lbl">Data da compra</label><input class="input" type="date" id="f_data" value="${p.data_compra||todayISO()}"></div>
-    <div><label class="lbl">Data do anúncio</label><input class="input" type="date" id="f_dataAn" value="${p.data_anuncio||''}"></div>
+    <div class="full fsec">Preços</div>
     <div><label class="lbl">Preço pago (R$)</label><input class="input num" type="number" step="0.01" id="f_pago" value="${p.preco_pago}" oninput="liveScore()"></div>
     <div><label class="lbl">Valor de mercado (R$)</label><input class="input num" type="number" step="0.01" id="f_merc" value="${p.valor_mercado}" oninput="liveScore()"></div>
     <div><label class="lbl">Preço anunciado (R$)</label><input class="input num" type="number" step="0.01" id="f_anun" value="${p.preco_anunciado}"></div>
-    <div><label class="lbl">Preço mínimo (R$)</label><input class="input num" type="number" step="0.01" id="f_min" value="${p.preco_minimo}"></div>
     <div><label class="lbl">Preço ideal (R$)</label><input class="input num" type="number" step="0.01" id="f_ideal" value="${p.preco_ideal}"></div>
+    <div><label class="lbl">Preço mínimo (R$)</label><input class="input num" type="number" step="0.01" id="f_min" value="${p.preco_minimo}"></div>
+    <div class="full fsec">Anúncio</div>
+    <div class="full"><label class="lbl">Onde anunciado</label><div id="onde_plat" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>
     <div class="full"><label class="lbl">Link do anúncio</label><input class="input" id="f_link" value="${esc(p.link_anuncio)}" placeholder="https://"></div>
+    <div><label class="lbl">Data do anúncio</label><input class="input" type="date" id="f_dataAn" value="${p.data_anuncio||''}"></div>
+    <div class="full fsec">Rastreio e garantia</div>
+    <div><label class="lbl">Nº de série</label><input class="input" id="f_serial" value="${esc(p.numero_serie)}"></div>
+    <div><label class="lbl">IMEI</label><input class="input" id="f_imei" value="${esc(p.imei)}"></div>
+    <div><label class="lbl">Garantia</label><input class="input" id="f_gar" value="${esc(p.garantia)}" placeholder="Ex: 3 meses"></div>
+    <div><label class="lbl">Garantia até</label><input class="input" type="date" id="f_gar_ate" value="${p.garantia_ate||''}"></div>
+    <div class="full fsec">Notas</div>
     <div class="full"><label class="lbl">Observações</label><textarea class="input" id="f_obs">${esc(p.observacoes)}</textarea></div>
     <div class="full"><label class="lbl">Descrição da vitrine pública 🛍️</label><textarea class="input" id="f_vdesc" placeholder="Texto que aparece no anúncio público: estado, acessórios, motivo da venda...">${esc(p.vitrine_desc||'')}</textarea></div>
   </div>
@@ -1794,7 +1835,7 @@ Object.defineProperty(window,'draft',{get:()=>draft,set:v=>{draft=v;}});
 /* ===== BLOCO 4: Dashboard estilo cockpit ===== */
 function dashPeriodStats(sold,per){const inP=(d)=>{if(!d)return false;if(per==='custom'){const r=window.bpDashRange||{};return r.from&&r.to&&d>=r.from&&d<=r.to;}if(per==='mes')return monthKey(d)===monthKey(todayISO());const dd=bpDaysSince(d);return per==='7d'?(dd>=0&&dd<=7):(dd>=0&&dd<=30);};let rec=0,luc=0,q=0;(sold||[]).forEach(p=>{const dv=derive(p);if(dv.sale&&inP(dv.sale.data_venda)){rec+=dv.receita;luc+=dv.lucroLiq;q++;}});return{receita:rec,lucro:luc,custo:rec-luc,qtd:q};}
 function setDashPeriod(p){window.bpDashPeriod=p;render();}
-function kcard(lab,val,color){const map={blue:'#6C8CFF',green:'var(--brand)',red:'var(--loss)',dark:'var(--text-3)'};const c=map[color]||map.dark;return `<div class="kcard" style="background:var(--surface)"><div class="kl" style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${c};flex-shrink:0"></span>${lab}</div><div class="kv num" style="color:var(--text)">${val}</div></div>`;}
+function kcard(lab,val,color){const map={blue:'#6C8CFF',green:'var(--brand)',red:'var(--loss)',dark:'var(--text-3)'};const c=map[color]||map.dark;return `<div class="kstat" style="background:var(--surface)"><div class="kl" style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:${c};flex-shrink:0"></span>${lab}</div><div class="kv num" style="color:var(--text)">${val}</div></div>`;}
 function alertBar(kind,txt,action){const c=kind==='loss'?'var(--loss)':'#FFB020';return `<div class="alertbar" style="border-color:${c};background:${c}1f"><span style="color:${c}">⚠ ${txt}</span><button class="lnk" onclick="${action}">Visualizar</button></div>`;}
 Object.assign(window,{setDashPeriod,dashPeriodStats,kcard,alertBar});
 
