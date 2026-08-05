@@ -20,10 +20,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#131417;--bg-grad:radial-gradient(1100px 560px at 84% -14%,rgba(1,227,119,.06),transparent 62%);
-  --surface:#1A1C20;--surface-2:#212429;--surface-3:#2A2E34;
-  --border:rgba(255,255,255,.08);--border-strong:rgba(255,255,255,.15);
-  --text:#ECEEF1;--text-2:#98A1AD;--text-3:#606874;
+  --bg:#0C0E11;--bg-grad:radial-gradient(1200px 620px at 86% -16%,rgba(1,227,119,.055),transparent 60%),radial-gradient(900px 500px at -10% 4%,rgba(45,212,167,.035),transparent 55%);
+  --surface:#16191E;--surface-2:#1D2127;--surface-3:#262B33;
+  --border:rgba(255,255,255,.07);--border-strong:rgba(255,255,255,.17);
+  --text:#EDEFF2;--text-2:#9AA4B1;--text-3:#6E7887;
   --profit:#2DD4A7;--profit-soft:rgba(45,212,167,.12);
   --brand:#01E377;--brand-soft:rgba(1,227,119,.12);
   --amber:#E7B15A;--amber-soft:rgba(231,177,90,.12);
@@ -346,6 +346,20 @@ body{background-image:var(--bg-grad);background-attachment:fixed;background-repe
 .frow .fsec:first-child{border-top:0;padding-top:0}
 
 ::selection{background:var(--brand-soft);color:var(--text)}
+
+/* hub do menu */
+.mgrp{font-size:10.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-3);margin:20px 0 9px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mtile{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:13px 13px 14px;transition:transform .14s,border-color .18s}
+.mtile:hover{border-color:var(--border-strong)}
+.mtile:active{transform:scale(.97)}
+.mtile .mico{width:32px;height:32px;border-radius:10px;background:var(--surface-3);color:var(--text-2);display:grid;place-items:center;margin-bottom:9px}
+.mtile .mico svg{width:17px;height:17px}
+.mtile b{font-size:13.5px;display:block}
+.mtile small{font-size:11px;color:var(--text-2);line-height:1.35;margin-top:2px}
+
+/* números grandes com aperto de display */
+.hero .big,.coach-num,.kstat .kv,.kpi .val{letter-spacing:-.03em}
 </style>
 </head>
 <body>
@@ -654,11 +668,35 @@ function buildNav(){
   $('#notifBtn').onclick=openNotifs;$('#menuBtn').onclick=openMenu;
 }
 function openMenu(){
-  const all=TABS.concat([{id:'metas',label:'Metas'},{id:'relatorios',label:'Relatórios'},{id:'config',label:'Configurações'}]);
-  const extra=`<button class="navbtn" style="background:var(--surface-3);margin-bottom:8px" onclick="closeModal();openNegoRapida()">Negociação rápida</button>`;
-  const seen=new Set();
-  openModal(`<div class="modal-head"><h3>Menu</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div><div style="margin-top:8px">`+
-    all.filter(t=>(t.id!=='master'||(PROFILE&&PROFILE.is_master))&&t.id!=='caixa'&&t.id!=='recebiveis'&&!seen.has(t.id)&&seen.add(t.id)).map(t=>`<button class="navbtn" style="background:var(--surface-3);margin-bottom:8px" onclick="closeModal();setTab('${t.id}')">${t.label}</button>`).join('')+extra+`</div>`);
+  const ic=i=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">'+i+'</svg>';
+  const T=id=>(TABS.find(x=>x.id===id)||{icon:''}).icon;
+  const I={
+    calc:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M8 15h2M14 11h2v4h-2z"/>',
+    hand:'<path d="M12 22a10 10 0 1 0-10-10"/><path d="M8 12l3 3 5-6"/>',
+    gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+    exit:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+    imei:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/>'
+  };
+  const tile=(icon,label,desc,action)=>`<button class="mtile" onclick="closeModal();${action}"><span class="mico">${ic(icon)}</span><b>${label}</b><small>${desc}</small></button>`;
+  const grp=(t,items)=>`<div class="mgrp">${t}</div><div class="mgrid">${items.filter(Boolean).join('')}</div>`;
+  const go=id=>`setTab('${id}')`;
+  openModal(`<div class="modal-head"><h3>Tudo do BRIQPRO</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  ${grp('Crescer',[
+    tile(T('metas'),'Metas','Alvo do mês e o ritmo pra bater',go('metas')),
+    tile(T('iq'),'Insights','O que seus números já mostram',go('iq')),
+    tile(T('radar'),'Radar','Garimpar boas compras',go('radar')),
+    tile(T('relatorios'),'Relatórios','Exportar PDF, Excel ou CSV',go('relatorios'))])}
+  ${grp('Operar',[
+    tile(T('fornecedores'),'Fornecedores','Parceiros e orçamentos',go('fornecedores')),
+    tile(T('garantias'),'Garantias','Prazos que estão vencendo',go('garantias')),
+    tile(I.calc,'Calculadora','Lucro e preço de venda','openCalc()'),
+    tile(I.hand,'Negociar','Simular a oferta na hora','openNegoRapida()')])}
+  ${grp('Conta',[
+    tile(I.imei,'Consulta IMEI','Checar antes de comprar','openIMEIConsulta()'),
+    tile(I.gear,'Configurações','Perfil, vitrine e backup',go('config')),
+    (PROFILE&&PROFILE.is_master)?tile(T('master'),'Master','Assinantes da plataforma',go('master')):'',
+    tile(I.exit,'Sair','Encerrar a sessão','logout()')])}
+  <div style="height:6px"></div>`);
 }
 function setTab(id){
   if(id==='caixa'){window.bpFinSub='caixa';id='financeiro';}else if(id==='recebiveis'){window.bpFinSub='receber';id='financeiro';}
@@ -778,11 +816,7 @@ function rDash(v){
 
   <div class="sec-title"><h3>Performance de Vendas</h3><span class="hint">tempo real</span></div>
   <div class="card chart-card" style="margin-bottom:12px"><div class="chart-wrap" style="height:230px"><canvas id="cMes"></canvas></div></div>
-  <div class="grid charts">
-    <div class="card chart-card"><h4>Patrimônio mensal</h4><div class="chart-wrap"><canvas id="cPat"></canvas></div></div>
-    <div class="card chart-card"><h4>ROI por categoria</h4><div class="chart-wrap"><canvas id="cRoi"></canvas></div></div>
-    <div class="card chart-card"><h4>Produtos mais lucrativos</h4><div class="chart-wrap"><canvas id="cTop"></canvas></div></div>
-  </div>
+  <div class="card chart-card"><h4>Patrimônio mensal</h4><div class="chart-wrap"><canvas id="cPat"></canvas></div></div>
 
   <div class="sec-title"><h3>Agenda financeira</h3>
     <div style="display:flex;align-items:center;gap:6px"><button class="icon-btn" onclick="setWeek(-1)" style="opacity:${wk===0?'.35':'1'}" aria-label="Semana anterior">\u25c0</button><span style="font-size:11.5px;color:var(--text-2);min-width:92px;text-align:center">${weekLabel}</span><button class="icon-btn" onclick="setWeek(1)" aria-label="Próxima semana">\u25b6</button></div>
@@ -794,22 +828,7 @@ function rDash(v){
     </div>
     <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('entrada')">+ Recebimento</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openAgenda('saida')">+ Gasto</button></div>
   </div>
-  ${inWeek.length?inWeek.map(agItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nada agendado para este período.</div>'}
-
-  <div class="sec-title"><h3>Entradas e saídas</h3><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('aporte')">+ Entrada</button><button class="btn btn-ghost btn-sm" style="width:auto" onclick="openMov('retirada')">+ Saída</button></div></div>
-  ${movs.length?movs.map(movItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nenhum registro de caixa ainda.</div>'}
-
-  <div class="card" style="margin:14px 0 16px;padding:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:8px;align-items:center"><b style="font-size:15px">Faturamento MEI ${anoAtual}</b></div><span style="font-size:12px;color:var(--text-2)">limite R$ 81.000</span></div>
-    <div class="big num" style="font-size:24px;margin-top:8px;letter-spacing:-1px">${brl(meiFat)}</div>
-    <div class="prog" style="margin:8px 0"><i style="width:${meiPct}%;${meiPct>=100?'background:var(--loss)':(meiPct>=80?'background:#FFB020':'')}"></i></div>
-    <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text-2)">${meiPct.toFixed(0)}% do limite</span><span style="${meiPct>=100?'color:var(--loss)':(meiPct>=80?'color:#FFB020':'color:var(--text-2)')};font-weight:700">${meiPct>=100?'Acima do limite!':(meiPct>=80?'Perto do limite':'Dentro do limite')}</span></div>
-  </div>
-
-  <div class="card" style="margin-bottom:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openFixed()">
-    <div><div style="display:flex;gap:8px;align-items:center"><b style="font-size:15px">Despesas fixas</b></div><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${(S.fixed||[]).filter(f=>f.ativo!==false).length} conta(s) recorrente(s) · toque para gerenciar</div></div>
-    <div style="text-align:right"><div class="num down" style="font-size:19px;font-weight:800">${brl(fixedTotal())}</div><div style="font-size:10.5px;color:var(--text-2)">por mês</div></div>
-  </div>`;
+  ${inWeek.length?inWeek.map(agItem).join(''):'<div style="color:var(--text-2);font-size:13px;text-align:center;padding:4px 0 16px">Nada agendado para este período.</div>'}`;
   countUp($('#hb'),ps.lucro);countUp($('#hpat'),s.patrimonio);drawCharts(s);
 }
 function ctheme(){const c=getComputedStyle(document.documentElement);return{grid:c.getPropertyValue('--border').trim(),text:c.getPropertyValue('--text-2').trim(),profit:c.getPropertyValue('--profit').trim(),brand:c.getPropertyValue('--brand').trim(),amber:c.getPropertyValue('--amber').trim(),loss:c.getPropertyValue('--loss').trim(),surface:c.getPropertyValue('--surface').trim()};}
@@ -1772,6 +1791,10 @@ function rFinResumo(v){
   const cur=bpMesTotais(mk),ant=bpMesTotais(mkPrev);
   const rs=recvStats();const aReceber=rs.areceber+rs.atrasado;
   const aPagar=(S.payables||[]).filter(p=>!p.pago).reduce((a,p)=>a+numf(p.valor),0);
+  const anoAtual=new Date().getFullYear();const MEI_LIM=81000;
+  const meiFat=(S.products||[]).reduce((a,p)=>{const d=derive(p);return (d.vendido&&d.sale.data_venda&&String(d.sale.data_venda).slice(0,4)==anoAtual)?a+d.receita:a;},0);
+  const meiPct=Math.min(100,meiFat/MEI_LIM*100);
+  const fixAtivas=(S.fixed||[]).filter(f=>f.ativo!==false).length;
   const byC={};(S.products||[]).forEach(p=>{const d=derive(p);if(d.vendido){const c=(d.sale.canal_venda||'Não informado');byC[c]=(byC[c]||0)+d.lucroLiq;}});
   const canais=Object.entries(byC).sort((a,b)=>b[1]-a[1]);const maxC=Math.max(1,...canais.map(c=>Math.abs(c[1])));
   v.innerHTML=`<div class="grid kpis" style="grid-template-columns:repeat(2,1fr)">
@@ -1781,7 +1804,18 @@ function rFinResumo(v){
     <div class="card kpi"><div class="lab">A pagar</div><div class="val num ${aPagar>0?'down':''}">${brl(aPagar)}</div><div style="margin-top:6px;font-size:11.5px;color:var(--text-3)">em aberto</div></div>
   </div>
   <div class="sec-title"><h3>Lucro por canal de venda</h3></div>
-  <div class="card">${canais.length?canais.map(([c,l])=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0"><span style="font-size:13px;flex:0 0 108px">${esc(c)}</span><div class="prog" style="flex:1"><i style="width:${Math.round(Math.abs(l)/maxC*100)}%;${l<0?'background:var(--loss)':''}"></i></div><b class="num ${l>=0?'up':'down'}" style="font-size:13px;flex:0 0 auto">${brl(l)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem vendas ainda. O canal é registrado ao salvar cada venda.</p>'}</div>`;
+  <div class="card">${canais.length?canais.map(([c,l])=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0"><span style="font-size:13px;flex:0 0 108px">${esc(c)}</span><div class="prog" style="flex:1"><i style="width:${Math.round(Math.abs(l)/maxC*100)}%;${l<0?'background:var(--loss)':''}"></i></div><b class="num ${l>=0?'up':'down'}" style="font-size:13px;flex:0 0 auto">${brl(l)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem vendas ainda. O canal é registrado ao salvar cada venda.</p>'}</div>
+  <div class="sec-title"><h3>Compromissos do mês</h3></div>
+  <div class="card" style="padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:10px" onclick="openFixed()">
+    <div><b style="font-size:15px">Despesas fixas</b><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${fixAtivas} conta(s) recorrente(s) · toque para gerenciar</div></div>
+    <div style="text-align:right;flex-shrink:0"><div class="num down" style="font-size:19px;font-weight:800">${brl(fixedTotal())}</div><div style="font-size:10.5px;color:var(--text-2)">por mês</div></div>
+  </div>
+  <div class="card" style="padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Faturamento MEI ${anoAtual}</b><span style="font-size:12px;color:var(--text-2)">limite R$ 81.000</span></div>
+    <div class="big num" style="font-size:24px;margin-top:8px">${brl(meiFat)}</div>
+    <div class="prog" style="margin:8px 0"><i style="width:${meiPct}%;${meiPct>=100?'background:var(--loss)':(meiPct>=80?'background:var(--amber)':'')}"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text-2)">${meiPct.toFixed(0)}% do limite</span><span style="${meiPct>=100?'color:var(--loss)':(meiPct>=80?'color:var(--amber)':'color:var(--text-2)')};font-weight:700">${meiPct>=100?'Acima do limite!':(meiPct>=80?'Perto do limite':'Dentro do limite')}</span></div>
+  </div>`;
 }
 function rPagar(v){
   const t=todayISO();const list=(S.payables||[]).slice().sort((a,b)=>String(a.vencimento||'9999').localeCompare(String(b.vencimento||'9999')));
