@@ -519,6 +519,30 @@ body.bp-priv .num:not(input){filter:blur(7px);user-select:none}
 .est-bgs i{width:16px;height:16px;border-radius:50%;border:1px solid rgba(128,128,128,.4)}
 .eb-original{background:conic-gradient(#999 25%,#ddd 0 50%,#999 0 75%,#ddd 0)}.eb-branco{background:#fff}.eb-cinza{background:#E3E7EB}.eb-marca{background:linear-gradient(135deg,#0E3B2A,#01E377)}.eb-escuro{background:#15181c}
 </style>
+<style id="bp-fin7">
+.vi-prog{margin-top:12px}.vi-prog span{display:block;font-size:12px;color:var(--text-2);margin-top:6px}
+.vi-items{padding:6px 14px!important;margin-top:8px}
+.vi-it{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--border)}
+.vi-st{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border-strong);background:transparent;display:grid;place-items:center;font-size:14px;font-weight:800;flex-shrink:0;cursor:pointer;color:var(--text-3)}
+.vi-it.ok .vi-st{background:var(--brand);border-color:var(--brand);color:#03170C}
+.vi-it.prob .vi-st{background:var(--amber);border-color:var(--amber);color:#1a1200}
+.vi-t{font-size:14px;line-height:1.35;padding-top:4px;cursor:pointer}
+.vi-it.pend .vi-t{color:var(--text-2)}
+.vi-obs{margin-top:8px;padding:9px 11px;font-size:14px}
+.vi-rm{width:26px;height:26px;border-radius:50%;background:transparent;color:var(--text-3);font-size:17px;flex-shrink:0;cursor:pointer}
+.vi-media{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.vi-m{min-width:0}.vi-m .input{margin-top:5px;padding:7px 9px;font-size:12.5px}
+.vi-mbox{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--surface-3)}
+.vi-img{width:100%;height:100%;background:center/cover no-repeat}
+.vi-mbox video{width:100%;height:100%;object-fit:cover;display:block;background:#000}
+.vi-play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:20px;text-shadow:0 2px 8px rgba(0,0,0,.6);pointer-events:none}
+.vi-up{position:absolute;inset:0;background:rgba(0,0,0,.55);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center}
+.vi-mbox>button{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:14px;display:grid;place-items:center}
+.vi-media .ct-add{aspect-ratio:1;font-size:11px;text-align:center;padding:4px}
+.vi-signed{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:14px;padding:12px;border-radius:14px;background:var(--brand-soft)}
+.vi-signed span{display:block;font-size:11px;color:var(--text-2)}.vi-signed b{display:block;font-size:13.5px;margin-top:2px;overflow-wrap:anywhere}
+.vi-sig-img{display:block;max-width:240px;width:100%;margin:12px auto 0;background:#fff;border-radius:12px;padding:6px}
+</style>
 <style id="bp-polish">
 /* profundidade: o gradiente de fundo já existia como token e nunca era usado */
 body{background-image:var(--bg-grad);background-attachment:fixed;background-repeat:no-repeat}
@@ -646,7 +670,7 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:s
 
 /* ============ STATE ============ */
 let USER=null, PROFILE=null;
-const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[],fixed:[],payables:[],trips:[],tripItems:[],budgets:[],tripPlan:[],reservas:[],priceHist:[],interessados:[]};
+const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[],fixed:[],payables:[],trips:[],tripItems:[],budgets:[],tripPlan:[],reservas:[],priceHist:[],interessados:[],vistorias:[]};
 const charts={};
 let filters={status:'todos',q:''};
 let draft=null;
@@ -743,7 +767,7 @@ async function loadAll(){
   try{const [wl,op]=await Promise.all([sb.from('watchlist').select('*').order('created_at',{ascending:false}),sb.from('opportunities').select('*').order('created_at',{ascending:false})]);S.watch=wl.data||[];S.opps=op.data||[];}catch(e){}
   try{S.quotes=(await sb.from('quotes').select('*').order('created_at',{ascending:false})).data||[];}catch(e){}
   try{S.payables=(await sb.from('payables').select('*').order('vencimento',{ascending:true})).data||[];}catch(e){}
-  await refresh('trips');await refresh('budgets');await refresh('reservas');await refresh('prices');await refresh('interessados');
+  await refresh('trips');await refresh('budgets');await refresh('reservas');await refresh('prices');await refresh('interessados');await refresh('vistorias');
 }
 async function refresh(part){
   if(!part||part==='products')S.products=(await sb.from('products').select('*').order('data_compra',{ascending:false})).data||[];
@@ -757,6 +781,7 @@ async function refresh(part){
   if(!part||part==='trips')try{const [tr,ti]=await Promise.all([sb.from('trips').select('*').order('data_ida',{ascending:false}),sb.from('trip_items').select('*').order('created_at',{ascending:true})]);S.trips=tr.data||[];S.tripItems=ti.data||[];}catch(e){}
   if(!part||part==='trips')try{S.tripPlan=(await sb.from('trip_plan').select('*').order('data',{ascending:true})).data||[];}catch(e){}
   if(!part||part==='prices'||part==='products')try{S.priceHist=(await sb.from('price_history').select('*').order('created_at',{ascending:true}).limit(3000)).data||[];}catch(e){}
+  if(!part||part==='vistorias')try{S.vistorias=(await sb.from('vistorias').select('*').order('created_at',{ascending:false}).limit(300)).data||[];}catch(e){}
   if(!part||part==='interessados')try{S.interessados=(await sb.from('interessados').select('*').order('created_at',{ascending:false})).data||[];}catch(e){}
   if(!part||part==='reservas')try{S.reservas=(await sb.from('reservations').select('*').order('created_at',{ascending:false}).limit(100)).data||[];}catch(e){}
   if(!part||part==='budgets')try{S.budgets=(await sb.from('budgets').select('*')).data||[];}catch(e){}
@@ -914,6 +939,7 @@ function openMenu(){
     tile('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>','Avaliar compra','Quanto pagar antes de fechar','openAvaliador()'),
     tile(I.hand,'Negociar','Simular a oferta na hora','openNegoRapida()'),
     tile('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>','Contratos','Contratos de compra e venda','openContratos()'),
+    tile('<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>','Vistorias','Checklists de compra e venda','openVistorias()'),
     tile('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>','Reservas','Sinais pagos pela vitrine','openReservas()'),
     tile('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/>','Cobrar por Pix','QR Code e copia e cola','openPix(0)')])}
   ${grp('Conta',[
@@ -2920,6 +2946,8 @@ function bpCTStart(pid,tipo){
       pg:{valor:d.vendido?d.receita:(numf(p.preco_anunciado)||numf(p.preco_ideal)),forma:sale.forma_pagamento||'Pix',permuta:(sale.permuta_itens||[]).map(x=>x.nome+' ('+brl(x.valor)+')').join(', ')},
       gar:bpGarDias(p.garantia),local:(P.cidade_uf||p.cidade||''),data:sale.data_venda||todayISO(),imeiStatus:p.imei_status||null,imeiData:p.imei_consultado_em||null};
   }
+  const vi=(S.vistorias||[]).filter(x=>x.product_id===pid&&x.tipo===tipo).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)))[0];
+  if(vi)(vi.itens||[]).forEach(it=>{if(it.s==='ok')window.bpCT.chk[it.t]=true;});
   bpCTRender();
 }
 function bpCTCollect(){const C=window.bpCT;if(!C)return;const g=id=>{const e=$('#'+id);return e?e.value.trim():null;};
@@ -3396,6 +3424,7 @@ function openPreparo(pid){const p=S.products.find(x=>x.id===pid);if(!p)return;op
 /* ---------- Detalhe do produto: blocos extras ---------- */
 function bpDetailExtras(p,d){let h='';const rs=(S.reservas||[]).filter(r=>r.product_id===p.id&&bpReservaAtiva(r));
   if(rs.length&&!d.vendido){const r=rs[0];h+=`<div class="nx-line" style="margin-top:14px;cursor:pointer" onclick="openReservas()"><span>${r.status==='confirmada'?'Reservado para':'Reserva pendente de'}</span><b>${esc(r.nome)}</b><b class="num">sinal ${brl(r.valor_sinal)}</b></div>`;}
+  h+=bpViLinha(p);
   const ints=(S.interessados||[]).filter(i=>i.product_id===p.id);
   if(!d.vendido&&ints.length){const pend=bpPendAviso(p.id).length;const best=Math.max(0,...ints.map(i=>numf(i.oferta)));h+=`<div class="nx-line" style="margin-top:14px;cursor:pointer" onclick="${pend?`openAvisar('${p.id}')`:`openInteressados('${p.id}')`}"><span>${ints.length} interessado(s)${best?' · melhor oferta '+brl(best):''}</span><b style="color:var(--brand);text-align:right">${pend?pend+' para avisar':'ver'}</b></div>`;}
   if(!d.vendido&&['comprado','manutencao','preparacao'].includes(p.status))h+=bpPrepCardHTML(p);
@@ -3503,6 +3532,121 @@ async function bpEstSalvar(){const E=window.bpEst;if(!E||!E.proc){toast('Escolha
   catch(e){toast('Erro ao salvar: '+(e.message||e));if(btn){btn.disabled=false;btn.textContent='Salvar no produto';}}}
 document.addEventListener('click',e=>{const b=e.target.closest('.chips .chip');if(!b||!window.bpEst)return;const g=b.parentElement.dataset.group;if(g==='est_fmt'){window.bpEst.fmt=b.dataset.v.startsWith('4:5')?'4:5':'1:1';bpEstRender();}else if(g==='est_selo')bpEstRender();});
 Object.assign(window,{openPrecoHist,bpUsarPreco,openInteressados,bpIntAdd,bpIntAvisar,bpIntDel,openAvisar,bpPrepToggle,bpPrepAdd,openPreparo,openCanais,openEstudio,bpEstSet,bpEstPick,bpEstNova,bpEstBaixar,bpEstSalvar});
+
+/* ===== BLOCO 17: v7 — checklist de compra, vistoria de venda com fotos/vídeos, link para assinatura do comprador ===== */
+const VI_MAX_VIDEO=50*1024*1024;
+const VI_EXTRA_VENDA=['Acessórios conferidos com o comprador'];
+const VI_EXTRA_COMPRA=['Documento de identidade do vendedor conferido','IMEI consultado sem restrição na base oficial (ABR Telecom)','Nota fiscal, caixa ou comprovante de compra apresentado'];
+BP_EXTRA_BTNS.push({t:'Checklist de compra',fn:'openVistCompra'},{t:'Vistoria de venda',fn:'openVistVenda'});
+BP_GRUPOS[2][1].push('Checklist de compra','Vistoria de venda');
+function openVistCompra(pid){openVist(pid,'compra');}
+function openVistVenda(pid){openVist(pid,'venda');}
+function bpViItensPadrao(p,tipo){const base=(VIST[bpCatKey(p)]||VIST.geral).slice();return (tipo==='compra'?base.concat(VI_EXTRA_COMPRA):base.concat(VI_EXTRA_VENDA)).map(t=>({t,s:'pend',obs:''}));}
+function bpViUrl(path){return sb.storage.from('vistorias').getPublicUrl(path).data.publicUrl;}
+function bpViLink(v){return location.origin+'/vistoria?t='+v.token;}
+function bpViStat(v){const I=v.itens||[];return{n:I.length,ok:I.filter(i=>i.s==='ok').length,prob:I.filter(i=>i.s==='prob').length,pend:I.filter(i=>i.s==='pend').length};}
+function bpViDoProduto(pid,tipo){return (S.vistorias||[]).filter(v=>v.product_id===pid&&v.tipo===tipo).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));}
+
+function openVist(pid,tipo,forceNew){
+  const p=S.products.find(x=>x.id===pid);if(!p)return;const L=bpViDoProduto(pid,tipo);let v=forceNew?null:L[0];
+  if(!v){const d=derive(p);const sale=d.sale||{};
+    v={id:null,product_id:pid,tipo,titulo:p.nome,itens:bpViItensPadrao(p,tipo),midias:[],obs:p.observacoes||'',
+      produto:{nome:p.nome,marca:[p.marca,p.modelo].filter(Boolean).join(' '),serie:p.imei||p.numero_serie||'',cor:p.cor||'',condicao:condLabel(p.condicao||'usado'),preco:d.vendido?d.receita:(numf(p.preco_anunciado)||null)},
+      comprador_nome:tipo==='venda'?(sale.comprador||''):'',comprador_tel:tipo==='venda'?(sale.comprador_contato||''):'',token:null,assinado_em:null};}
+  window.bpVi=JSON.parse(JSON.stringify(v));bpViRender();}
+function bpViRender(){const V=window.bpVi;if(!V)return;const p=S.products.find(x=>x.id===V.product_id)||{};const venda=V.tipo==='venda';const st=bpViStat(V);const signed=!!V.assinado_em;
+  const head=`<div class="modal-head"><h3>${venda?'Vistoria de venda':'Checklist de compra'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="font-size:13px;color:var(--text-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.nome||V.titulo||'')}</div>${venda?`<span class="pill" style="flex-shrink:0;background:var(--${signed?'brand-soft':'surface-3'});color:var(--${signed?'brand':'text-2'})">${signed?'Assinada':'Não assinada'}</span>`:''}</div>`;
+  if(signed){openModal(head+`<div class="vi-signed"><div><span>Assinada por</span><b>${esc(V.comprador_nome||'')}</b></div><div><span>Em</span><b>${new Date(V.assinado_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</b></div>${V.hash?`<div><span>Código</span><b>${String(V.hash).slice(0,16).toUpperCase().match(/.{4}/g).join('-')}</b></div>`:''}</div>
+    ${V.assinatura?`<img src="${V.assinatura}" alt="Assinatura do comprador" class="vi-sig-img">`:''}
+    <div style="font-size:12.5px;color:var(--text-2);margin-top:10px">${st.ok} teste(s) aprovado(s)${st.prob?' · '+st.prob+' com observação':''} · ${(V.midias||[]).length} foto(s)/vídeo(s)</div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="window.open('${bpViLink(V)}','_blank')">Abrir página</button><button class="btn btn-primary" id="vi_pdf" onclick="bpViPDF()">Baixar termo em PDF</button></div>
+    <button class="lnk-btn" style="margin-top:12px" onclick="openVist('${V.product_id}','venda',true)">Fazer nova vistoria</button>`);return;}
+  const M=V.midias||[];
+  openModal(head+`
+  <div class="vi-prog"><div class="prog" style="height:7px"><i style="width:${st.n?Math.round((st.ok+st.prob)/st.n*100):0}%"></i></div><span>${st.ok+st.prob} de ${st.n} verificados${st.prob?` · <b class="down">${st.prob} com problema</b>`:''}</span></div>
+  <p style="font-size:12.5px;color:var(--text-3);margin:8px 0 0">Toque para marcar: ✓ funcionando · ! com problema.</p>
+  <div class="card vi-items">${(V.itens||[]).map((it,k)=>`<div class="vi-it ${it.s}"><button class="vi-st" onclick="bpViCycle(${k})" aria-label="Mudar situação">${it.s==='ok'?'✓':it.s==='prob'?'!':''}</button><div style="min-width:0;flex:1"><div class="vi-t" onclick="bpViCycle(${k})">${esc(it.t)}</div>${it.s==='prob'?`<input class="input vi-obs" data-obs="${k}" value="${esc(it.obs||'')}" placeholder="O que foi observado?" oninput="bpViObs(${k},this.value)">`:''}</div><button class="vi-rm" onclick="bpViRmItem(${k})" aria-label="Remover item">×</button></div>`).join('')}
+    <div style="display:flex;gap:8px;margin-top:10px"><input class="input" id="vi_new" placeholder="Outro teste" onkeydown="if(event.key==='Enter'){event.preventDefault();bpViAddItem()}"><button class="btn btn-ghost" style="flex:0 0 auto;width:auto" onclick="bpViAddItem()">Adicionar</button></div></div>
+  <button class="lnk-btn" style="margin-top:8px" onclick="bpViTodosOk()">Marcar pendentes como funcionando</button>
+  <div class="fsub">Fotos e vídeos ${venda?'do produto funcionando':'do produto e do documento'}</div>
+  <div class="vi-media">${M.map((m,k)=>`<div class="vi-m"><div class="vi-mbox">${m.tipo==='video'?`<video src="${esc(m.url||bpViUrl(m.path))}#t=0.5" muted playsinline preload="metadata"></video><span class="vi-play">▶</span>`:`<div class="vi-img" style="background-image:url('${esc(m.url||bpViUrl(m.path))}')"></div>`}${m.up?'<div class="vi-up">Enviando…</div>':''}<button onclick="bpViRmMidia(${k})" aria-label="Remover">×</button></div><input class="input" value="${esc(m.legenda||'')}" placeholder="${m.tipo==='video'?'Ex: testando câmeras':'Legenda'}" oninput="bpViLeg(${k},this.value)"></div>`).join('')}
+    <button class="ct-add" onclick="bpViAdd('foto')">${bpSvg('foto',22)}<span>Tirar foto</span></button>
+    <button class="ct-add" onclick="bpViAdd('video')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg><span>Gravar vídeo</span></button>
+    <button class="ct-add" onclick="bpViAdd('galeria')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M4 16l4-4 4 4 4-6 4 6"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg><span>Da galeria</span></button></div>
+  <p style="font-size:11.5px;color:var(--text-3);margin:6px 0 0">Vídeos de até 50 MB. Prefira vídeos curtos, de 10 a 30 segundos, um para cada teste.</p>
+  <div class="field"><label class="lbl">Acessórios e observações</label><textarea class="input" id="vi_obs" rows="2" placeholder="Ex: acompanha carregador e capinha; bateria 87%" oninput="window.bpVi.obs=this.value">${esc(V.obs||'')}</textarea></div>
+  ${venda?`<div class="fsub">Comprador</div><div class="frow" style="margin-top:6px"><div><label class="lbl">Nome</label><input class="input" id="vi_cn" value="${esc(V.comprador_nome||'')}" oninput="window.bpVi.comprador_nome=this.value"></div><div><label class="lbl">WhatsApp</label><input class="input" id="vi_ct" inputmode="tel" value="${esc(V.comprador_tel||'')}" oninput="window.bpVi.comprador_tel=this.value"></div></div>`:''}
+  <div class="modal-foot">${venda?`<button class="btn btn-ghost" onclick="bpViSalvar()">Salvar</button><button class="btn btn-primary" onclick="bpViCompartilhar()">${V.token&&V.id?'Enviar link':'Gerar link para assinar'}</button>`:`<button class="btn btn-ghost" onclick="bpViAnotar()">Anotar no produto</button><button class="btn btn-primary" onclick="bpViSalvar(true)">Salvar checklist</button>`}</div>`);}
+function bpViCycle(k){const V=window.bpVi;const it=V.itens[k];it.s=it.s==='pend'?'ok':it.s==='ok'?'prob':'pend';if(it.s!=='prob')it.obs='';bpViKeepScroll(bpViRender);if(it.s==='prob')setTimeout(()=>{const e=document.querySelector(`[data-obs="${k}"]`);if(e)e.focus();},60);}
+function bpViObs(k,v){window.bpVi.itens[k].obs=v;}
+function bpViLeg(k,v){window.bpVi.midias[k].legenda=v;}
+function bpViTodosOk(){window.bpVi.itens.forEach(i=>{if(i.s==='pend')i.s='ok';});bpViKeepScroll(bpViRender);}
+function bpViAddItem(){const e=$('#vi_new');const t=e&&e.value.trim();if(!t)return;window.bpVi.itens.push({t,s:'pend',obs:''});bpViKeepScroll(bpViRender);setTimeout(()=>{const n=$('#vi_new');if(n)n.focus();},60);}
+function bpViRmItem(k){window.bpVi.itens.splice(k,1);bpViKeepScroll(bpViRender);}
+function bpViKeepScroll(fn){const m=$('#modal');const y=m?m.scrollTop:0;fn();const m2=$('#modal');if(m2)m2.scrollTop=y;}
+function bpViRow(V){return{id:V.id,product_id:V.product_id,tipo:V.tipo,titulo:V.titulo,produto:V.produto,itens:V.itens,midias:(V.midias||[]).filter(m=>!m.up).map(m=>({path:m.path,tipo:m.tipo,legenda:m.legenda||'',mime:m.mime||''})),obs:(V.obs||'').trim()||null,comprador_nome:(V.comprador_nome||'').trim()||null,comprador_tel:(V.comprador_tel||'').trim()||null,updated_at:new Date().toISOString()};}
+async function bpViEnsure(){const V=window.bpVi;if(V.id)return true;V.id=bpUUID();const r=await sb.from('vistorias').insert(bpViRow(V)).select().single();if(r.error){V.id=null;toast('Erro: '+r.error.message);return false;}V.token=r.data&&r.data.token;await refresh('vistorias');return true;}
+async function bpViSalvar(fechar){const V=window.bpVi;if(!V)return false;if((V.midias||[]).some(m=>m.up)){toast('Aguarde terminar de enviar');return false;}
+  if(!V.id){if(!(await bpViEnsure()))return false;}else{const r=await sb.from('vistorias').update(bpViRow(V)).eq('id',V.id);if(r.error){toast('Erro: '+r.error.message);return false;}await refresh('vistorias');}
+  const cur=(S.vistorias||[]).find(x=>x.id===V.id);if(cur)V.token=cur.token;toast(V.tipo==='compra'?'Checklist salvo':'Vistoria salva');if(fechar)closeModal();else bpViKeepScroll(bpViRender);return true;}
+function bpViAdd(modo){const inp=document.createElement('input');inp.type='file';inp.style.display='none';
+  if(modo==='foto'){inp.accept='image/*';inp.setAttribute('capture','environment');}else if(modo==='video'){inp.accept='video/*';inp.setAttribute('capture','environment');}else{inp.accept='image/*,video/*';inp.multiple=true;}
+  inp.onchange=async()=>{const files=Array.from(inp.files||[]);inp.remove();if(!files.length)return;if(!(await bpViEnsure()))return;const V=window.bpVi;
+    for(const f of files){const isV=(f.type||'').startsWith('video');if(isV&&f.size>VI_MAX_VIDEO){toast(`Vídeo de ${(f.size/1048576).toFixed(0)} MB passa do limite de 50 MB. Grave um trecho menor.`);continue;}
+      let blob=f,mime=f.type||(isV?'video/mp4':'image/jpeg');if(!isV){try{blob=await compressBlob(f,1600,.82);mime='image/jpeg';}catch(e){}}
+      const ext=isV?((mime.split('/')[1]||'mp4').replace('quicktime','mov').replace('x-matroska','mkv')):'jpg';const path=`${USER.id}/${V.id}/${bpUUID()}.${ext}`;
+      const m={path,tipo:isV?'video':'foto',legenda:'',mime,url:URL.createObjectURL(blob),up:true};V.midias.push(m);bpViKeepScroll(bpViRender);
+      const up=await sb.storage.from('vistorias').upload(path,blob,{contentType:mime,upsert:false});
+      if(up.error){V.midias.splice(V.midias.indexOf(m),1);toast('Falha no envio: '+up.error.message);}else{m.up=false;}
+      bpViKeepScroll(bpViRender);}
+    const r=await sb.from('vistorias').update(bpViRow(V)).eq('id',V.id);if(r.error)toast('Erro ao salvar: '+r.error.message);else await refresh('vistorias');};
+  document.body.appendChild(inp);inp.click();}
+async function bpViRmMidia(k){const V=window.bpVi;const m=V.midias[k];if(!m)return;if(m.up){toast('Aguarde o envio terminar');return;}V.midias.splice(k,1);bpViKeepScroll(bpViRender);
+  try{await sb.storage.from('vistorias').remove([m.path]);}catch(e){}if(V.id){await sb.from('vistorias').update(bpViRow(V)).eq('id',V.id);await refresh('vistorias');}}
+async function bpViCompartilhar(){const V=window.bpVi;const st=bpViStat(V);if(!st.ok){toast('Marque pelo menos um teste como funcionando');return;}if(!(V.midias||[]).length&&!confirm('Enviar a vistoria sem fotos ou vídeos?'))return;
+  if(!(await bpViSalvar()))return;const cur=(S.vistorias||[]).find(x=>x.id===V.id)||V;const link=bpViLink(cur);const p=S.products.find(x=>x.id===V.product_id)||{};
+  const msg=`Oi${V.comprador_nome?' '+String(V.comprador_nome).split(' ')[0]:''}! Segue a vistoria do ${p.nome||V.titulo}, com as fotos e vídeos dos testes feitos antes da entrega. Confira e assine por aqui:\n${link}`;
+  openModal(`<div class="modal-head"><h3>Link da vistoria</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <p style="font-size:13px;color:var(--text-2);margin:0">O comprador abre o link, confere os testes, fotos e vídeos e assina com o dedo na tela. Você recebe uma notificação quando ele assinar.</p>
+  <div class="share-link">${esc(link)}</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCopy('${esc(link)}')">Copiar</button><button class="btn btn-ghost" onclick="window.open('${esc(link)}','_blank')">Abrir</button><button class="btn btn-primary" onclick="window.open('${bpWa(V.comprador_tel,msg).replace(/'/g,'%27')}','_blank')">WhatsApp</button></div>
+  <button class="lnk-btn" style="margin-top:12px" onclick="openVist('${V.product_id}','venda')">Voltar à vistoria</button>`);}
+async function bpViAnotar(){const V=window.bpVi;const p=S.products.find(x=>x.id===V.product_id);if(!p)return;const st=bpViStat(V);if(!(await bpViSalvar()))return;
+  const probs=V.itens.filter(i=>i.s==='prob').map(i=>i.t+(i.obs?' ('+i.obs+')':''));const linha=`Checklist de compra ${fmtDate(todayISO())}: ${st.ok} ok${probs.length?'; problemas: '+probs.join('; '):''}.`;
+  const obs=((p.observacoes||'')+(p.observacoes?'\n':'')+linha).slice(0,2000);const r=await sb.from('products').update({observacoes:obs}).eq('id',p.id);if(r.error){toast('Erro: '+r.error.message);return;}p.observacoes=obs;toast('Anotado no produto');openDetail(p.id);}
+async function openVistorias(){await refresh('vistorias');const L=(S.vistorias||[]).slice().sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+  openModal(`<div class="modal-head"><h3>Vistorias e checklists</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  ${L.length?`<div class="up-list" style="margin-top:0">${L.map(v=>{const st=bpViStat(v);const venda=v.tipo==='venda';return `<div class="up-row" style="cursor:pointer" onclick="${v.product_id?`openVist('${v.product_id}','${v.tipo}')`:''}"><div style="min-width:0;flex:1"><div class="up-t"><span class="pill" style="font-size:10px;margin-right:6px;background:var(--${venda?'brand':'amber'}-soft);color:var(--${venda?'brand':'amber'})">${venda?'Venda':'Compra'}</span>${esc(v.titulo||'Produto')}</div><div class="up-o">${fmtDate(String(v.created_at).slice(0,10))} · ${st.ok}/${st.n} ok${st.prob?' · '+st.prob+' problema(s)':''} · ${(v.midias||[]).length} mídia(s)</div></div><b style="flex-shrink:0;font-size:12px;color:var(--${venda?(v.assinado_em?'brand':'amber'):'text-3'})">${venda?(v.assinado_em?'assinada':'aguardando'):''}</b></div>`;}).join('')}</div>`:'<div class="empty" style="padding:24px 10px"><b>Nenhuma vistoria ainda</b><p>Abra um produto e toque em “Checklist de compra” ou “Vistoria de venda”.</p></div>'}`);}
+async function bpViPDF(){const V=window.bpVi;if(!V||!V.assinado_em)return;if(!window.jspdf){toast('Gerador de PDF indisponível');return;}const btn=$('#vi_pdf');if(btn){btn.disabled=true;btn.textContent='Gerando…';}
+  try{const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210,H=297,M=18,CW=W-2*M;let y=M;const P=PROFILE||{};const pr=V.produto||{};
+    const ensure=h=>{if(y+h>H-18){doc.addPage();y=M;}};
+    const txt=(t,size,style,color,gap)=>{doc.setFont('helvetica',style||'normal');doc.setFontSize(size);doc.setTextColor(...(color||[40,44,50]));const lh=size*0.43;doc.splitTextToSize(String(t),CW).forEach(l=>{ensure(lh);doc.text(l,M,y);y+=lh;});y+=(gap==null?2:gap);};
+    const cod=(V.hash?String(V.hash).slice(0,16).toUpperCase().match(/.{4}/g).join('-'):'');
+    doc.setFillColor(1,227,119);doc.rect(0,0,W,3,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(90,96,105);doc.text(String(P.business_name||P.full_name||'BRIQPRO').toUpperCase(),M,y);if(cod)doc.text('Código '+cod,W-M,y,{align:'right'});y+=9;
+    doc.setFontSize(14);doc.setTextColor(15,18,22);doc.text('TERMO DE VISTORIA E ENTREGA',W/2,y,{align:'center'});y+=9;
+    txt('PRODUTO',10,'bold',[15,18,22],1);txt([pr.nome,pr.marca?'marca/modelo '+pr.marca:'',pr.cor?'cor '+pr.cor:'',pr.serie?'IMEI/série '+pr.serie:'',pr.condicao?'condição: '+String(pr.condicao).toLowerCase():'',pr.preco?'valor '+brl(pr.preco):''].filter(Boolean).join(' · '),9.6,'normal',null,3);
+    txt('VENDEDOR',10,'bold',[15,18,22],1);txt([P.full_name,P.cpf?'CPF/CNPJ '+P.cpf:'',P.cidade_uf].filter(Boolean).join(' · ')||'—',9.6,'normal',null,3);
+    txt('COMPRADOR',10,'bold',[15,18,22],1);txt([V.comprador_nome,V.comprador_cpf?'CPF '+V.comprador_cpf:''].filter(Boolean).join(' · '),9.6,'normal',null,3);
+    txt('TESTES REALIZADOS ANTES DA ENTREGA',10,'bold',[15,18,22],1.5);(V.itens||[]).filter(i=>i.s!=='pend').forEach(i=>txt((i.s==='ok'?'[OK] ':'[OBS] ')+i.t+(i.s==='prob'&&i.obs?' — '+i.obs:''),9.4,'normal',i.s==='prob'?[160,90,20]:null,0.8));y+=2;
+    if(V.obs){txt('ACESSÓRIOS E OBSERVAÇÕES',10,'bold',[15,18,22],1);txt(V.obs,9.4,'normal',null,3);}
+    const vids=(V.midias||[]).filter(m=>m.tipo==='video');if(vids.length){txt('VÍDEOS DOS TESTES',10,'bold',[15,18,22],1);vids.forEach((m,k)=>txt(`Vídeo ${k+1}${m.legenda?': '+m.legenda:''}`,9.2,'normal',null,0.8));txt('Os vídeos ficam disponíveis no link da vistoria: '+bpViLink(V),8.6,'normal',[90,96,105],3);}
+    const temProb=(V.itens||[]).some(i=>i.s==='prob');
+    txt('DECLARAÇÃO DO COMPRADOR',10,'bold',[15,18,22],1);txt(bpViDeclaracao(temProb),9.4,'normal',null,4);
+    ensure(48);if(V.assinatura){const sz=await bpImgSize(V.assinatura);const hh=22,ww=Math.min(80,hh*sz.w/sz.h);doc.addImage(V.assinatura,'PNG',M,y,ww,hh);}y+=24;doc.setDrawColor(120);doc.line(M,y,M+90,y);y+=5;
+    txt(`${V.comprador_nome||''}${V.comprador_cpf?' · CPF '+V.comprador_cpf:''}`,9,'bold',[15,18,22],1);
+    txt(`Assinado eletronicamente em ${new Date(V.assinado_em).toLocaleString('pt-BR')}${V.assinado_ip?' · IP '+V.assinado_ip:''}${cod?' · código '+cod:''}. Página de vistoria: ${bpViLink(V)}`,7.8,'normal',[110,116,125],1);
+    const fotos=(V.midias||[]).filter(m=>m.tipo==='foto');
+    if(fotos.length){doc.addPage();y=M;txt('ANEXO – FOTOS DO PRODUTO ANTES DA ENTREGA',11,'bold',[15,18,22],4);const gap=6,cw=(CW-gap)/2,ch=cw*0.75;let col=0;
+      for(const m of fotos){let src;try{const r=await fetch(m.url||bpViUrl(m.path));src=await bpFileToDataURL(await r.blob());}catch(e){continue;}if(col===0)ensure(ch+12);const x=M+col*(cw+gap);const sz=await bpImgSize(src);let ww=cw,hh=cw*sz.h/sz.w;if(hh>ch){hh=ch;ww=ch*sz.w/sz.h;}
+        doc.setFillColor(244,246,250);doc.rect(x,y,cw,ch,'F');doc.addImage(src,'JPEG',x+(cw-ww)/2,y+(ch-hh)/2,ww,hh);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(60,64,70);if(m.legenda)doc.text(doc.splitTextToSize(m.legenda,cw)[0],x,y+ch+4.5);
+        if(col===1){y+=ch+10;col=0;}else col=1;}}
+    const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(130,136,145);doc.text(`Termo de vistoria${cod?' · código '+cod:''}`,M,H-9);doc.text(`Página ${i} de ${n}`,W-M,H-9,{align:'right'});}
+    const blob=doc.output('blob');const name='vistoria-'+String(pr.nome||'produto').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'-').toLowerCase()+'.pdf';if(!bpShareFile(blob,name,'Termo de vistoria'))bpDownload(blob,name);}
+  catch(e){toast('Erro ao gerar: '+(e.message||e));}if(btn){btn.disabled=false;btn.textContent='Baixar termo em PDF';}}
+function bpViDeclaracao(temProb){return 'Declaro que recebi o produto descrito neste termo, que conferi os testes registrados, com as fotos e os vídeos do funcionamento feitos antes da entrega, e que o produto está em perfeito estado de funcionamento e conservação, de acordo com o descrito'+(temProb?', incluídas as observações registradas':'')+', nada tendo a reclamar quanto ao estado verificado na entrega.';}
+function bpViLinha(p){const L=bpViDoProduto(p.id,'venda');const v=L[0];if(!v||!v.id)return '';return `<div class="nx-line" style="margin-top:14px;cursor:pointer" onclick="openVist('${p.id}','venda')"><span>Vistoria de venda</span><b style="color:var(--${v.assinado_em?'brand':'amber'})">${v.assinado_em?'assinada por '+esc(String(v.comprador_nome||'').split(' ')[0]):'aguardando assinatura'}</b></div>`;}
+Object.assign(window,{openVist,openVistCompra,openVistVenda,bpViCycle,bpViObs,bpViLeg,bpViTodosOk,bpViAddItem,bpViRmItem,bpViSalvar,bpViAdd,bpViRmMidia,bpViCompartilhar,bpViAnotar,openVistorias,bpViPDF});
 
 /* ============ BOOT ============ */
 $('#authBtn').onclick=doAuth;
