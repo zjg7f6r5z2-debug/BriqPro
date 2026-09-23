@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="robots" content="noindex"/>
+<title>Viagem</title>
+<link rel="icon" href="icon-192.png"/>
+<style>
+:root{--bg:#07090B;--surface:#0F1316;--surface2:#161B1F;--border:#232A2F;--text:#EEF2F0;--text2:#9AA6A0;--text3:#6B7670;--brand:#01E377;--loss:#F07B7B;--amber:#F2B84B}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:640px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(30px + env(safe-area-inset-bottom))}
+.cover{position:relative;height:230px;border-radius:20px;overflow:hidden;background:#15332a center/cover no-repeat;display:flex;flex-direction:column;justify-content:space-between;padding:16px;color:#fff}
+.cover.noimg{background-image:radial-gradient(120% 90% at 100% 0%,rgba(1,227,119,.35),transparent 60%),linear-gradient(160deg,#17493a,#10231d 70%)}
+.cover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,0) 40%,rgba(0,0,0,.75))}
+.cover>*{position:relative;z-index:1}
+.chip{display:inline-block;background:rgba(0,0,0,.45);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.cb{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.cb h1{font-size:26px;margin:0;line-height:1.1;letter-spacing:-.5px;overflow-wrap:anywhere}
+.cb .dt{font-size:13px;opacity:.88;margin-top:5px}
+.cnt{text-align:right;flex-shrink:0}.cnt b{display:block;font-size:38px;line-height:1;letter-spacing:-1px}.cnt span{font-size:12px;opacity:.88}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;margin-top:12px}
+h2{font-size:16px;margin:24px 0 0;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+h2 small{font-size:12px;color:var(--text3);font-weight:500}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.g3 span{display:block;font-size:11.5px;color:var(--text2)}.g3 b{display:block;font-size:17px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}.row:last-child{border-bottom:0;padding-bottom:0}.row:first-child{padding-top:0}
+.row .t{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row .s{font-size:12px;color:var(--text2);margin-top:2px}
+.up{color:var(--brand)}.down{color:var(--loss)}
+.btn{border:0;border-radius:11px;padding:9px 13px;font-weight:700;font-size:13px;cursor:pointer;background:var(--brand);color:#03170C;flex-shrink:0}
+.btn.gh{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.day{font-size:12px;font-weight:700;color:var(--brand);text-transform:capitalize;margin:14px 0 4px}.day:first-child{margin-top:0}
+.it{display:flex;gap:12px;padding:8px 0}.it .h{flex:0 0 46px;font-size:13px;font-weight:700;color:var(--text2);padding-top:1px}
+.it b{font-size:14px}.it a{display:block;font-size:12.5px;color:var(--brand);text-decoration:none;margin-top:2px}.it .n{font-size:12.5px;color:var(--text2);margin-top:3px;white-space:pre-wrap}
+.state{text-align:center;color:var(--text2);padding:90px 20px}
+.skel{height:230px;border-radius:20px;background:linear-gradient(90deg,var(--surface),var(--surface2),var(--surface));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.foot{text-align:center;color:var(--text3);font-size:11px;margin-top:30px}.foot b{color:var(--brand)}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
+.ov.open{display:flex}.sheet{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+@media(min-width:620px){.ov{align-items:center}.sheet{border-radius:20px}}
+.qr{display:flex;justify-content:center;background:#fff;border-radius:14px;padding:14px;margin:14px 0;min-height:228px;align-items:center}
+textarea{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:11px;padding:10px;font-size:12px;word-break:break-all;resize:none}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="skel"></div></div>
+<div class="ov" id="ov" onclick="if(event.target===this)closeSheet()"><div class="sheet" id="sheet"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://qkrrngvedziaijpnssjw.supabase.co';
+const SUPABASE_KEY='sb_publishable_VLkwob7uJicbpe4FFRa3xw_fgN4Kv0W';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false}});
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0;};
+const brl=v=>'R$ '+num(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>iso(new Date());
+const fdate=s=>s?String(s).slice(8,10)+'/'+String(s).slice(5,7)+'/'+String(s).slice(0,4):'';
+const diff=(a,b)=>Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
+function addMonths(s,k){if(!s)return null;const [y,m,d]=s.split('-').map(Number);const last=new Date(y,m+k,0).getDate();return iso(new Date(y,m-1+k,Math.min(d,last)));}
+function calc(it){
+  if(it.forma==='parcelado'){const n=Math.max(1,parseInt(it.parcelas)||1),pg=Math.min(n,Math.max(0,parseInt(it.parcelas_pagas)||0)),vp=num(it.valor_parcela),e=num(it.entrada),ep=e>0&&!!it.entrada_paga;
+    const total=e+n*vp,pago=(ep?e:0)+pg*vp;return{total,pago,falta:Math.max(0,total-pago),parc:true,n,pg,vp,e,ep};}
+  const total=num(it.valor),pago=it.pago?total:0;return{total,pago,falta:total-pago,parc:false};}
+function split(all,itens,acertos){const bal={},pagou={},parte={};all.forEach(n=>{bal[n]=0;pagou[n]=0;parte[n]=0;});
+  itens.forEach(i=>{const c=calc(i);if(!(c.total>0))return;const payer=all.includes(i.pago_por)?i.pago_por:'Você';let div=Array.isArray(i.divisao)&&i.divisao.length?i.divisao.filter(n=>all.includes(n)):all;if(!div.length)div=all;const sh=c.total/div.length;pagou[payer]+=c.total;bal[payer]+=c.total;div.forEach(n=>{parte[n]+=sh;bal[n]-=sh;});});
+  (acertos||[]).forEach(a=>{if(bal[a.de]!=null)bal[a.de]+=num(a.valor);if(bal[a.para]!=null)bal[a.para]-=num(a.valor);});
+  const deb=all.filter(n=>bal[n]<-0.009).map(n=>({n,v:-bal[n]})).sort((a,b)=>b.v-a.v),cre=all.filter(n=>bal[n]>0.009).map(n=>({n,v:bal[n]})).sort((a,b)=>b.v-a.v);const tr=[];let i=0,j=0;
+  while(i<deb.length&&j<cre.length){const x=Math.min(deb[i].v,cre[j].v);if(x>0.009)tr.push({de:deb[i].n,para:cre[j].n,valor:Math.round(x*100)/100});deb[i].v-=x;cre[j].v-=x;if(deb[i].v<0.01)i++;if(cre[j].v<0.01)j++;}
+  return{bal,pagou,parte,tr};}
+/* Pix */
+function pf(id,v){v=String(v);return id+String(v.length).padStart(2,'0')+v;}
+function crc(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++){c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF;}}return c.toString(16).toUpperCase().padStart(4,'0');}
+function asc(s,m){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9 .\-]/g,'').replace(/\s+/g,' ').trim().toUpperCase().slice(0,m);}
+function pixKey(p){const k=String(p.chave||'').trim();if(p.tipo==='telefone'){let d=k.replace(/\D/g,'');if(!d.startsWith('55'))d='55'+d;return '+'+d;}if(p.tipo==='cpf')return k.replace(/\D/g,'');if(p.tipo==='email')return k.toLowerCase();return k;}
+function pixCode(p,valor,desc){let mai=pf('00','br.gov.bcb.pix')+pf('01',pixKey(p));const d=asc(desc,30);if(d&&(mai.length+d.length+4)<=99)mai+=pf('02',d);
+  let s=pf('00','01')+pf('26',mai)+pf('52','0000')+pf('53','986')+(valor>0?pf('54',(Math.round(valor*100)/100).toFixed(2)):'')+pf('58','BR')+pf('59',asc(p.nome,25)||'RECEBEDOR')+pf('60',asc(String(p.cidade||'').split(/[\/,-]/)[0],15)||'BRASIL')+pf('62',pf('05','***'))+'6304';return s+crc(s);}
+function loadQR(cb){if(window.QRCode){cb();return;}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js';s.onload=cb;document.body.appendChild(s);}
+let DATA=null;
+function nm(n){return n==='Você'?(DATA.organizador||'Organizador'):n;}
+function openPay(k){const t=DATA._tr[k];if(!t||!DATA.pix)return;const code=pixCode(DATA.pix,t.valor,'Viagem '+DATA.viagem.nome);
+  $('#sheet').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">Pagar ${esc(nm(t.para))}</b><button class="btn gh" onclick="closeSheet()">Fechar</button></div>
+  <div style="font-size:13px;color:var(--text2);margin-top:6px">${esc(nm(t.de))} → ${esc(nm(t.para))} · viagem ${esc(DATA.viagem.nome)}</div>
+  <div style="font-size:28px;font-weight:800;margin-top:8px">${brl(t.valor)}</div>
+  <div class="qr" id="qr"></div><textarea id="code" rows="4" readonly>${esc(code)}</textarea>
+  <button class="btn" style="width:100%;margin-top:10px;padding:13px" onclick="copyCode(this)">Copiar Pix copia e cola</button>`;
+  $('#ov').classList.add('open');loadQR(()=>{new QRCode($('#qr'),{text:code,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});});}
+function copyCode(b){const t=$("#code");try{navigator.clipboard.writeText(t.value);}catch(e){t.select();document.execCommand("copy");}b.textContent='Copiado!';setTimeout(()=>b.textContent='Copiar Pix copia e cola',1500);}
+function closeSheet(){$('#ov').classList.remove('open');}
+function render(){
+  const V=DATA.viagem,itens=DATA.itens||[],rot=DATA.roteiro||[];const all=['Você',...(V.participantes||[]).filter(Boolean)];
+  let total=0,pago=0;itens.forEach(i=>{const c=calc(i);total+=c.total;pago+=c.pago;});
+  const h=today();let cnt='';if(V.data_ida){const volta=V.data_volta||V.data_ida;if(h<V.data_ida){const n=diff(h,V.data_ida);cnt=`<div class="cnt"><b>${n}</b><span>${n===1?'dia para ir':'dias para ir'}</span></div>`;}else if(h<=volta){cnt=`<div class="cnt"><b>Dia ${diff(V.data_ida,h)+1}</b><span>de ${diff(V.data_ida,volta)+1} · boa viagem</span></div>`;}else cnt='<div class="cnt"><span>concluída</span></div>';}
+  const dias=V.data_ida&&V.data_volta?diff(V.data_ida,V.data_volta)+1:0;const datas=V.data_ida?(fdate(V.data_ida).slice(0,5)+(V.data_volta?' – '+fdate(V.data_volta):''))+(dias?' · '+dias+' dias':''):'';
+  let html=`<div class="cover${V.capa_url?'':' noimg'}"${V.capa_url?` style="background-image:url('${encodeURI(V.capa_url)}')"`:''}><div>${V.tipo?`<span class="chip">${esc(V.tipo)}</span>`:''}</div><div class="cb"><div style="min-width:0"><h1>${esc(V.nome)}</h1><div class="dt">${esc(datas)}${datas?' · ':''}organizada por ${esc(DATA.organizador||'')}</div></div>${cnt}</div></div>`;
+  html+=`<div class="card"><div class="g3"><div><span>Total da viagem</span><b>${brl(total)}</b></div><div><span>${all.length>1?'Por pessoa':'Já pago'}</span><b>${all.length>1?brl(total/all.length):brl(pago)}</b></div><div><span>Falta pagar</span><b class="${total-pago>0.009?'down':''}">${brl(total-pago)}</b></div></div></div>`;
+  if(all.length>1){const s=split(all,itens,V.acertos);DATA._tr=s.tr;
+    html+=`<h2>Quem deve quanto<small>${all.length} pessoas</small></h2><div class="card">${all.map(n=>`<div class="row"><div style="min-width:0;flex:1"><div class="t">${esc(nm(n))}</div><div class="s">pagou ${brl(s.pagou[n])} · parte ${brl(s.parte[n])}</div></div><b class="${s.bal[n]>0.009?'up':(s.bal[n]<-0.009?'down':'')}" style="flex-shrink:0;font-size:14px">${s.bal[n]>0.009?'recebe '+brl(s.bal[n]):(s.bal[n]<-0.009?'deve '+brl(-s.bal[n]):'em dia')}</b></div>`).join('')}</div>`;
+    html+=s.tr.length?`<div class="card">${s.tr.map((t,k)=>`<div class="row"><div style="min-width:0;flex:1;font-size:13.5px"><b>${esc(nm(t.de))}</b> paga <b>${brl(t.valor)}</b> para <b>${esc(nm(t.para))}</b></div>${DATA.pix&&t.para==='Você'?`<button class="btn" onclick="openPay(${k})">Pagar por Pix</button>`:''}</div>`).join('')}</div>`:`<div class="card" style="color:var(--brand);font-weight:600;font-size:13.5px">Tudo acertado entre vocês.</div>`;}
+  if(rot.length){const g={};rot.forEach(r=>{(g[r.data||'']=g[r.data||'']||[]).push(r);});
+    html+=`<h2>Roteiro</h2><div class="card">${Object.keys(g).map(k=>{let lab='Sem data';if(k){const d=new Date(k+'T12:00:00');const n=V.data_ida?diff(V.data_ida,k)+1:0;lab=(n>=1&&(!V.data_volta||k<=V.data_volta)?'Dia '+n+' · ':'')+d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'});}
+      return `<div class="day">${esc(lab)}</div>${g[k].map(r=>`<div class="it"><div class="h">${esc(r.hora||'—')}</div><div style="min-width:0;flex:1"><b>${esc(r.titulo)}</b>${r.local?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.local)}">${esc(r.local)}</a>`:''}${r.notas?`<div class="n">${esc(r.notas)}</div>`:''}${r.anexo?'<div class="n">📎 anexo com o organizador</div>':''}</div></div>`).join('')}`;}).join('')}</div>`;}
+  if(itens.length){html+=`<h2>Custos<small>${itens.length} item(ns)</small></h2><div class="card">${itens.map(i=>{const c=calc(i);let st;if(c.parc){st=(c.e>0?'entrada '+brl(c.e)+' + ':'')+c.pg+' de '+c.n+' parcelas';}else st=i.pago?'pago':'a pagar';
+      const quem=all.length>1?' · '+(nm(all.includes(i.pago_por)?i.pago_por:'Você'))+' pagou':'';return `<div class="row"><div style="min-width:0;flex:1"><div class="t">${esc(i.descricao||i.tipo||'Custo')}</div><div class="s">${esc(i.tipo||'')}${i.descricao&&i.tipo?' · ':''}${esc(st)}${esc(quem)}</div></div><b style="flex-shrink:0;font-size:14px">${brl(c.total)}</b></div>`;}).join('')}</div>`;}
+  html+=`<div class="foot">Atualiza sozinho quando o organizador muda algo · feito com <b>BRIQPRO</b></div>`;
+  $('#app').innerHTML=html;document.title=V.nome+' — Viagem';
+}
+(async function(){
+  const tok=new URLSearchParams(location.search).get('t');
+  const fail=m=>{$('#app').innerHTML='<div class="state"><h2 style="color:var(--brand);justify-content:center">BRIQPRO</h2><p>'+esc(m)+'</p></div>';};
+  if(!tok||!/^[0-9a-f-]{36}$/i.test(tok)){fail('Link inválido. Peça o link da viagem ao organizador.');return;}
+  try{const r=await sb.rpc('viagem_publica',{tok});if(r.error)throw r.error;DATA=r.data;}catch(e){fail('Não foi possível carregar agora. Tente de novo em instantes.');return;}
+  if(!DATA){fail('Esta viagem não está mais compartilhada.');return;}
+  render();
+})();
+window.openPay=openPay;window.closeSheet=closeSheet;window.copyCode=copyCode;
+</script>
+</body>
+</html>

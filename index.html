@@ -429,6 +429,22 @@ body.bp-priv .num:not(input){filter:blur(7px);user-select:none}
 .fech-prev canvas{width:100%;height:auto;border-radius:14px;display:block}
 .split-tr{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border);font-size:13px;flex-wrap:wrap}
 </style>
+<style id="bp-fin4">
+.ct-choose{display:grid;gap:10px;margin-top:16px}
+.ct-choose button{text-align:left;background:var(--surface-3);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;color:var(--text)}
+.ct-choose b{display:block;font-size:14.5px}.ct-choose span{display:block;font-size:12.5px;color:var(--text-2);margin-top:3px;line-height:1.4}
+.hist-card{margin-top:14px;padding:14px!important}
+.hist-sug{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--brand-soft);font-size:13px}
+.plan{padding:14px 16px!important}
+.plan-day{font-size:12px;font-weight:700;color:var(--brand);text-transform:capitalize;margin:14px 0 2px}.plan-day:first-child{margin-top:0}
+.plan-it{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}.plan-it:last-child{border-bottom:0}
+.plan-h{flex:0 0 44px;font-family:'Space Grotesk';font-weight:700;font-size:13.5px;color:var(--text-2);padding-top:1px}
+.plan-it b{font-size:14px}.plan-loc{display:block;font-size:12.5px;color:var(--brand);text-decoration:none;margin-top:2px;overflow-wrap:anywhere}
+.plan-n{font-size:12.5px;color:var(--text-2);margin-top:3px;white-space:pre-wrap}
+.plan-act{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap}.plan-act .lnk-btn{font-size:12px}
+.plan-file{font-size:13px;color:var(--text-2);min-height:4px}
+.share-link{margin-top:12px;padding:11px 12px;border-radius:12px;background:var(--surface-3);font-size:12.5px;word-break:break-all;font-family:'Space Grotesk'}
+</style>
 <style id="bp-polish">
 /* profundidade: o gradiente de fundo já existia como token e nunca era usado */
 body{background-image:var(--bg-grad);background-attachment:fixed;background-repeat:no-repeat}
@@ -556,7 +572,7 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:s
 
 /* ============ STATE ============ */
 let USER=null, PROFILE=null;
-const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[],fixed:[],payables:[],trips:[],tripItems:[],budgets:[]};
+const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[],fixed:[],payables:[],trips:[],tripItems:[],budgets:[],tripPlan:[],reservas:[]};
 const charts={};
 let filters={status:'todos',q:''};
 let draft=null;
@@ -653,7 +669,7 @@ async function loadAll(){
   try{const [wl,op]=await Promise.all([sb.from('watchlist').select('*').order('created_at',{ascending:false}),sb.from('opportunities').select('*').order('created_at',{ascending:false})]);S.watch=wl.data||[];S.opps=op.data||[];}catch(e){}
   try{S.quotes=(await sb.from('quotes').select('*').order('created_at',{ascending:false})).data||[];}catch(e){}
   try{S.payables=(await sb.from('payables').select('*').order('vencimento',{ascending:true})).data||[];}catch(e){}
-  await refresh('trips');await refresh('budgets');
+  await refresh('trips');await refresh('budgets');await refresh('reservas');
 }
 async function refresh(part){
   if(!part||part==='products')S.products=(await sb.from('products').select('*').order('data_compra',{ascending:false})).data||[];
@@ -665,6 +681,8 @@ async function refresh(part){
   if(!part||part==='fixed')S.fixed=(await sb.from('fixed_expenses').select('*').order('dia',{ascending:true})).data||[];
   if(!part||part==='negos')S.negos=(await sb.from('negotiations').select('*').order('updated_at',{ascending:false})).data||[];
   if(!part||part==='trips')try{const [tr,ti]=await Promise.all([sb.from('trips').select('*').order('data_ida',{ascending:false}),sb.from('trip_items').select('*').order('created_at',{ascending:true})]);S.trips=tr.data||[];S.tripItems=ti.data||[];}catch(e){}
+  if(!part||part==='trips')try{S.tripPlan=(await sb.from('trip_plan').select('*').order('data',{ascending:true})).data||[];}catch(e){}
+  if(!part||part==='reservas')try{S.reservas=(await sb.from('reservations').select('*').order('created_at',{ascending:false}).limit(100)).data||[];}catch(e){}
   if(!part||part==='budgets')try{S.budgets=(await sb.from('budgets').select('*')).data||[];}catch(e){}
   if(!part||part==='notifs')S.notifs=(await sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(40)).data||[];
 }
@@ -817,7 +835,8 @@ function openMenu(){
     tile(T('garantias'),'Garantias','Prazos que estão vencendo',go('garantias')),
     tile(I.calc,'Calculadora','Lucro e preço de venda','openCalc()'),
     tile(I.hand,'Negociar','Simular a oferta na hora','openNegoRapida()'),
-    tile('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>','Contratos','Contratos de venda assinados','openContratos()'),
+    tile('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>','Contratos','Contratos de compra e venda','openContratos()'),
+    tile('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>','Reservas','Sinais pagos pela vitrine','openReservas()'),
     tile('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/>','Cobrar por Pix','QR Code e copia e cola','openPix(0)')])}
   ${grp('Conta',[
     tile(I.imei,'Consulta IMEI','Checar antes de comprar','openIMEIConsulta()'),
@@ -878,7 +897,7 @@ function rDash(v){
   if(oppExc>0)alerts+=alertBar('warn',oppExc+' oportunidade(s) com preço excelente no Radar',"setTab('radar')");
   const pgVenc=(S.payables||[]).filter(p=>!p.pago&&p.vencimento&&p.vencimento<today).length;
   const tVenc=bpTripVencidas();if(tVenc>0)alerts+=alertBar('warn',tVenc+' pagamento(s) de viagem vencido(s)',"setTab('viagens')");
-  alerts+=bpBudgetAlerts();
+  alerts+=bpBudgetAlerts()+bpReservaAlerts();
   if(pgVenc>0)alerts+=alertBar('warn',pgVenc+' conta(s) a pagar vencida(s)',"window.bpFinSub='pagar';setTab('financeiro')");
   // agenda
   if(window.bpWeek===undefined)window.bpWeek=0;const wk=window.bpWeek;
@@ -1147,10 +1166,11 @@ function openDetail(id){
     <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><span class="badge ${stClass(p.status)}" style="position:static">${stLabel(p.status)}</span><span class="score sc-${p.opportunity_label}" style="position:static">Score ${p.opportunity_score} · ${p.opportunity_label}</span>${p.link_anuncio?`<a href="${esc(p.link_anuncio)}" target="_blank" style="font-size:12.5px">anúncio ↗</a>`:''}</div>
     ${p.cover_url?`<div class="detail-imgs" style="margin-top:12px"><img src="${esc(p.cover_url)}" loading="lazy" decoding="async" alt=""></div>`:'<div style="height:6px"></div>'}
     <div class="dt-grid">${dt('Categoria',esc(p.categoria||'—'))}${dt('Condição',condLabel(p.condicao))}${dt('Marca/Modelo',esc((p.marca||'—')+(p.modelo?' '+p.modelo:'')))}${dt('Comprado',fmtDate(p.data_compra)+' · '+esc(p.origem||''))}${dt('Preço pago',brl(p.preco_pago))}${dt('Valor mercado',brl(p.valor_mercado))}${dt(d.vendido?'Custo total':'Dias em estoque',d.vendido?brl(d.custo):d.dias+'d')}${dt('Custo total',brl(d.custo))}</div>
-    ${(p.numero_serie||p.imei)?`<p style="font-size:12.5px;color:var(--text-2)">${p.numero_serie?'S/N: '+esc(p.numero_serie):''} ${p.imei?' · IMEI: '+esc(p.imei):''}</p>`:''}
+    ${(p.numero_serie||p.imei)?`<p style="font-size:12.5px;color:var(--text-2)">${p.numero_serie?'S/N: '+esc(p.numero_serie):''} ${p.imei?' · IMEI: '+esc(p.imei):''}${bpImeiBadge(p)}</p>`:''}
     ${p.observacoes?`<p style="font-size:13.5px;color:var(--text-2);background:var(--surface-3);padding:11px;border-radius:11px">${esc(p.observacoes)}</p>`:''}
     <div style="display:flex;justify-content:space-between;margin-top:14px"><b style="font-size:13.5px">Despesas</b><b class="num">${brl(d.despesas)}</b></div>
     ${exps.length?exps.map(e=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><span>${esc(e.descricao)} <small style="color:var(--text-3)">${fmtDate(e.data)}</small></span><b class="num">${brl(e.valor)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem despesas.</p>'}
+    ${bpDetailExtras(p,d)}
     ${saleB}
     <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${p.status!=='vendido'?`<button class="btn btn-ghost" style="width:auto" onclick="toggleVitrineProd('${p.id}')">${p.na_vitrine?'Tirar da vitrine':'Pôr na vitrine'}</button>`:''}${(p.imei||p.numero_serie)?`<button class="btn btn-ghost" style="width:auto" onclick="openIMEI('${p.id}')">IMEI</button>`:''}<button class="btn btn-ghost" style="width:auto" onclick="openContrato('${p.id}')">Contrato</button><button class="btn btn-ghost" style="width:auto" onclick="bpPixProduto('${p.id}')">Pix</button>${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="bpPosVenda('${p.id}')">Pós-venda</button>`:''}<button class="btn btn-ghost" style="width:auto" onclick="openEtiqueta('${p.id}')">Etiqueta</button>${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button><button class="btn btn-ghost" style="width:auto" onclick="reciboWhats('${p.id}')">Recibo no Zap</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
 }
@@ -1412,7 +1432,7 @@ function expCSV(){const head=['Produto','Categoria','Status','Score','Custo','Ve
 /* ============ CONFIG ============ */
 function rConfig(v){
   v.innerHTML=`<div class="card"><h3 style="font-size:16px">Perfil</h3><div class="frow"><div><label class="lbl">Nome</label><input class="input" id="p_name" value="${esc(PROFILE.full_name||'')}"></div><div><label class="lbl">Negócio</label><input class="input" id="p_biz" value="${esc(PROFILE.business_name||'')}"></div><div><label class="lbl">Telefone</label><input class="input" id="p_phone" value="${esc(PROFILE.phone||'')}"></div><div><label class="lbl">Dias p/ "parado"</label><input class="input num" type="number" id="p_stale" value="${S.settings.stale_days||30}"></div></div><div style="margin-top:14px"><button class="btn btn-primary" style="width:auto" onclick="saveProfile()">Salvar perfil</button></div></div>
-  ${bpSellerCard()}
+  ${bpSellerCard()}${bpReservaCard()}
   <div class="card" style="margin-top:14px"><h3 style="font-size:16px">Vitrine pública 🛍️</h3>
   <p style="font-size:12.5px;color:var(--text-2);margin:6px 0 12px">Um catálogo do seu estoque por link, pra mandar no WhatsApp. Mostra só foto, nome, condição e preço — <b>nunca seus custos</b>.</p>
   <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px"><input type="checkbox" id="vit_on" ${PROFILE.vitrine_ativa?'checked':''} onchange="toggleVitrineLoja(this.checked)"> Vitrine ativa</label>
@@ -1832,7 +1852,6 @@ function imeiResultHTML(ch){if(!ch.ok)return `<p style="font-size:13px;color:var
   <p style="font-size:12px;color:var(--text-2);margin:10px 0 8px">Confira roubo/bloqueio nas fontes:</p>
   <div style="display:flex;gap:8px;flex-wrap:wrap"><a href="https://www.consultaaparelhoimpedido.com.br" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="width:auto">Consulta oficial (ABR Telecom)</a><a href="${ch.links.info}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="width:auto">Dados do aparelho</a><a href="${ch.links.busca}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="width:auto">Pesquisar na web</a></div>
   <p style="font-size:11px;color:var(--text-3);margin-top:8px">Na consulta oficial, cole o IMEI acima (toque e segure no número para copiar).</p>`;}
-function openIMEI(id){const p=S.products.find(x=>x.id===id);if(!p)return;const ch=imeiCheck(p.imei||p.numero_serie);openModal(`<div class="modal-head"><h3>Verificação de IMEI</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>${imeiResultHTML(ch)}`);}
 function openIMEIConsulta(){openModal(`<div class="modal-head"><h3>Consulta de IMEI</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div><p style="font-size:12.5px;color:var(--text-2);margin:4px 0 10px">Digite o IMEI (disque *#06# no aparelho) para validar e consultar antes de comprar.</p><div style="display:flex;gap:8px"><input class="input num" id="imq" inputmode="numeric" placeholder="15 dígitos" oninput="bpIMEIrun()"><button class="btn btn-ghost" style="width:auto;flex:0 0 auto;padding:0 14px" onclick="bpIMEIcolar()">Colar</button></div><div id="imres" style="margin-top:14px"></div>`);setTimeout(()=>{const el=$('#imq');if(el)el.focus();},80);}
 function bpIMEIcolar(){if(!navigator.clipboard||!navigator.clipboard.readText){toast('Cole manualmente no campo');return;}navigator.clipboard.readText().then(t=>{const el=$('#imq');if(el){el.value=t;bpIMEIrun();}}).catch(()=>toast('Cole manualmente no campo'));}
 function bpIMEIrun(){const v=($('#imq')&&$('#imq').value)||'';const w=$('#imres');if(!w)return;const d=v.replace(/\D/g,'');if(d.length<10){w.innerHTML='<div style="font-size:12.5px;color:var(--text-3)">Digite ao menos 10 dígitos…</div>';return;}w.innerHTML=imeiResultHTML(imeiCheck(d));} 
@@ -2272,13 +2291,6 @@ function bpTripCount(t){
 function bpNextTrip(){return (S.trips||[]).map(t=>({t,c:bpTripCount(t)})).filter(x=>x.c&&x.c.fase!=='depois').sort((a,b)=>String(a.t.data_ida).localeCompare(String(b.t.data_ida)))[0]||null;}
 
 /* ---------- Viagens: telas ---------- */
-function tripCoverHTML(t,edit){
-  const cd=bpTripCount(t);const dias=bpTripDias(t);
-  return `<div class="trip-cover${t.capa_url?'':' no-img'}" style="${t.capa_url?`background-image:url('${esc(t.capa_url)}')`:''}">
-    <div class="tc-top">${t.tipo?`<span class="tc-chip">${esc(t.tipo)}</span>`:'<span></span>'}${edit?`<button class="tc-edit" onclick="openTrip('${t.id}')" aria-label="Editar viagem">${PEN_SVG}</button>`:''}</div>
-    <div class="tc-bottom"><div style="min-width:0"><h2>${esc(t.nome)}</h2><div class="tc-dates">${[bpTripDatas(t),dias?dias+' dias':''].filter(Boolean).join(' · ')||'sem datas definidas'}</div></div>${cd&&cd.big?`<div class="tc-count"><b>${esc(cd.big)}</b><span>${esc(cd.lab)}</span></div>`:(cd?`<div class="tc-count"><span>${esc(cd.txt)}</span></div>`:'')}</div>
-  </div>`;
-}
 function tripCard(t){
   const c=tripCalc(t.id);const pct=c.total>0?Math.round(c.pago/c.total*100):0;const cd=bpTripCount(t);
   const meta=[t.tipo,bpTripDatas(t),(!t.capa_url&&cd)?cd.txt:''].filter(Boolean).join(' · ');
@@ -2529,16 +2541,6 @@ const FOTO_SUG={celular:['Frente com a tela ligada','Traseira','Laterais e botõ
 function bpCatKey(p){const c=String((p&&p.categoria)||'').toLowerCase();if(c.includes('celular')||c.includes('iphone')||c.includes('smart'))return 'celular';if(c.includes('video')||c.includes('game')||c.includes('console'))return 'videogame';if(c.includes('note')||c.includes('laptop'))return 'notebook';if(c==='tv'||c.includes('televis'))return 'tv';return 'geral';}
 function bpGarDias(txt){const s=String(txt||'').toLowerCase();const n=parseInt(s.replace(/\D/g,''))||0;if(!n)return 0;if(s.includes('ano'))return n*365;if(s.includes('mes')||s.includes('mês'))return n*30;return n;}
 
-function openContrato(pid){
-  const p=S.products.find(x=>x.id===pid);if(!p)return;
-  sb.from('contracts').select('*').eq('product_id',pid).order('created_at',{ascending:false}).then(r=>{
-    const list=(r&&r.data)||[];if(!list.length){bpCTStart(pid);return;}
-    openModal(`<div class="modal-head"><h3>Contratos</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
-    <div style="font-size:13px;color:var(--text-2);margin-bottom:6px">${esc(p.nome)}</div>
-    ${list.map(bpCTRow).join('')}
-    <div class="modal-foot"><button class="btn btn-primary" onclick="bpCTStart('${pid}')">Novo contrato</button></div>`);});
-}
-function bpCTRow(c){const d=c.dados||{};return `<div class="up-row"><div style="min-width:0;flex:1"><div class="up-t">${esc((d.comprador&&d.comprador.nome)||'Comprador')} · ${esc((d.produto&&d.produto.descricao)||'')}</div><div class="up-o">${esc(c.codigo)} · ${fmtDate(String(c.created_at).slice(0,10))} · ${brl(d.pagamento&&d.pagamento.valor)}</div></div><button class="btn btn-ghost btn-sm" style="flex:0 0 auto;width:auto" onclick="bpCTOpenPDF('${c.id}')">PDF</button></div>`;}
 async function openContratos(){const r=await sb.from('contracts').select('*').order('created_at',{ascending:false}).limit(60);const list=(r&&r.data)||[];
   openModal(`<div class="modal-head"><h3>Contratos de venda</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
   ${list.length?list.map(bpCTRow).join(''):'<div class="empty" style="padding:24px 10px"><b>Nenhum contrato ainda</b><p>Abra um produto e toque em “Contrato”, ou gere logo após registrar a venda.</p></div>'}`);}
@@ -2551,66 +2553,6 @@ function bpAfterSale(pid){const p=S.products.find(x=>x.id===pid);if(!p)return;
   <p style="font-size:14px;color:var(--text-2);margin:0">Quer gerar agora o contrato de ${esc(p.nome)}, com fotos da entrega e assinatura das duas partes?</p>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Agora não</button><button class="btn btn-primary" onclick="bpCTStart('${pid}')">Gerar contrato</button></div>`);}
 
-function bpCTStart(pid){
-  const p=S.products.find(x=>x.id===pid);if(!p)return;const d=derive(p);const sale=d.sale||{};const P=PROFILE||{};const ck=bpCatKey(p);
-  window.bpCT={pid,sid:sale.id||null,step:1,ck,fotos:[],chk:{},decl:false,obsVist:'',sigV:null,sigC:null,
-    v:{nome:P.full_name||'',cpf:P.cpf||'',endereco:P.endereco||'',cidade:P.cidade_uf||'',tel:P.phone||''},
-    c:{nome:sale.comprador||'',cpf:'',tel:sale.comprador_contato||'',endereco:''},
-    pr:{descricao:p.nome||'',marca:[p.marca,p.modelo].filter(Boolean).join(' '),serie:p.imei||p.numero_serie||'',cor:p.cor||'',condicao:condLabel(p.condicao||'usado'),acessorios:'',estado:p.observacoes||''},
-    pg:{valor:d.vendido?d.receita:(numf(p.preco_anunciado)||numf(p.preco_ideal)),forma:sale.forma_pagamento||'Pix',permuta:(sale.permuta_itens||[]).map(x=>x.nome+' ('+brl(x.valor)+')').join(', ')},
-    gar:bpGarDias(p.garantia),local:(P.cidade_uf||p.cidade||''),data:sale.data_venda||todayISO()};
-  bpCTRender();
-}
-function bpCTCollect(){const C=window.bpCT;if(!C)return;const g=id=>{const e=$('#'+id);return e?e.value.trim():null;};
-  if(C.step===1){['nome','cpf','endereco','cidade','tel'].forEach(k=>{const v=g('ctv_'+k);if(v!==null)C.v[k]=v;});['nome','cpf','tel','endereco'].forEach(k=>{const v=g('ctc_'+k);if(v!==null)C.c[k]=v;});
-    ['descricao','marca','serie','cor','condicao','acessorios','estado'].forEach(k=>{const v=g('ctp_'+k);if(v!==null)C.pr[k]=v;});
-    const val=g('ctg_valor');if(val!==null)C.pg.valor=numf(val);const f=g('ctg_forma');if(f!==null)C.pg.forma=f;const gd=g('ctg_gar');if(gd!==null)C.gar=Math.max(0,parseInt(gd)||0);const lc=g('ctg_local');if(lc!==null)C.local=lc;const dt=g('ctg_data');if(dt)C.data=dt;}
-  if(C.step===2){document.querySelectorAll('[data-leg]').forEach(el=>{const f=C.fotos[+el.dataset.leg];if(f)f.legenda=el.value.trim();});}
-  if(C.step===3){document.querySelectorAll('[data-vk]').forEach(el=>{C.chk[el.dataset.vk]=el.checked;});const o=$('#ct_obs');if(o)C.obsVist=o.value.trim();const dc=$('#ct_decl');if(dc)C.decl=dc.checked;}
-  if(C.step===4){['V','C'].forEach(k=>{const cv=$('#sig'+k);if(cv&&!cv._empty)C['sig'+k]=cv.toDataURL('image/png');});}
-}
-function bpCTGo(step){const C=window.bpCT;bpCTCollect();
-  if(step>C.step){
-    if(C.step===1){if(!C.v.nome){toast('Informe o nome do vendedor');return;}if(!C.c.nome){toast('Informe o nome do comprador');return;}if(!(C.pg.valor>0)){toast('Informe o valor da venda');return;}}
-    if(C.step===3&&!C.decl){toast('O comprador precisa confirmar a declaração de vistoria');return;}
-  }
-  C.step=step;bpCTRender();const m=$('#modal');if(m)m.scrollTop=0;}
-function bpCTSteps(n){return `<div class="ct-steps">${['Dados','Fotos','Vistoria','Assinar'].map((s,i)=>`<div class="${i+1===n?'on':(i+1<n?'done':'')}"><b>${i+1}</b><span>${s}</span></div>`).join('')}</div>`;}
-function bpCTRender(){
-  const C=window.bpCT;if(!C)return;const head=`<div class="modal-head"><h3>Contrato de venda</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>${bpCTSteps(C.step)}`;
-  const inp=(id,lbl,val,extra)=>`<div${extra&&extra.full?' class="full"':''}><label class="lbl">${lbl}</label><input class="input" id="${id}" value="${esc(val||'')}"${extra&&extra.attrs?' '+extra.attrs:''}></div>`;
-  if(C.step===1){
-    openModal(head+`<div class="fsub">Vendedor</div><div class="frow" style="margin-top:6px">${inp('ctv_nome','Nome completo',C.v.nome,{full:1})}${inp('ctv_cpf','CPF ou CNPJ',C.v.cpf,{attrs:'inputmode="numeric"'})}${inp('ctv_tel','Telefone',C.v.tel,{attrs:'inputmode="tel"'})}${inp('ctv_endereco','Endereço',C.v.endereco,{full:1})}${inp('ctv_cidade','Cidade/UF',C.v.cidade)}</div>
-    <div class="fsub">Comprador</div><div class="frow" style="margin-top:6px">${inp('ctc_nome','Nome completo',C.c.nome,{full:1})}${inp('ctc_cpf','CPF',C.c.cpf,{attrs:'inputmode="numeric"'})}${inp('ctc_tel','WhatsApp',C.c.tel,{attrs:'inputmode="tel"'})}${inp('ctc_endereco','Endereço (opcional)',C.c.endereco,{full:1})}</div>
-    <div class="fsub">Produto</div><div class="frow" style="margin-top:6px">${inp('ctp_descricao','Descrição',C.pr.descricao,{full:1})}${inp('ctp_marca','Marca e modelo',C.pr.marca)}${inp('ctp_serie','IMEI ou nº de série',C.pr.serie)}${inp('ctp_cor','Cor',C.pr.cor)}${inp('ctp_condicao','Condição',C.pr.condicao)}${inp('ctp_acessorios','Acompanha',C.pr.acessorios,{full:1,attrs:'placeholder="Ex: carregador, cabo, 2 controles, caixa"'})}<div class="full"><label class="lbl">Estado do produto / avarias</label><textarea class="input" id="ctp_estado" rows="2" placeholder="Ex: pequeno risco na lateral, bateria 86%">${esc(C.pr.estado)}</textarea></div></div>
-    <div class="fsub">Venda</div><div class="frow" style="margin-top:6px">${inp('ctg_valor','Valor (R$)',C.pg.valor?(+C.pg.valor).toFixed(2):'',{attrs:'type="number" step="0.01" inputmode="decimal"'})}${inp('ctg_forma','Forma de pagamento',C.pg.forma)}${inp('ctg_gar','Garantia do vendedor (dias)',String(C.gar),{attrs:'type="number" min="0" inputmode="numeric"'})}${inp('ctg_data','Data da venda',C.data,{attrs:'type="date"'})}${inp('ctg_local','Cidade da assinatura',C.local,{full:1})}</div>
-    <div class="modal-foot"><button class="btn btn-primary" onclick="bpCTGo(2)">Continuar para fotos</button></div>`);
-  }else if(C.step===2){
-    const sug=FOTO_SUG[C.ck]||FOTO_SUG.geral;const p=S.products.find(x=>x.id===C.pid);
-    openModal(head+`<p style="font-size:13px;color:var(--text-2);margin:0 0 10px">Fotografe o produto na hora da entrega, na frente do comprador. As fotos vão para o Anexo I do contrato com data e hora.</p>
-    <div class="sugs" style="margin:0 0 12px">${sug.map(s=>`<span class="chip" style="cursor:default">${esc(s)}</span>`).join('')}</div>
-    <div class="ct-photos">${C.fotos.map((f,k)=>`<div class="ct-ph"><div class="ct-img" style="background-image:url('${f.url}')"><button onclick="bpCTRmFoto(${k})" aria-label="Remover foto">×</button></div><input class="input" data-leg="${k}" value="${esc(f.legenda||'')}" placeholder="Legenda"></div>`).join('')}
-      <button class="ct-add" onclick="bpCTAddFoto(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Câmera</span></button>
-      <button class="ct-add" onclick="bpCTAddFoto(false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Galeria</span></button></div>
-    ${p&&p.cover_url&&!C.fotos.some(f=>f.cover)?`<button class="lnk-btn" style="margin-top:10px" onclick="bpCTCover()">Incluir a foto do cadastro do produto</button>`:''}
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(1)">Voltar</button><button class="btn btn-primary" onclick="bpCTGo(3)">${C.fotos.length?'Continuar para vistoria':'Continuar sem fotos'}</button></div>`);
-  }else if(C.step===3){
-    const items=VIST[C.ck]||VIST.geral;
-    openModal(head+`<p style="font-size:13px;color:var(--text-2);margin:0 0 8px">Passe o aparelho com o app para o comprador marcar o que ele testou.</p>
-    <div class="card" style="padding:6px 14px">${items.map((it,k)=>`<label class="chk vk"><input type="checkbox" data-vk="${esc(it)}" ${C.chk[it]?'checked':''}><span>${esc(it)}</span></label>`).join('')}</div>
-    <button class="lnk-btn" style="margin-top:8px" onclick="document.querySelectorAll('[data-vk]').forEach(e=>e.checked=true)">Marcar todos</button>
-    <div class="field"><label class="lbl">Observações da vistoria (opcional)</label><textarea class="input" id="ct_obs" rows="2" placeholder="Ex: comprador testou por 15 min, jogou uma partida online">${esc(C.obsVist)}</textarea></div>
-    <label class="chk ct-decl"><input type="checkbox" id="ct_decl" ${C.decl?'checked':''}><span>Eu, comprador, testei o produto, conferi as fotos da entrega e declaro que o recebo em perfeito estado de funcionamento e conservação, conforme descrito.</span></label>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(2)">Voltar</button><button class="btn btn-primary" onclick="bpCTGo(4)">Continuar para assinaturas</button></div>`);
-  }else if(C.step===4){
-    openModal(head+`<details class="ct-read"><summary>Ler o contrato completo</summary><div class="ct-text">${bpCTClauses(C,{}).map(s=>`<p><b>${esc(s.t)}</b></p>${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}`).join('')}</div></details>
-    <div class="sig-box"><div class="sig-top"><b>Assinatura do vendedor</b><button class="lnk-btn" onclick="bpSigClear('sigV')">Limpar</button></div><canvas id="sigV" class="sig-pad"></canvas><div class="sig-name">${esc(C.v.nome)}</div></div>
-    <div class="sig-box"><div class="sig-top"><b>Assinatura do comprador</b><button class="lnk-btn" onclick="bpSigClear('sigC')">Limpar</button></div><canvas id="sigC" class="sig-pad"></canvas><div class="sig-name">${esc(C.c.nome)}</div></div>
-    <p style="font-size:11.5px;color:var(--text-3);margin:8px 0 0">Assine com o dedo dentro do quadro.</p>
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(3)">Voltar</button><button class="btn btn-primary" id="ct_gen" onclick="bpCTGerar()">Gerar contrato em PDF</button></div>`);
-    setTimeout(()=>{bpSigPad('sigV',C.sigV);bpSigPad('sigC',C.sigC);},30);
-  }
-}
 async function bpCTAddFoto(cam){const C=window.bpCT;bpCTCollect();const inp=document.createElement('input');inp.type='file';inp.accept='image/*';if(cam)inp.setAttribute('capture','environment');else inp.multiple=true;inp.style.display='none';
   inp.onchange=async()=>{const files=Array.from(inp.files||[]);for(const f of files){if(C.fotos.length>=12){toast('Máximo de 12 fotos');break;}try{const b=await compressBlob(f,1400,.78);C.fotos.push({blob:b,url:URL.createObjectURL(b),legenda:'',ts:new Date().toISOString()});}catch(e){}}inp.remove();bpCTRender();};
   document.body.appendChild(inp);inp.click();}
@@ -2625,26 +2567,6 @@ function bpSigPad(id,prev){const cv=$('#'+id);if(!cv)return;const r=cv.getBoundi
   cv.onpointerup=cv.onpointercancel=cv.onpointerleave=()=>{down=false;};}
 function bpSigClear(id){const cv=$('#'+id);if(!cv)return;cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv._empty=true;const C=window.bpCT;if(C)C[id]=null;}
 
-function bpCTClauses(C,meta){
-  const v=C.v,c=C.c,pr=C.pr,pg=C.pg;const cid=C.local||v.cidade||'';
-  const items=(VIST[C.ck]||VIST.geral).filter(it=>C.chk[it]);
-  const ident=(x,papel)=>`${papel}: ${x.nome||'—'}${x.cpf?', inscrito(a) no CPF/CNPJ sob o nº '+x.cpf:''}${x.endereco?', residente em '+x.endereco:''}${papel==='VENDEDOR'&&x.cidade?', '+x.cidade:''}${x.tel?', telefone '+x.tel:''}.`;
-  const obj=[pr.descricao,pr.marca?'marca/modelo '+pr.marca:'',pr.cor?'cor '+pr.cor:'',pr.serie?'IMEI/número de série '+pr.serie:'',pr.condicao?'condição: '+String(pr.condicao).toLowerCase():''].filter(Boolean).join(', ');
-  const S1=[
-    {t:'IDENTIFICAÇÃO DAS PARTES',p:[ident(v,'VENDEDOR'),ident(c,'COMPRADOR'),'As partes acima identificadas têm entre si justo e contratado o presente Contrato Particular de Compra e Venda de Bem Móvel Usado, que se regerá pelas cláusulas a seguir.']},
-    {t:'CLÁUSULA 1ª – DO OBJETO',p:[`O VENDEDOR vende ao COMPRADOR o seguinte bem: ${obj}. Acompanha(m) o bem: ${pr.acessorios||'nenhum acessório adicional'}. Estado declarado do bem: ${pr.estado||'sem avarias declaradas'}.`]},
-    {t:'CLÁUSULA 2ª – DO PREÇO E DO PAGAMENTO',p:[`O preço total da venda é de ${brl(pg.valor)} (${bpExtenso(pg.valor)}), pago por meio de ${pg.forma||'forma combinada entre as partes'}${pg.permuta?', incluída a entrega, pelo COMPRADOR, do(s) seguinte(s) item(ns) em permuta: '+pg.permuta:''}. Com o recebimento integral do valor, o VENDEDOR dá ao COMPRADOR plena e geral quitação.`]},
-    {t:'CLÁUSULA 3ª – DA PROPRIEDADE E PROCEDÊNCIA',p:['O VENDEDOR declara que o bem é de sua legítima propriedade, de procedência lícita, livre e desembaraçado de quaisquer ônus, dívidas ou restrições, que não possui registro de roubo, furto ou extravio, nem bloqueio de operadora ou de conta vinculada, responsabilizando-se civil e criminalmente pela veracidade desta declaração.']},
-    {t:'CLÁUSULA 4ª – DA ENTREGA, VISTORIA E ACEITE',p:[`O bem é entregue ao COMPRADOR em ${fmtDate(C.data)}, que declara tê-lo examinado e testado pessoalmente no ato da entrega, recebendo-o em perfeito estado de funcionamento e conservação, conforme descrito neste contrato e registrado no Anexo I (registro fotográfico da entrega), nada tendo a reclamar quanto ao estado do bem verificado nessa ocasião.`,
-      items.length?'Itens testados e aprovados pelo COMPRADOR: '+items.join('; ')+'.':'O COMPRADOR declara ter testado o funcionamento geral do bem.',
-      C.obsVist?'Observações da vistoria: '+C.obsVist:''].filter(Boolean)},
-    {t:'CLÁUSULA 5ª – DA GARANTIA',p:[C.gar>0?`O VENDEDOR concede garantia de ${C.gar} (${bpExtenso(C.gar).replace(/ reais?$/,'')}) dias, contados da entrega, exclusivamente para defeitos de funcionamento preexistentes à entrega. A garantia não cobre danos ocorridos após a entrega, tais como quedas, contato com líquidos, oxidação, mau uso, desgaste natural da bateria, violação de lacres ou reparos feitos por terceiros.`:'O bem é usado e é vendido no estado em que se encontra, conforme vistoriado e aceito pelo COMPRADOR, não havendo garantia adicional concedida pelo VENDEDOR além das previstas em lei.']},
-    {t:'CLÁUSULA 6ª – DA RESPONSABILIDADE APÓS A ENTREGA',p:['A partir da entrega, o COMPRADOR assume integral responsabilidade pela guarda, uso e conservação do bem, bem como por quaisquer danos, perdas ou obrigações dele decorrentes.']},
-    {t:'CLÁUSULA 7ª – DOS DADOS PESSOAIS',p:['Os dados pessoais informados neste instrumento serão utilizados exclusivamente para a formalização e a comprovação desta compra e venda, nos termos da Lei nº 13.709/2018 (LGPD).']},
-    {t:'CLÁUSULA 8ª – DA ASSINATURA ELETRÔNICA E DO FORO',p:[`As partes reconhecem como válida a assinatura manuscrita capturada em dispositivo eletrônico neste documento, nos termos do art. 10, § 2º, da Medida Provisória nº 2.200-2/2001. Fica eleito o foro da comarca de ${cid||'domicílio do VENDEDOR'} para dirimir quaisquer questões oriundas deste contrato.`,`E, por estarem de acordo, as partes assinam o presente instrumento em ${cid?cid+', ':''}${new Date(meta.assISO||Date.now()).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}${meta.hora?', às '+meta.hora:''}.`]}
-  ];
-  return S1;
-}
 async function bpCTBuildPDF(C,meta){
   if(!window.jspdf){throw new Error('Gerador de PDF indisponível. Verifique a internet e tente de novo.');}
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210,H=297,M=18,CW=W-2*M;let y=M;
@@ -2654,7 +2576,7 @@ async function bpCTBuildPDF(C,meta){
   // cabeçalho
   doc.setFillColor(1,227,119);doc.rect(0,0,W,3,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(90,96,105);doc.text(String(biz).toUpperCase(),M,y);doc.text('Nº '+meta.codigo,W-M,y,{align:'right'});y+=9;
-  doc.setFontSize(14);doc.setTextColor(15,18,22);doc.splitTextToSize('CONTRATO PARTICULAR DE COMPRA E VENDA DE BEM MÓVEL USADO',CW).forEach(l=>{doc.text(l,W/2,y,{align:'center'});y+=6.2;});y+=3;
+  doc.setFontSize(14);doc.setTextColor(15,18,22);doc.splitTextToSize('CONTRATO PARTICULAR DE COMPRA E VENDA DE BEM MÓVEL USADO',CW).forEach(l=>{doc.text(l,W/2,y,{align:'center'});y+=6.2;});if(C.tipo==='compra'){doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(90,96,105);doc.text('Aquisição com declaração de procedência',W/2,y,{align:'center'});y+=5;}y+=3;
   bpCTClauses(C,meta).forEach(s=>{ensure(12);txt(s.t,10,'bold',[15,18,22],1.2);s.p.forEach(pp=>txt(pp,9.6,'normal',[40,44,50],2.2));y+=1.2;});
   // assinaturas
   ensure(80);y+=3;txt('ASSINATURAS',10,'bold',[15,18,22],1.2);txt(`Referente ao contrato nº ${meta.codigo}: ${C.pr.descricao}${C.pr.serie?' (IMEI/série '+C.pr.serie+')':''}, pelo valor de ${brl(C.pg.valor)}.`,8.8,'normal',[80,86,95],6);const colW=(CW-12)/2;const sy=y;
@@ -2663,7 +2585,7 @@ async function bpCTBuildPDF(C,meta){
   await sig(C.sigV,M,C.v.nome,C.v.cpf,'VENDEDOR');await sig(C.sigC,M+colW+12,C.c.nome,C.c.cpf,'COMPRADOR');
   y=sy+46;txt(`Assinado eletronicamente em ${meta.quando}. Registro do dispositivo: ${meta.ua}.`,7.8,'normal',[110,116,125],1);
   // anexo de fotos
-  if(meta.fotos.length){doc.addPage();y=M;txt('ANEXO I – REGISTRO FOTOGRÁFICO DA ENTREGA',11,'bold',[15,18,22],1.5);txt(`Fotos do bem no momento da entrega, conferidas pelo COMPRADOR. Contrato nº ${meta.codigo}.`,9,'normal',[80,86,95],4);
+  if(meta.fotos.length){doc.addPage();y=M;txt(C.tipo==='compra'?'ANEXO I – REGISTRO FOTOGRÁFICO DA COMPRA':'ANEXO I – REGISTRO FOTOGRÁFICO DA ENTREGA',11,'bold',[15,18,22],1.5);txt(C.tipo==='compra'?`Fotos do bem e do documento do VENDEDOR no momento da compra. Contrato nº ${meta.codigo}.`:`Fotos do bem no momento da entrega, conferidas pelo COMPRADOR. Contrato nº ${meta.codigo}.`,9,'normal',[80,86,95],4);
     const gap=6,cw=(CW-gap)/2,ch=cw*0.75;let col=0;
     for(const f of meta.fotos){if(col===0)ensure(ch+12);const x=M+col*(cw+gap);const sz=await bpImgSize(f.src);let ww=cw,hh=cw*sz.h/sz.w;if(hh>ch){hh=ch;ww=ch*sz.w/sz.h;}
       doc.setFillColor(244,246,250);doc.rect(x,y,cw,ch,'F');doc.addImage(f.src,f.src.startsWith('data:image/png')?'PNG':'JPEG',x+(cw-ww)/2,y+(ch-hh)/2,ww,hh);
@@ -2683,28 +2605,28 @@ async function bpCTGerar(){
     const quando=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});const hora=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const ua=(navigator.userAgent.match(/\(([^)]+)\)/)||[,''])[1].split(';').slice(0,2).join(';').trim()||'navegador';
     const fotos=[];for(let i=0;i<C.fotos.length;i++){const f=C.fotos[i];fotos.push({src:await bpFileToDataURL(f.blob),legenda:f.legenda,ts:f.ts,i});}
-    const dados={vendedor:C.v,comprador:C.c,produto:C.pr,pagamento:C.pg,garantia_dias:C.gar,local:C.local,data:C.data,vistoria:{categoria:C.ck,itens:(VIST[C.ck]||VIST.geral).filter(it=>C.chk[it]),obs:C.obsVist,declaracao:true},assinado_em:now.toISOString(),dispositivo:ua};
+    const dados={tipo:C.tipo||'venda',vendedor:C.v,comprador:C.c,produto:C.pr,pagamento:C.pg,garantia_dias:C.gar,local:C.local,data:C.data,vistoria:{categoria:C.ck,itens:bpCTItems(C).filter(it=>C.chk[it]),obs:C.obsVist,declaracao:true},imei:{status:C.imeiStatus||null,data:C.imeiData||null},assinado_em:now.toISOString(),dispositivo:ua};
     const hash=await bpSha(JSON.stringify({codigo,dados,f:fotos.map(f=>f.src.length),sv:C.sigV.length,sc:C.sigC.length}));
     const meta={codigo,quando,hora,ua,fotos,assISO:now.toISOString(),hashCurto:hash.slice(0,16).toUpperCase().match(/.{4}/g).join('-')};
-    const pdf=await bpCTBuildPDF(C,meta);window.bpCTLast={blob:pdf,name:'contrato-'+codigo+'.pdf',codigo,tel:C.c.tel,comprador:C.c.nome};
+    const pdf=await bpCTBuildPDF(C,meta);const other=C.tipo==='compra'?C.v:C.c,me=C.tipo==='compra'?C.c:C.v;window.bpCTLast={blob:pdf,name:'contrato-'+codigo+'.pdf',codigo,tel:other.tel,comprador:other.nome,tipo:C.tipo};
     // salvar arquivos (privados) e registro
     const base=`${USER.id}/contracts/${id}`;const up=async(path,blob,type)=>{const r=await sb.storage.from('documents').upload(path,blob,{contentType:type,upsert:true});return r.error?null:path;};
     const fotosSalvas=[];for(let i=0;i<C.fotos.length;i++){const pth=await up(`${base}/foto_${i+1}.jpg`,C.fotos[i].blob,'image/jpeg');if(pth)fotosSalvas.push({path:pth,legenda:C.fotos[i].legenda||'',ts:C.fotos[i].ts});}
     const sv=await up(`${base}/assinatura_vendedor.png`,bpDataURLtoBlob(C.sigV),'image/png');const sc=await up(`${base}/assinatura_comprador.png`,bpDataURLtoBlob(C.sigC),'image/png');
     const pp=await up(`${base}/contrato-${codigo}.pdf`,pdf,'application/pdf');
     const ins=await sb.from('contracts').insert({id,codigo,product_id:C.pid,sale_id:C.sid,dados,fotos:fotosSalvas,assinatura_vendedor:sv,assinatura_comprador:sc,pdf_path:pp,hash});
-    const pf={};if(C.v.cpf&&C.v.cpf!==(PROFILE.cpf||''))pf.cpf=C.v.cpf;if(C.v.endereco&&C.v.endereco!==(PROFILE.endereco||''))pf.endereco=C.v.endereco;if(C.v.cidade&&C.v.cidade!==(PROFILE.cidade_uf||''))pf.cidade_uf=C.v.cidade;
+    const pf={};if(me.cpf&&me.cpf!==(PROFILE.cpf||''))pf.cpf=me.cpf;if(me.endereco&&me.endereco!==(PROFILE.endereco||''))pf.endereco=me.endereco;if(me.cidade&&me.cidade!==(PROFILE.cidade_uf||''))pf.cidade_uf=me.cidade;
     if(Object.keys(pf).length){await sb.from('profiles').update(pf).eq('id',USER.id);Object.assign(PROFILE,pf);}
-    if(C.sid&&(C.c.nome||C.c.tel)){await sb.from('sales').update({comprador:C.c.nome||null,comprador_contato:C.c.tel||null}).eq('id',C.sid);await refresh('sales');}
+    if(C.tipo!=='compra'&&C.sid&&(C.c.nome||C.c.tel)){await sb.from('sales').update({comprador:C.c.nome||null,comprador_contato:C.c.tel||null}).eq('id',C.sid);await refresh('sales');}
     openModal(`<div class="modal-head"><h3>Contrato pronto</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
-    <div class="ct-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg><b>${esc(codigo)}</b><span>${esc(C.c.nome)} · ${brl(C.pg.valor)}</span><small>Código de verificação ${meta.hashCurto}</small></div>
+    <div class="ct-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg><b>${esc(codigo)}</b><span>${C.tipo==='compra'?'Compra de '+esc(C.v.nome):esc(C.c.nome)} · ${brl(C.pg.valor)}</span><small>Código de verificação ${meta.hashCurto}</small></div>
     ${ins.error||!pp?`<p style="font-size:12.5px;color:var(--amber);margin:10px 0 0">O PDF foi gerado, mas não consegui guardar uma cópia na nuvem${ins.error?' ('+esc(ins.error.message)+')':''}. Baixe agora para não perder.</p>`:'<p style="font-size:12.5px;color:var(--text-2);margin:10px 0 0">Uma cópia fica guardada no app, em Contratos.</p>'}
-    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTLastDownload()">Baixar PDF</button><button class="btn btn-primary" onclick="bpCTLastShare()">Enviar ao comprador</button></div>`);
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTLastDownload()">Baixar PDF</button><button class="btn btn-primary" onclick="bpCTLastShare()">${C.tipo==='compra'?'Enviar ao vendedor':'Enviar ao comprador'}</button></div>`);
     window.bpCT=null;
   }catch(e){toast('Erro ao gerar: '+(e.message||e));if(btn){btn.disabled=false;btn.textContent='Gerar contrato em PDF';}}
 }
 function bpCTLastDownload(){const L=window.bpCTLast;if(L)bpDownload(L.blob,L.name);}
-function bpCTLastShare(){const L=window.bpCTLast;if(!L)return;if(bpShareFile(L.blob,L.name,'Contrato de compra e venda '+L.codigo))return;bpDownload(L.blob,L.name);const d=String(L.tel||'').replace(/\D/g,'');setTimeout(()=>window.open('https://wa.me/'+(d?(d.length<=11?'55'+d:d):'')+'?text='+encodeURIComponent(`Olá${L.comprador?' '+L.comprador.split(' ')[0]:''}! Segue o contrato da nossa venda (${L.codigo}). Estou te enviando o PDF aqui.`),'_blank'),600);}
+function bpCTLastShare(){const L=window.bpCTLast;if(!L)return;if(bpShareFile(L.blob,L.name,'Contrato de compra e venda '+L.codigo))return;bpDownload(L.blob,L.name);const d=String(L.tel||'').replace(/\D/g,'');setTimeout(()=>window.open('https://wa.me/'+(d?(d.length<=11?'55'+d:d):'')+'?text='+encodeURIComponent(`Olá${L.comprador?' '+L.comprador.split(' ')[0]:''}! Segue o contrato da nossa ${L.tipo==='compra'?'negociação':'venda'} (${L.codigo}). Estou te enviando o PDF aqui.`),'_blank'),600);}
 
 /* ---------- Pós-venda ---------- */
 function bpPosVendaList(){const t=todayISO();return (S.sales||[]).filter(s=>{if(s.posvenda_ok||!s.data_venda)return false;const dd=bpDiff(s.data_venda,t);return dd>=2&&dd<=10;}).map(s=>({s,p:S.products.find(p=>p.id===s.product_id)})).filter(x=>x.p);}
@@ -2877,33 +2799,6 @@ async function bpTgSave(tid){const t=S.trips.find(x=>x.id===tid);if(!t)return;co
   const r=await sb.from('trip_items').insert(row);if(r.error){toast('Erro: '+r.error.message);return;}
   if($('#tg_caixa')&&$('#tg_caixa').checked&&(!row.pago_por||row.pago_por==='Você')){await sb.from('cash_flow').insert({kind:'retirada',valor:brlV,data:todayISO(),nota:'Viagem '+t.nome+' · '+row.descricao,categoria:'Viagem'});await refresh('cash');}
   await refresh('trips');toast('Gasto lançado · '+brl(brlV));render();}
-function rViagem(v,id){
-  const t=S.trips.find(x=>x.id===id);const c=tripCalc(id);const pct=c.total>0?Math.round(c.pago/c.total*100):0;
-  const dias=bpTripDias(t),pes=bpTripPeople(t).length,orc=numf(t.orcamento);
-  const items=c.items.slice().sort((a,b)=>{const ca=tiCalc(a),cb=tiCalc(b);if((ca.falta>0)!==(cb.falta>0))return ca.falta>0?-1:1;if(ca.falta>0)return String(ca.prox||'9999').localeCompare(String(cb.prox||'9999'));return String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''));});
-  const byT={};c.items.forEach(i=>{const k=i.tipo||'Outros';byT[k]=(byT[k]||0)+tiCalc(i).total;});
-  const tipos=Object.entries(byT).sort((a,b)=>b[1]-a[1]);const maxT=Math.max(1,...tipos.map(x=>x[1]));
-  const st=[];if(pes>1)st.push(['Por pessoa',brl(c.total/pes),pes+' pessoas']);if(dias&&c.total>0)st.push(['Por dia',brl(c.total/dias),dias+' dias']);
-  let orcH='';if(orc>0){const u=c.total/orc*100;const col=u>100?'var(--loss)':(u>=90?'var(--amber)':'');orcH=`<div class="orc"><div class="orc-top"><span>Orçamento ${brl(orc)}</span><b class="num ${u>100?'down':''}">${u>100?'passou '+brl(c.total-orc):'sobram '+brl(orc-c.total)}</b></div><div class="prog" style="height:6px"><i style="width:${Math.min(100,u)}%;${col?'background:'+col:''}"></i></div></div>`;}
-  v.innerHTML=`<button class="btn btn-ghost btn-sm" style="width:auto;margin-bottom:12px" onclick="bpOpenTrip(null)">← Viagens</button>
-  ${tripCoverHTML(t,true)}
-  <div class="card" style="padding:16px">
-    <div style="font-size:12.5px;color:var(--text-2);font-weight:600">Falta pagar</div>
-    <div class="num" style="font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.5px;margin-top:2px">${brl(c.falta)}</div>
-    ${c.total>0?`<div class="prog"><i style="width:${pct}%"></i></div>`:''}
-    <div class="fin4"><div><span>Total</span><b class="num">${brl(c.total)}</b></div><div><span>Já pago</span><b class="num up">${brl(c.pago)}</b></div><div><span>Em parcelas</span><b class="num">${brl(c.parcelas)}</b></div><div><span>A pagar</span><b class="num">${brl(c.apagar)}</b></div></div>
-    ${orcH}
-    ${st.length?`<div class="tstats">${st.map(s=>`<div><span>${s[0]}</span><b class="num">${s[1]}</b><small>${s[2]}</small></div>`).join('')}</div>`:''}
-  </div>
-  ${bpTripModoHTML(t)}
-  <div class="sec-title"><h3>Custos</h3><button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${t.id}')">+ Adicionar custo</button></div>
-  ${items.length?items.map(tiCard).join(''):'<div class="empty" style="padding:28px 16px"><b>Nenhum custo lançado</b><p>Adicione passagem, hospedagem, passeios… parcelado, com entrada, já pago ou a pagar.</p></div>'}
-  ${bpSplitHTML(t)}
-  ${tripChkHTML(t)}
-  ${tipos.length>1?`<div class="sec-title"><h3>Por tipo</h3></div><div class="card">${tipos.map(([k,val])=>`<div class="bar-row"><span>${esc(k)}</span><div class="prog"><i style="width:${Math.round(val/maxT*100)}%"></i></div><b class="num">${brl(val)}</b></div>`).join('')}</div>`:''}
-  ${t.notas?`<div class="sec-title"><h3>Observações</h3></div><div class="card" style="font-size:13.5px;color:var(--text-2);white-space:pre-wrap">${esc(t.notas)}</div>`:''}
-  <div style="margin-top:22px;text-align:center"><button class="btn btn-ghost btn-sm" style="width:auto;color:var(--loss)" onclick="delTrip('${t.id}')">Excluir viagem</button></div>`;
-}
 function tiCard(i){
   const c=tiCalc(i);const late=c.falta>0&&c.prox&&c.prox<todayISO();let status,acao='';const t=(S.trips||[]).find(x=>x.id===i.trip_id);const ppl=bpTripPeople(t);
   if(c.parc){const pt=[];if(c.e>0)pt.push('Entrada '+brl(c.e)+(c.ep?' paga':''));pt.push(`${c.pg} de ${c.n} parcelas de ${brl(c.vp)}`);
@@ -2921,6 +2816,277 @@ function tiCard(i){
   </div>`;
 }
 Object.assign(window,{openPix,bpSavePixKey,bpPixRender,bpPixWhats,bpPixProduto,bpPixRecv,bpSaveSeller,openContrato,openContratos,bpCTOpenPDF,bpAfterSale,bpCTStart,bpCTGo,bpCTAddFoto,bpCTRmFoto,bpCTCover,bpSigClear,bpCTGerar,bpCTLastDownload,bpCTLastShare,bpPosVenda,bpPosVendaOk,openFechamento,bpFechSave,bpPeopleAdd,bpPeopleDel,bpMoedaChange,bpBuscarCotacao,openTrip,saveTrip,openTripItem,saveTripItem,bpSplitCobrar,bpSplitAcertar,bpSplitUndo,bpTgPrev,bpTgSave});
+
+/* ===== BLOCO 14: v4 — contrato de compra, IMEI registrado, preço pelo histórico, reservas com sinal, roteiro e link da viagem ===== */
+
+/* ---------- IMEI: registrar resultado da consulta oficial ---------- */
+const IMEI_URL_SIGA='https://www.consultaserialaparelho.com.br';
+function bpImeiBadge(p){if(!p||!p.imei_status)return '';const ok=p.imei_status==='ok';return ` <span class="pill" style="font-size:10.5px;background:var(--${ok?'profit':'loss'}-soft);color:var(--${ok?'profit':'loss'})">${ok?'sem restrição':'com restrição'}${p.imei_consultado_em?' · '+fmtDate(p.imei_consultado_em).slice(0,5):''}</span>`;}
+function openIMEI(id){const p=S.products.find(x=>x.id===id);if(!p)return;const ch=imeiCheck(p.imei||p.numero_serie);
+  openModal(`<div class="modal-head"><h3>Verificação de IMEI</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>${imeiResultHTML(ch)}
+  ${ch.ok?`<div class="card" style="margin-top:14px;padding:14px"><b style="font-size:13.5px">Resultado da consulta oficial</b><p style="font-size:12px;color:var(--text-2);margin:4px 0 10px">Consulte na base da ABR Telecom e registre aqui. Fica salvo no produto e entra no contrato de compra.</p>
+  <button class="btn btn-ghost btn-sm" style="width:auto" onclick="bpImeiCopyOpen('${esc(ch.imei)}')">Copiar IMEI e abrir a consulta</button>
+  <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary btn-sm" onclick="bpImeiSet('${p.id}','ok')">Sem restrição</button><button class="btn btn-ghost btn-sm" style="color:var(--loss)" onclick="bpImeiSet('${p.id}','restricao')">Com restrição</button></div>
+  ${p.imei_status?`<div style="font-size:12px;color:var(--text-2);margin-top:10px">Último registro: ${p.imei_status==='ok'?'sem restrição':'<span class="down">com restrição</span>'}${p.imei_consultado_em?' em '+fmtDate(p.imei_consultado_em):''}</div>`:''}</div>`:''}`);}
+function bpImeiCopyOpen(imei){try{navigator.clipboard.writeText(imei).then(()=>toast('IMEI copiado'));}catch(e){}window.open(IMEI_URL_SIGA,'_blank');}
+async function bpImeiSet(pid,st){const r=await sb.from('products').update({imei_status:st,imei_consultado_em:todayISO()}).eq('id',pid);if(r.error){toast('Erro: '+r.error.message);return;}
+  const p=S.products.find(x=>x.id===pid);if(p){p.imei_status=st;p.imei_consultado_em=todayISO();}toast(st==='ok'?'Registrado: sem restrição':'Atenção: aparelho com restrição');openIMEI(pid);}
+
+/* ---------- Contratos: venda e compra ---------- */
+const PROC=['Documento de identidade do vendedor conferido','IMEI ou nº de série confere com o aparelho','IMEI consultado sem restrição na base oficial (ABR Telecom)','Aparelho desvinculado de contas (iCloud/Google) e sem senha','Nota fiscal, caixa ou comprovante de compra apresentado','Aparelho testado e funcionando'];
+const FOTO_SUG_COMPRA=['Produto de frente','Tela com o IMEI ou nº de série','Documento do vendedor (RG ou CNH)','Nota fiscal ou caixa'];
+function bpCTItems(C){return C.tipo==='compra'?PROC:(VIST[C.ck]||VIST.geral);}
+function openContrato(pid){
+  const p=S.products.find(x=>x.id===pid);if(!p)return;const d=derive(p);
+  sb.from('contracts').select('*').eq('product_id',pid).order('created_at',{ascending:false}).then(r=>{
+    const list=(r&&r.data)||[];
+    const bv=`<button onclick="bpCTStart('${pid}','venda')"><b>Contrato de venda</b><span>Você vende: fotos da entrega, vistoria e aceite do comprador.</span></button>`;
+    const bc=`<button onclick="bpCTStart('${pid}','compra')"><b>Contrato de compra</b><span>Você compra: o vendedor declara a procedência, com documento e IMEI registrados.</span></button>`;
+    openModal(`<div class="modal-head"><h3>Contratos</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:6px">${esc(p.nome)}</div>
+    ${list.length?list.map(bpCTRow).join(''):'<p style="font-size:13px;color:var(--text-3);margin:2px 0 0">Nenhum contrato para este produto ainda.</p>'}
+    <div class="ct-choose">${d.vendido?bv+bc:bc+bv}</div>`);});
+}
+function bpCTRow(c){const d=c.dados||{};const compra=d.tipo==='compra';const outro=compra?(d.vendedor&&d.vendedor.nome):(d.comprador&&d.comprador.nome);
+  return `<div class="up-row"><div style="min-width:0;flex:1"><div class="up-t"><span class="pill" style="font-size:10px;margin-right:6px;background:var(--${compra?'amber':'brand'}-soft);color:var(--${compra?'amber':'brand'})">${compra?'Compra':'Venda'}</span>${esc(outro||'—')}</div><div class="up-o">${esc(c.codigo)} · ${fmtDate(String(c.created_at).slice(0,10))} · ${brl(d.pagamento&&d.pagamento.valor)}${d.produto&&d.produto.descricao?' · '+esc(d.produto.descricao):''}</div></div><button class="btn btn-ghost btn-sm" style="flex:0 0 auto;width:auto" onclick="bpCTOpenPDF('${c.id}')">PDF</button></div>`;}
+function bpCTStart(pid,tipo){
+  tipo=tipo||'venda';const p=S.products.find(x=>x.id===pid);if(!p)return;const d=derive(p);const sale=d.sale||{};const P=PROFILE||{};const ck=bpCatKey(p);
+  const eu={nome:P.full_name||'',cpf:P.cpf||'',doc:'',endereco:P.endereco||'',cidade:P.cidade_uf||'',tel:P.phone||''};
+  const pr={descricao:p.nome||'',marca:[p.marca,p.modelo].filter(Boolean).join(' '),serie:p.imei||p.numero_serie||'',cor:p.cor||'',condicao:condLabel(p.condicao||'usado'),acessorios:'',estado:p.observacoes||''};
+  if(tipo==='compra'){
+    window.bpCT={pid,sid:null,tipo,step:1,ck,fotos:[],chk:{},decl:false,obsVist:'',sigV:null,sigC:null,
+      v:{nome:p.fornecedor||'',cpf:'',doc:'',endereco:'',cidade:'',tel:''},c:eu,pr,pg:{valor:numf(p.preco_pago),forma:'Pix',permuta:''},gar:0,local:P.cidade_uf||p.cidade||'',data:p.data_compra||todayISO(),
+      imeiStatus:p.imei_status||null,imeiData:p.imei_consultado_em||null};
+    if(p.imei_status==='ok')window.bpCT.chk[PROC[2]]=true;
+  }else{
+    window.bpCT={pid,sid:sale.id||null,tipo,step:1,ck,fotos:[],chk:{},decl:false,obsVist:'',sigV:null,sigC:null,v:eu,
+      c:{nome:sale.comprador||'',cpf:'',doc:'',tel:sale.comprador_contato||'',endereco:'',cidade:''},pr,
+      pg:{valor:d.vendido?d.receita:(numf(p.preco_anunciado)||numf(p.preco_ideal)),forma:sale.forma_pagamento||'Pix',permuta:(sale.permuta_itens||[]).map(x=>x.nome+' ('+brl(x.valor)+')').join(', ')},
+      gar:bpGarDias(p.garantia),local:(P.cidade_uf||p.cidade||''),data:sale.data_venda||todayISO(),imeiStatus:p.imei_status||null,imeiData:p.imei_consultado_em||null};
+  }
+  bpCTRender();
+}
+function bpCTCollect(){const C=window.bpCT;if(!C)return;const g=id=>{const e=$('#'+id);return e?e.value.trim():null;};
+  if(C.step===1){['nome','cpf','doc','endereco','cidade','tel'].forEach(k=>{const a=g('ctv_'+k);if(a!==null)C.v[k]=a;const b=g('ctc_'+k);if(b!==null)C.c[k]=b;});
+    ['descricao','marca','serie','cor','condicao','acessorios','estado'].forEach(k=>{const v=g('ctp_'+k);if(v!==null)C.pr[k]=v;});
+    const val=g('ctg_valor');if(val!==null)C.pg.valor=numf(val);const f=g('ctg_forma');if(f!==null)C.pg.forma=f;const gd=g('ctg_gar');if(gd!==null)C.gar=Math.max(0,parseInt(gd)||0);const lc=g('ctg_local');if(lc!==null)C.local=lc;const dt=g('ctg_data');if(dt)C.data=dt;}
+  if(C.step===2){document.querySelectorAll('[data-leg]').forEach(el=>{const f=C.fotos[+el.dataset.leg];if(f)f.legenda=el.value.trim();});}
+  if(C.step===3){document.querySelectorAll('[data-vk]').forEach(el=>{C.chk[el.dataset.vk]=el.checked;});const o=$('#ct_obs');if(o)C.obsVist=o.value.trim();const dc=$('#ct_decl');if(dc)C.decl=dc.checked;}
+  if(C.step===4){['V','C'].forEach(k=>{const cv=$('#sig'+k);if(cv&&!cv._empty)C['sig'+k]=cv.toDataURL('image/png');});}
+}
+function bpCTGo(step){const C=window.bpCT;bpCTCollect();
+  if(step>C.step){
+    if(C.step===1){if(!C.v.nome){toast('Informe o nome do vendedor');return;}if(!C.c.nome){toast('Informe o nome do comprador');return;}if(!(C.pg.valor>0)){toast('Informe o valor');return;}}
+    if(C.step===3&&!C.decl){toast(C.tipo==='compra'?'O vendedor precisa confirmar a declaração de procedência':'O comprador precisa confirmar a declaração de vistoria');return;}
+  }
+  C.step=step;bpCTRender();const m=$('#modal');if(m)m.scrollTop=0;}
+function bpCTSteps(n,compra){return `<div class="ct-steps">${['Dados','Fotos',compra?'Procedência':'Vistoria','Assinar'].map((s,i)=>`<div class="${i+1===n?'on':(i+1<n?'done':'')}"><b>${i+1}</b><span>${s}</span></div>`).join('')}</div>`;}
+function bpCTRender(){
+  const C=window.bpCT;if(!C)return;const compra=C.tipo==='compra';
+  const head=`<div class="modal-head"><h3>${compra?'Contrato de compra':'Contrato de venda'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>${bpCTSteps(C.step,compra)}`;
+  const inp=(id,lbl,val,extra)=>`<div${extra&&extra.full?' class="full"':''}><label class="lbl">${lbl}</label><input class="input" id="${id}" value="${esc(val||'')}"${extra&&extra.attrs?' '+extra.attrs:''}></div>`;
+  if(C.step===1){
+    const vend=compra?`<div class="fsub">Vendedor · quem está vendendo para você</div><div class="frow" style="margin-top:6px">${inp('ctv_nome','Nome completo',C.v.nome,{full:1})}${inp('ctv_cpf','CPF',C.v.cpf,{attrs:'inputmode="numeric"'})}${inp('ctv_doc','RG ou CNH (nº)',C.v.doc)}${inp('ctv_tel','WhatsApp',C.v.tel,{attrs:'inputmode="tel"'})}${inp('ctv_cidade','Cidade/UF',C.v.cidade)}${inp('ctv_endereco','Endereço',C.v.endereco,{full:1})}</div>`
+      :`<div class="fsub">Vendedor</div><div class="frow" style="margin-top:6px">${inp('ctv_nome','Nome completo',C.v.nome,{full:1})}${inp('ctv_cpf','CPF ou CNPJ',C.v.cpf,{attrs:'inputmode="numeric"'})}${inp('ctv_tel','Telefone',C.v.tel,{attrs:'inputmode="tel"'})}${inp('ctv_endereco','Endereço',C.v.endereco,{full:1})}${inp('ctv_cidade','Cidade/UF',C.v.cidade)}</div>`;
+    const comp=compra?`<div class="fsub">Comprador · você</div><div class="frow" style="margin-top:6px">${inp('ctc_nome','Nome completo',C.c.nome,{full:1})}${inp('ctc_cpf','CPF ou CNPJ',C.c.cpf,{attrs:'inputmode="numeric"'})}${inp('ctc_tel','Telefone',C.c.tel,{attrs:'inputmode="tel"'})}${inp('ctc_endereco','Endereço',C.c.endereco,{full:1})}${inp('ctc_cidade','Cidade/UF',C.c.cidade)}</div>`
+      :`<div class="fsub">Comprador</div><div class="frow" style="margin-top:6px">${inp('ctc_nome','Nome completo',C.c.nome,{full:1})}${inp('ctc_cpf','CPF',C.c.cpf,{attrs:'inputmode="numeric"'})}${inp('ctc_tel','WhatsApp',C.c.tel,{attrs:'inputmode="tel"'})}${inp('ctc_endereco','Endereço (opcional)',C.c.endereco,{full:1})}</div>`;
+    openModal(head+(compra?vend+comp:vend+comp)+`
+    <div class="fsub">Produto</div><div class="frow" style="margin-top:6px">${inp('ctp_descricao','Descrição',C.pr.descricao,{full:1})}${inp('ctp_marca','Marca e modelo',C.pr.marca)}${inp('ctp_serie','IMEI ou nº de série',C.pr.serie)}${inp('ctp_cor','Cor',C.pr.cor)}${inp('ctp_condicao','Condição',C.pr.condicao)}${inp('ctp_acessorios','Acompanha',C.pr.acessorios,{full:1,attrs:'placeholder="Ex: carregador, cabo, 2 controles, caixa"'})}<div class="full"><label class="lbl">Estado do produto / avarias</label><textarea class="input" id="ctp_estado" rows="2" placeholder="Ex: pequeno risco na lateral, bateria 86%">${esc(C.pr.estado)}</textarea></div></div>
+    <div class="fsub">${compra?'Compra':'Venda'}</div><div class="frow" style="margin-top:6px">${inp('ctg_valor',compra?'Valor pago (R$)':'Valor (R$)',C.pg.valor?(+C.pg.valor).toFixed(2):'',{attrs:'type="number" step="0.01" inputmode="decimal"'})}${inp('ctg_forma','Forma de pagamento',C.pg.forma)}${compra?'':inp('ctg_gar','Garantia do vendedor (dias)',String(C.gar),{attrs:'type="number" min="0" inputmode="numeric"'})}${inp('ctg_data',compra?'Data da compra':'Data da venda',C.data,{attrs:'type="date"'})}${inp('ctg_local','Cidade da assinatura',C.local,{full:1})}</div>
+    ${compra&&C.imeiStatus?`<div class="nx-line${C.imeiStatus==='ok'?'':' late'}" style="margin-top:14px"><span>IMEI consultado${C.imeiData?' em '+fmtDate(C.imeiData):''}</span><b>${C.imeiStatus==='ok'?'sem restrição':'COM RESTRIÇÃO'}</b></div>`:''}
+    ${compra&&!C.imeiStatus&&C.pr.serie?`<button class="lnk-btn" style="margin-top:12px" onclick="bpImeiCopyOpen('${esc(String(C.pr.serie).replace(/\D/g,''))}')">Consultar o IMEI na base oficial antes de comprar</button>`:''}
+    <div class="modal-foot"><button class="btn btn-primary" onclick="bpCTGo(2)">Continuar para fotos</button></div>`);
+  }else if(C.step===2){
+    const sug=compra?FOTO_SUG_COMPRA:(FOTO_SUG[C.ck]||FOTO_SUG.geral);const p=S.products.find(x=>x.id===C.pid);
+    openModal(head+`<p style="font-size:13px;color:var(--text-2);margin:0 0 10px">${compra?'Fotografe o produto e o documento do vendedor na hora da compra. As fotos vão para o Anexo I com data e hora.':'Fotografe o produto na hora da entrega, na frente do comprador. As fotos vão para o Anexo I do contrato com data e hora.'}</p>
+    <div class="sugs" style="margin:0 0 12px">${sug.map(s=>`<span class="chip" style="cursor:default">${esc(s)}</span>`).join('')}</div>
+    <div class="ct-photos">${C.fotos.map((f,k)=>`<div class="ct-ph"><div class="ct-img" style="background-image:url('${f.url}')"><button onclick="bpCTRmFoto(${k})" aria-label="Remover foto">×</button></div><input class="input" data-leg="${k}" value="${esc(f.legenda||'')}" placeholder="Legenda"></div>`).join('')}
+      <button class="ct-add" onclick="bpCTAddFoto(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Câmera</span></button>
+      <button class="ct-add" onclick="bpCTAddFoto(false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Galeria</span></button></div>
+    ${p&&p.cover_url&&!C.fotos.some(f=>f.cover)?`<button class="lnk-btn" style="margin-top:10px" onclick="bpCTCover()">Incluir a foto do cadastro do produto</button>`:''}
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(1)">Voltar</button><button class="btn btn-primary" onclick="bpCTGo(3)">${C.fotos.length?(compra?'Continuar para procedência':'Continuar para vistoria'):'Continuar sem fotos'}</button></div>`);
+  }else if(C.step===3){
+    const items=bpCTItems(C);
+    openModal(head+`<p style="font-size:13px;color:var(--text-2);margin:0 0 8px">${compra?'Marque o que você conferiu antes de fechar a compra.':'Passe o aparelho com o app para o comprador marcar o que ele testou.'}</p>
+    <div class="card" style="padding:6px 14px">${items.map(it=>`<label class="chk vk"><input type="checkbox" data-vk="${esc(it)}" ${C.chk[it]?'checked':''}><span>${esc(it)}</span></label>`).join('')}</div>
+    <button class="lnk-btn" style="margin-top:8px" onclick="document.querySelectorAll('[data-vk]').forEach(e=>e.checked=true)">Marcar todos</button>
+    <div class="field"><label class="lbl">Observações (opcional)</label><textarea class="input" id="ct_obs" rows="2" placeholder="${compra?'Ex: vendedor apresentou nota fiscal de 2024':'Ex: comprador testou por 15 min'}">${esc(C.obsVist)}</textarea></div>
+    <label class="chk ct-decl"><input type="checkbox" id="ct_decl" ${C.decl?'checked':''}><span>${compra?'Eu, vendedor, declaro que o bem é de minha legítima propriedade e de origem lícita, sem registro de roubo, furto, bloqueio, financiamento ou qualquer restrição, e respondo civil e criminalmente por esta declaração.':'Eu, comprador, testei o produto, conferi as fotos da entrega e declaro que o recebo em perfeito estado de funcionamento e conservação, conforme descrito.'}</span></label>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(2)">Voltar</button><button class="btn btn-primary" onclick="bpCTGo(4)">Continuar para assinaturas</button></div>`);
+  }else if(C.step===4){
+    openModal(head+`<details class="ct-read"><summary>Ler o contrato completo</summary><div class="ct-text">${bpCTClauses(C,{}).map(s=>`<p><b>${esc(s.t)}</b></p>${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}`).join('')}</div></details>
+    <div class="sig-box"><div class="sig-top"><b>Assinatura do vendedor${compra?'':' (você)'}</b><button class="lnk-btn" onclick="bpSigClear('sigV')">Limpar</button></div><canvas id="sigV" class="sig-pad"></canvas><div class="sig-name">${esc(C.v.nome)}</div></div>
+    <div class="sig-box"><div class="sig-top"><b>Assinatura do comprador${compra?' (você)':''}</b><button class="lnk-btn" onclick="bpSigClear('sigC')">Limpar</button></div><canvas id="sigC" class="sig-pad"></canvas><div class="sig-name">${esc(C.c.nome)}</div></div>
+    <p style="font-size:11.5px;color:var(--text-3);margin:8px 0 0">Assine com o dedo dentro do quadro.</p>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(3)">Voltar</button><button class="btn btn-primary" id="ct_gen" onclick="bpCTGerar()">Gerar contrato em PDF</button></div>`);
+    setTimeout(()=>{bpSigPad('sigV',C.sigV);bpSigPad('sigC',C.sigC);},30);
+  }
+}
+function bpCTClauses(C,meta){
+  const compra=C.tipo==='compra';const v=C.v,c=C.c,pr=C.pr,pg=C.pg;const cid=C.local||(compra?c.cidade:v.cidade)||'';
+  const items=bpCTItems(C).filter(it=>C.chk[it]);
+  const ident=(x,papel)=>`${papel}: ${x.nome||'—'}${x.cpf?', inscrito(a) no CPF/CNPJ sob o nº '+x.cpf:''}${x.doc?', documento de identidade nº '+x.doc:''}${x.endereco?', residente em '+x.endereco:''}${x.cidade?', '+x.cidade:''}${x.tel?', telefone '+x.tel:''}.`;
+  const obj=[pr.descricao,pr.marca?'marca/modelo '+pr.marca:'',pr.cor?'cor '+pr.cor:'',pr.serie?'IMEI/número de série '+pr.serie:'',pr.condicao?'condição: '+String(pr.condicao).toLowerCase():''].filter(Boolean).join(', ');
+  const assin=`E, por estarem de acordo, as partes assinam o presente instrumento em ${cid?cid+', ':''}${new Date(meta.assISO||Date.now()).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}${meta.hora?', às '+meta.hora:''}.`;
+  const foro={t:'CLÁUSULA 8ª – DA ASSINATURA ELETRÔNICA E DO FORO',p:[`As partes reconhecem como válida a assinatura manuscrita capturada em dispositivo eletrônico neste documento, nos termos do art. 10, § 2º, da Medida Provisória nº 2.200-2/2001. Fica eleito o foro da comarca de ${cid||'domicílio do '+(compra?'COMPRADOR':'VENDEDOR')} para dirimir quaisquer questões oriundas deste contrato.`,assin]};
+  const lgpd={t:'CLÁUSULA 7ª – DOS DADOS PESSOAIS',p:['Os dados pessoais informados neste instrumento serão utilizados exclusivamente para a formalização e a comprovação desta compra e venda, nos termos da Lei nº 13.709/2018 (LGPD).']};
+  const intro={t:'IDENTIFICAÇÃO DAS PARTES',p:[ident(v,'VENDEDOR'),ident(c,'COMPRADOR'),'As partes acima identificadas têm entre si justo e contratado o presente Contrato Particular de Compra e Venda de Bem Móvel Usado, que se regerá pelas cláusulas a seguir.']};
+  const objeto={t:'CLÁUSULA 1ª – DO OBJETO',p:[`O VENDEDOR vende ao COMPRADOR o seguinte bem: ${obj}. Acompanha(m) o bem: ${pr.acessorios||'nenhum acessório adicional'}. Estado declarado do bem: ${pr.estado||'sem avarias declaradas'}.`]};
+  const preco={t:'CLÁUSULA 2ª – DO PREÇO E DO PAGAMENTO',p:[`O preço total é de ${brl(pg.valor)} (${bpExtenso(pg.valor)}), pago pelo COMPRADOR ao VENDEDOR por meio de ${pg.forma||'forma combinada entre as partes'}${pg.permuta?', incluída a entrega, pelo COMPRADOR, do(s) seguinte(s) item(ns) em permuta: '+pg.permuta:''}. Com o recebimento integral do valor, o VENDEDOR dá ao COMPRADOR plena e geral quitação.`]};
+  if(compra){
+    const imei=C.imeiStatus?` O IMEI/número de série foi consultado${C.imeiData?' em '+fmtDate(C.imeiData):''} na base oficial de aparelhos impedidos (ABR Telecom), com resultado: ${C.imeiStatus==='ok'?'sem restrição de uso':'COM RESTRIÇÃO'}.`:'';
+    return [intro,objeto,preco,
+      {t:'CLÁUSULA 3ª – DA PROPRIEDADE E DA PROCEDÊNCIA',p:['O VENDEDOR declara, sob as penas da lei, que é o legítimo proprietário do bem, que o adquiriu de forma lícita e que ele não é produto de roubo, furto, apropriação indébita ou de qualquer outro ilícito, estando livre de ônus, dívidas, financiamento, alienação, bloqueio de operadora ou de conta vinculada e de qualquer restrição judicial ou administrativa.','Caso o bem venha a ser apreendido, bloqueado ou reclamado por terceiro em razão de fato anterior a esta venda, o VENDEDOR obriga-se a restituir integralmente ao COMPRADOR o valor pago, acrescido das despesas comprovadas, sem prejuízo de indenização por perdas e danos e de sua responsabilidade civil e criminal.']},
+      {t:'CLÁUSULA 4ª – DAS VERIFICAÇÕES REALIZADAS',p:[(items.length?'Antes da conclusão do negócio, foram realizadas as seguintes verificações: '+items.join('; ')+'.':'O COMPRADOR realizou a conferência do bem antes da conclusão do negócio.')+imei,C.obsVist?'Observações: '+C.obsVist:''].filter(Boolean)},
+      {t:'CLÁUSULA 5ª – DA ENTREGA',p:[`O bem é entregue ao COMPRADOR em ${fmtDate(C.data)}, no estado registrado no Anexo I (registro fotográfico), que também contém a imagem do documento de identificação apresentado pelo VENDEDOR, quando fornecido.`]},
+      {t:'CLÁUSULA 6ª – DAS CONTAS E DESBLOQUEIOS',p:['O VENDEDOR declara ter removido todas as contas, senhas e vínculos pessoais do bem e compromete-se a colaborar prontamente, sem custo para o COMPRADOR, caso seja identificado qualquer bloqueio ou vínculo remanescente.']},
+      lgpd,foro];
+  }
+  return [intro,objeto,preco,
+    {t:'CLÁUSULA 3ª – DA PROPRIEDADE E PROCEDÊNCIA',p:['O VENDEDOR declara que o bem é de sua legítima propriedade, de procedência lícita, livre e desembaraçado de quaisquer ônus, dívidas ou restrições, que não possui registro de roubo, furto ou extravio, nem bloqueio de operadora ou de conta vinculada, responsabilizando-se civil e criminalmente pela veracidade desta declaração.']},
+    {t:'CLÁUSULA 4ª – DA ENTREGA, VISTORIA E ACEITE',p:[`O bem é entregue ao COMPRADOR em ${fmtDate(C.data)}, que declara tê-lo examinado e testado pessoalmente no ato da entrega, recebendo-o em perfeito estado de funcionamento e conservação, conforme descrito neste contrato e registrado no Anexo I (registro fotográfico da entrega), nada tendo a reclamar quanto ao estado do bem verificado nessa ocasião.`,
+      items.length?'Itens testados e aprovados pelo COMPRADOR: '+items.join('; ')+'.':'O COMPRADOR declara ter testado o funcionamento geral do bem.',C.obsVist?'Observações da vistoria: '+C.obsVist:''].filter(Boolean)},
+    {t:'CLÁUSULA 5ª – DA GARANTIA',p:[C.gar>0?`O VENDEDOR concede garantia de ${C.gar} (${bpExtenso(C.gar).replace(/ reais?$/,'')}) dias, contados da entrega, exclusivamente para defeitos de funcionamento preexistentes à entrega. A garantia não cobre danos ocorridos após a entrega, tais como quedas, contato com líquidos, oxidação, mau uso, desgaste natural da bateria, violação de lacres ou reparos feitos por terceiros.`:'O bem é usado e é vendido no estado em que se encontra, conforme vistoriado e aceito pelo COMPRADOR, não havendo garantia adicional concedida pelo VENDEDOR além das previstas em lei.']},
+    {t:'CLÁUSULA 6ª – DA RESPONSABILIDADE APÓS A ENTREGA',p:['A partir da entrega, o COMPRADOR assume integral responsabilidade pela guarda, uso e conservação do bem, bem como por quaisquer danos, perdas ou obrigações dele decorrentes.']},
+    lgpd,foro];
+}
+
+/* ---------- Preço sugerido pelo seu histórico ---------- */
+const BP_STOP=['de','do','da','com','e','o','a','gb','novo','nova','usado','usada','seminovo','seminova','original'];
+function bpNorm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w&&!BP_STOP.includes(w));}
+function bpSimilares(p){const A=new Set(bpNorm(p.nome+' '+(p.modelo||'')));if(!A.size)return [];const mod=bpNorm(p.modelo).join(' ');
+  return (S.products||[]).filter(o=>o.id!==p.id).map(o=>({o,d:derive(o)})).filter(x=>x.d.vendido&&x.d.receita>0).map(x=>{const B=new Set(bpNorm(x.o.nome+' '+(x.o.modelo||'')));const inter=[...A].filter(w=>B.has(w)).length;let sim=inter/(new Set([...A,...B]).size||1);if(mod&&bpNorm(x.o.modelo).join(' ')===mod)sim=Math.max(sim,.9);if((p.categoria||'')&&(x.o.categoria||'')&&p.categoria!==x.o.categoria)sim*=.7;return Object.assign(x,{sim});}).filter(x=>x.sim>=.5).sort((a,b)=>b.sim-a.sim).slice(0,12);}
+function bpMediana(a){if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);const m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+function bpHistCard(p){const L=bpSimilares(p);if(!L.length)return '';
+  const precos=L.map(x=>x.d.receita),dias=L.map(x=>x.d.diasVenda||0),lucros=L.map(x=>x.d.lucroLiq);const med=bpMediana(precos);const sug=med>=100?Math.round(med/10)*10:Math.round(med);
+  const dMed=Math.round(dias.reduce((a,b)=>a+b,0)/dias.length),lMed=lucros.reduce((a,b)=>a+b,0)/lucros.length;let insight='';
+  if(L.length>=3){const ord=L.slice().sort((a,b)=>(a.d.diasVenda||0)-(b.d.diasVenda||0));const h=Math.ceil(ord.length/2);const rap=ord.slice(0,h),len=ord.slice(h);const pr=a=>a.reduce((s,x)=>s+x.d.receita,0)/a.length;const lim=len.length?(len[0].d.diasVenda||0):0;
+    if(len.length)insight=`As que venderam em até ${ord[h-1].d.diasVenda||0} dias saíram, em média, por ${brl(pr(rap))}; as mais lentas, por ${brl(pr(len))}.`;}
+  const anun=numf(p.preco_anunciado);const mx=Math.max(...precos);const alerta=anun>mx*1.05?`<div style="font-size:12px;color:var(--amber);margin-top:8px">O preço anunciado (${brl(anun)}) está acima do que você já conseguiu por esse modelo.</div>`:'';
+  return `<div class="card hist-card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:14px">Seu histórico com este modelo</b><span style="font-size:11.5px;color:var(--text-3)">${L.length} venda(s) parecida(s)</span></div>
+  <div class="fin3"><div><span>Preço mediano</span><b class="num">${brl(med)}</b></div><div><span>Vendeu em</span><b class="num">${dMed} dias</b></div><div><span>Lucro médio</span><b class="num ${lMed>=0?'up':'down'}">${brl(lMed)}</b></div></div>
+  ${insight?`<div style="font-size:12px;color:var(--text-2);margin-top:10px;line-height:1.45">${insight}</div>`:''}${alerta}
+  ${p.status!=='vendido'?`<div class="hist-sug"><span>Sugestão: anunciar por <b class="num">${brl(sug)}</b></span><button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="bpUsarPreco('${p.id}',${sug})">Usar preço</button></div>`:''}</div>`;}
+async function bpUsarPreco(pid,v){const r=await sb.from('products').update({preco_anunciado:v}).eq('id',pid);if(r.error){toast('Erro: '+r.error.message);return;}const p=S.products.find(x=>x.id===pid);if(p)p.preco_anunciado=v;toast('Preço anunciado: '+brl(v));openDetail(pid);render();}
+
+/* ---------- Reservas com sinal (vitrine) ---------- */
+function bpReservaAtiva(r){return r.status==='confirmada'||(r.status==='pendente'&&new Date(r.expira_em)>new Date());}
+function bpReservaCard(){const P=PROFILE||{};return `<div class="card" style="margin-top:14px"><h3 style="font-size:16px">Reserva com sinal na vitrine</h3>
+  <p style="font-size:12.5px;color:var(--text-2);margin:6px 0 8px">O cliente reserva o produto pela vitrine e paga um sinal por Pix. Sua chave Pix aparece para quem fizer a reserva.</p>
+  ${P.pix_chave?'':'<p style="font-size:12.5px;color:var(--amber);margin:0 0 8px">Cadastre sua chave Pix em “Dados para contratos e Pix” para ativar.</p>'}
+  <label class="chk" style="margin-top:4px"><input type="checkbox" id="rs_on" ${P.reserva_ativa?'checked':''}><span>Permitir reservas pela vitrine</span></label>
+  <div class="frow"><div><label class="lbl">Sinal (% do preço)</label><input class="input num" type="number" min="1" max="100" inputmode="numeric" id="rs_pct" value="${P.reserva_pct||10}"></div><div><label class="lbl">Reserva vale por (horas)</label><input class="input num" type="number" min="1" max="168" inputmode="numeric" id="rs_h" value="${P.reserva_horas||24}"></div></div>
+  <div style="margin-top:14px"><button class="btn btn-primary" style="width:auto" onclick="bpSaveReserva()">Salvar</button></div></div>`;}
+async function bpSaveReserva(){const on=$('#rs_on').checked;if(on&&!(PROFILE&&PROFILE.pix_chave)){toast('Cadastre sua chave Pix primeiro');return;}
+  const u={reserva_ativa:on,reserva_pct:Math.min(100,Math.max(1,parseInt($('#rs_pct').value)||10)),reserva_horas:Math.min(168,Math.max(1,parseInt($('#rs_h').value)||24))};
+  const r=await sb.from('profiles').update(u).eq('id',USER.id);if(r.error){toast('Erro: '+r.error.message);return;}Object.assign(PROFILE,u);toast(on?'Reservas ativadas':'Reservas desativadas');}
+function bpReservaAlerts(){const n=(S.reservas||[]).filter(r=>r.status==='pendente'&&new Date(r.expira_em)>new Date()).length;return n?alertBar('warn',n+' reserva(s) aguardando o sinal','openReservas()'):'';}
+async function openReservas(){await refresh('reservas');const L=S.reservas||[];const now=new Date();
+  const vend=r=>{const p=S.products.find(x=>x.id===r.product_id);return p&&p.status==='vendido';};const pend=L.filter(r=>r.status==='pendente'&&new Date(r.expira_em)>now&&!vend(r)),conf=L.filter(r=>r.status==='confirmada'&&!vend(r)),old=L.filter(r=>!pend.includes(r)&&!conf.includes(r)).slice(0,8);
+  const row=r=>{const p=S.products.find(x=>x.id===r.product_id);const d=String(r.whatsapp||'').replace(/\D/g,'');const exp=new Date(r.expira_em);const sold=p&&p.status==='vendido';const vivo=!sold&&r.status==='pendente'&&exp>now;
+    return `<div class="card" style="margin-bottom:10px;padding:14px"><div style="display:flex;justify-content:space-between;gap:10px"><div style="min-width:0"><b style="font-size:14px">${esc(p?p.nome:'Produto removido')}</b><div style="font-size:12px;color:var(--text-2);margin-top:3px">${esc(r.nome)} · sinal ${brl(r.valor_sinal)}</div><div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${p&&p.status==='vendido'?'vendido':r.status==='confirmada'?'<span class="up">sinal recebido</span>':(vivo?'expira '+exp.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):(r.status==='cancelada'?'cancelada':'expirou'))}</div></div>
+    ${d?`<a class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto" target="_blank" rel="noopener" href="https://wa.me/${d.length<=11?'55'+d:d}?text=${encodeURIComponent('Oi '+String(r.nome).split(' ')[0]+'! Recebi sua reserva do '+(p?p.nome:'produto')+' pela vitrine.')}">WhatsApp</a>`:''}</div>
+    ${vivo?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary btn-sm" onclick="bpReservaSet('${r.id}','confirmada')">Sinal recebido</button><button class="btn btn-ghost btn-sm" style="color:var(--loss)" onclick="bpReservaSet('${r.id}','cancelada')">Cancelar</button></div>`:''}
+    ${r.status==='confirmada'&&!sold?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary btn-sm" onclick="closeModal();openSale('${r.product_id}')">Registrar venda</button><button class="btn btn-ghost btn-sm" style="color:var(--loss)" onclick="bpReservaSet('${r.id}','cancelada')">Cancelar reserva</button></div>`:''}</div>`;};
+  openModal(`<div class="modal-head"><h3>Reservas da vitrine</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  ${!L.length?'<div class="empty" style="padding:24px 10px"><b>Nenhuma reserva</b><p>Ative em Configurações → “Reserva com sinal na vitrine”.</p></div>':''}
+  ${pend.length?`<div class="fsub" style="margin:0 0 8px">Aguardando o sinal</div>${pend.map(row).join('')}`:''}
+  ${conf.length?`<div class="fsub" style="margin:${pend.length?'14px':'0'} 0 8px">Reservados</div>${conf.map(row).join('')}`:''}
+  ${old.length?`<div class="fsub" style="margin:14px 0 8px">Anteriores</div>${old.map(row).join('')}`:''}`);}
+async function bpReservaSet(id,st){const r=(S.reservas||[]).find(x=>x.id===id);if(!r)return;const up=await sb.from('reservations').update({status:st}).eq('id',id);if(up.error){toast('Erro: '+up.error.message);return;}
+  const p=S.products.find(x=>x.id===r.product_id);
+  if(p&&st==='confirmada'&&p.status!=='vendido'){await sb.from('products').update({status:'reservado'}).eq('id',p.id);p.status='reservado';}
+  if(p&&st==='cancelada'&&p.status==='reservado'){await sb.from('products').update({status:'anunciado'}).eq('id',p.id);p.status='anunciado';}
+  toast(st==='confirmada'?'Produto reservado':'Reserva cancelada');await openReservas();render();}
+function bpDetailExtras(p,d){let h='';const rs=(S.reservas||[]).filter(r=>r.product_id===p.id&&bpReservaAtiva(r));
+  if(rs.length&&!d.vendido){const r=rs[0];h+=`<div class="nx-line" style="margin-top:14px;cursor:pointer" onclick="openReservas()"><span>${r.status==='confirmada'?'Reservado para':'Reserva pendente de'}</span><b>${esc(r.nome)}</b><b class="num">sinal ${brl(r.valor_sinal)}</b></div>`;}
+  if(!d.vendido)h+=bpHistCard(p);return h;}
+
+/* ---------- Roteiro da viagem ---------- */
+function bpPlan(tid){return (S.tripPlan||[]).filter(r=>r.trip_id===tid).sort((a,b)=>String(a.data||'9999').localeCompare(String(b.data||'9999'))||String(a.hora||'99').localeCompare(String(b.hora||'99')));}
+function bpDiaLabel(t,data){if(!data)return 'Sem data';const dt=new Date(data+'T12:00:00');const w=dt.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');const n=t.data_ida?bpDiff(t.data_ida,data)+1:0;return (n>=1&&(!t.data_volta||data<=t.data_volta)?'Dia '+n+' · ':'')+w+', '+fmtDate(data).slice(0,5);}
+function bpPlanHTML(t){const L=bpPlan(t.id);const g={};L.forEach(r=>{const k=r.data||'';(g[k]=g[k]||[]).push(r);});
+  return `<div class="sec-title"><h3>Roteiro</h3><button class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto" onclick="openPlanItem('${t.id}')">+ Adicionar</button></div>
+  ${L.length?`<div class="card plan">${Object.keys(g).map(k=>`<div class="plan-day">${esc(bpDiaLabel(t,k))}</div>${g[k].map(r=>`<div class="plan-it"><div class="plan-h">${esc(r.hora||'—')}</div><div style="min-width:0;flex:1"><b>${esc(r.titulo)}</b>${r.local?`<a class="plan-loc" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.local)}">${esc(r.local)}</a>`:''}${r.notas?`<div class="plan-n">${esc(r.notas)}</div>`:''}<div class="plan-act">${r.anexo_path?`<button class="lnk-btn" onclick="bpPlanAnexo('${r.id}')">📎 ${esc(r.anexo_nome||'Anexo')}</button>`:''}<button class="lnk-btn" style="color:var(--text-2)" onclick="openPlanItem('${t.id}','${r.id}')">Editar</button></div></div></div>`).join('')}`).join('')}</div>`
+  :`<div class="card" style="font-size:13px;color:var(--text-2)">Monte o roteiro por dia: voos, check-in, passeios e reservas, com endereço e anexo (passagem, voucher, ingresso).</div>`}`;}
+function openPlanItem(tid,id){const t=S.trips.find(x=>x.id===tid);const r=id?(S.tripPlan||[]).find(x=>x.id===id):null;window.bpPlanFile=null;window.bpPlanRmAnexo=false;
+  const def=r?r.data:(t&&t.data_ida&&todayISO()<t.data_ida?t.data_ida:todayISO());
+  openModal(`<div class="modal-head"><h3>${r?'Editar item do roteiro':'Adicionar ao roteiro'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div class="field" style="margin-top:4px"><label class="lbl">O quê</label><input class="input" id="pl_t" value="${r?esc(r.titulo):''}" placeholder="Ex: Voo GOL 1234, check-in no hotel, passeio de buggy"></div>
+  <div class="frow"><div><label class="lbl">Dia</label><input class="input" type="date" id="pl_d" value="${def||''}"></div><div><label class="lbl">Horário</label><input class="input" type="time" id="pl_h" value="${r&&r.hora?esc(r.hora):''}"></div></div>
+  <div class="field"><label class="lbl">Endereço ou local (opcional)</label><input class="input" id="pl_l" value="${r?esc(r.local||''):''}" placeholder="Abre no mapa"></div>
+  <div class="field"><label class="lbl">Observações (opcional)</label><textarea class="input" id="pl_n" rows="2" placeholder="Código da reserva, portão, o que levar">${r?esc(r.notas||''):''}</textarea></div>
+  <div class="field"><label class="lbl">Anexo (passagem, voucher, ingresso)</label><div id="pl_a" class="plan-file">${r&&r.anexo_path?`📎 ${esc(r.anexo_nome||'Anexo')} <button class="lnk-btn" style="color:var(--loss)" onclick="bpPlanRm()">remover</button>`:''}</div><button class="btn btn-ghost btn-sm" style="width:auto;margin-top:6px" onclick="bpPlanPick()">Escolher arquivo</button></div>
+  <div class="modal-foot">${r?`<button class="btn btn-ghost" style="color:var(--loss);flex:0 0 auto" onclick="delPlanItem('${r.id}')">Excluir</button>`:''}<button class="btn btn-primary" id="pl_save" onclick="savePlanItem('${tid}',${r?`'${r.id}'`:'null'})">Salvar</button></div>`);}
+function bpPlanPick(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*,application/pdf';inp.style.display='none';inp.onchange=()=>{const f=inp.files&&inp.files[0];if(f){if(f.size>15*1024*1024){toast('Arquivo acima de 15 MB');return;}window.bpPlanFile=f;const a=$('#pl_a');if(a)a.innerHTML='📎 '+esc(f.name);}inp.remove();};document.body.appendChild(inp);inp.click();}
+function bpPlanRm(){window.bpPlanRmAnexo=true;window.bpPlanFile=null;const a=$('#pl_a');if(a)a.innerHTML='';}
+async function savePlanItem(tid,id){const titulo=$('#pl_t').value.trim();if(!titulo){toast('Diga o que é');return;}const btn=$('#pl_save');if(btn){btn.disabled=true;btn.textContent='Salvando…';}
+  const old=id?(S.tripPlan||[]).find(x=>x.id===id):null;const rid=id||bpUUID();
+  const row={trip_id:tid,titulo,data:$('#pl_d').value||null,hora:$('#pl_h').value||null,local:$('#pl_l').value.trim()||null,notas:$('#pl_n').value.trim()||null};
+  const f=window.bpPlanFile;
+  if(f){const safe=f.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9._-]/g,'_').slice(-60);const path=`${USER.id}/trips/${tid}/plan/${rid}-${safe}`;const up=await sb.storage.from('documents').upload(path,f,{contentType:f.type||'application/octet-stream',upsert:true});
+    if(up.error)toast('Anexo não enviado: '+up.error.message);else{row.anexo_path=path;row.anexo_nome=f.name;}}
+  else if(window.bpPlanRmAnexo){row.anexo_path=null;row.anexo_nome=null;}
+  if(old&&old.anexo_path&&(row.anexo_path!==undefined)&&row.anexo_path!==old.anexo_path){try{await sb.storage.from('documents').remove([old.anexo_path]);}catch(e){}}
+  const r=id?await sb.from('trip_plan').update(row).eq('id',id):await sb.from('trip_plan').insert(Object.assign({id:rid},row));
+  if(r.error){toast('Erro: '+r.error.message);if(btn){btn.disabled=false;btn.textContent='Salvar';}return;}
+  window.bpPlanFile=null;await refresh('trips');closeModal();toast('Roteiro salvo');render();}
+function delPlanItem(id){const r=(S.tripPlan||[]).find(x=>x.id===id);confirmBox('Excluir do roteiro','Remove este item e o anexo.',async()=>{await sb.from('trip_plan').delete().eq('id',id);if(r&&r.anexo_path){try{await sb.storage.from('documents').remove([r.anexo_path]);}catch(e){}}await refresh('trips');closeModal();toast('Item excluído');render();});}
+async function bpPlanAnexo(id){const r=(S.tripPlan||[]).find(x=>x.id===id);if(!r||!r.anexo_path)return;toast('Abrindo anexo…');const dl=await sb.storage.from('documents').download(r.anexo_path);if(dl.error||!dl.data){toast('Não consegui abrir o anexo');return;}
+  const name=r.anexo_nome||'anexo';if(!bpShareFile(dl.data,name,r.titulo))bpDownload(dl.data,name);}
+
+/* ---------- Link da viagem para acompanhantes ---------- */
+function bpTripLink(t){return location.origin+'/viagem?t='+t.share_token;}
+async function bpShareTrip(tid){const t=S.trips.find(x=>x.id===tid);if(!t)return;
+  if(!t.share_token||!t.share_ativo){const tok=t.share_token||bpUUID();const r=await sb.from('trips').update({share_token:tok,share_ativo:true}).eq('id',tid);if(r.error){toast('Erro: '+r.error.message);return;}t.share_token=tok;t.share_ativo=true;}
+  const link=bpTripLink(t);
+  openModal(`<div class="modal-head"><h3>Link da viagem</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <p style="font-size:13px;color:var(--text-2);margin:0">Quem abrir o link vê a contagem, o roteiro, os custos e quanto cada um deve, sem precisar de conta. Telefones e anexos não aparecem.</p>
+  <div class="share-link">${esc(link)}</div>
+  <label class="chk"><input type="checkbox" id="sh_pix" ${t.share_pix?'checked':''} onchange="bpSharePix('${tid}',this.checked)"><span>Mostrar minha chave Pix para os acertos</span></label>
+  <div class="modal-foot"><button class="btn btn-ghost" style="color:var(--loss);flex:0 0 auto" onclick="bpShareOff('${tid}')">Desativar</button><button class="btn btn-ghost" onclick="bpCopy('${esc(link)}')">Copiar</button><button class="btn btn-primary" onclick="bpShareWhats('${tid}')">Enviar</button></div>`);}
+async function bpSharePix(tid,on){if(on&&!(PROFILE&&PROFILE.pix_chave)){toast('Cadastre sua chave Pix em Configurações');const c=$('#sh_pix');if(c)c.checked=false;return;}const t=S.trips.find(x=>x.id===tid);const r=await sb.from('trips').update({share_pix:on}).eq('id',tid);if(!r.error&&t)t.share_pix=on;}
+function bpShareWhats(tid){const t=S.trips.find(x=>x.id===tid);if(!t)return;const msg=`Acompanhe a viagem ${t.nome}: roteiro, custos e a parte de cada um.\n${bpTripLink(t)}`;if(navigator.share){navigator.share({title:t.nome,text:msg}).catch(()=>{});return;}window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');}
+async function bpShareOff(tid){const t=S.trips.find(x=>x.id===tid);const r=await sb.from('trips').update({share_ativo:false}).eq('id',tid);if(r.error){toast('Erro: '+r.error.message);return;}if(t)t.share_ativo=false;closeModal();toast('Link desativado');render();}
+
+/* ---------- Viagem: capa (com compartilhar) e detalhe ---------- */
+function tripCoverHTML(t,edit){
+  const cd=bpTripCount(t);const dias=bpTripDias(t);
+  return `<div class="trip-cover${t.capa_url?'':' no-img'}" style="${t.capa_url?`background-image:url('${esc(t.capa_url)}')`:''}">
+    <div class="tc-top">${t.tipo?`<span class="tc-chip">${esc(t.tipo)}</span>`:'<span></span>'}${edit?`<div style="display:flex;gap:8px"><button class="tc-edit" onclick="bpShareTrip('${t.id}')" aria-label="Compartilhar viagem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button><button class="tc-edit" onclick="openTrip('${t.id}')" aria-label="Editar viagem">${PEN_SVG}</button></div>`:''}</div>
+    <div class="tc-bottom"><div style="min-width:0"><h2>${esc(t.nome)}</h2><div class="tc-dates">${[bpTripDatas(t),dias?dias+' dias':''].filter(Boolean).join(' · ')||'sem datas definidas'}</div></div>${cd&&cd.big?`<div class="tc-count"><b>${esc(cd.big)}</b><span>${esc(cd.lab)}</span></div>`:(cd?`<div class="tc-count"><span>${esc(cd.txt)}</span></div>`:'')}</div>
+  </div>`;
+}
+function rViagem(v,id){
+  const t=S.trips.find(x=>x.id===id);const c=tripCalc(id);const pct=c.total>0?Math.round(c.pago/c.total*100):0;
+  const dias=bpTripDias(t),pes=bpTripPeople(t).length,orc=numf(t.orcamento);
+  const items=c.items.slice().sort((a,b)=>{const ca=tiCalc(a),cb=tiCalc(b);if((ca.falta>0)!==(cb.falta>0))return ca.falta>0?-1:1;if(ca.falta>0)return String(ca.prox||'9999').localeCompare(String(cb.prox||'9999'));return String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''));});
+  const byT={};c.items.forEach(i=>{const k=i.tipo||'Outros';byT[k]=(byT[k]||0)+tiCalc(i).total;});
+  const tipos=Object.entries(byT).sort((a,b)=>b[1]-a[1]);const maxT=Math.max(1,...tipos.map(x=>x[1]));
+  const st=[];if(pes>1)st.push(['Por pessoa',brl(c.total/pes),pes+' pessoas']);if(dias&&c.total>0)st.push(['Por dia',brl(c.total/dias),dias+' dias']);
+  let orcH='';if(orc>0){const u=c.total/orc*100;const col=u>100?'var(--loss)':(u>=90?'var(--amber)':'');orcH=`<div class="orc"><div class="orc-top"><span>Orçamento ${brl(orc)}</span><b class="num ${u>100?'down':''}">${u>100?'passou '+brl(c.total-orc):'sobram '+brl(orc-c.total)}</b></div><div class="prog" style="height:6px"><i style="width:${Math.min(100,u)}%;${col?'background:'+col:''}"></i></div></div>`;}
+  v.innerHTML=`<button class="btn btn-ghost btn-sm" style="width:auto;margin-bottom:12px" onclick="bpOpenTrip(null)">← Viagens</button>
+  ${tripCoverHTML(t,true)}
+  ${t.share_ativo?`<div class="nx-line" style="margin:-4px 0 12px;cursor:pointer" onclick="bpShareTrip('${t.id}')"><span>Link compartilhado ativo</span><b>ver ou desativar</b></div>`:''}
+  <div class="card" style="padding:16px">
+    <div style="font-size:12.5px;color:var(--text-2);font-weight:600">Falta pagar</div>
+    <div class="num" style="font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.5px;margin-top:2px">${brl(c.falta)}</div>
+    ${c.total>0?`<div class="prog"><i style="width:${pct}%"></i></div>`:''}
+    <div class="fin4"><div><span>Total</span><b class="num">${brl(c.total)}</b></div><div><span>Já pago</span><b class="num up">${brl(c.pago)}</b></div><div><span>Em parcelas</span><b class="num">${brl(c.parcelas)}</b></div><div><span>A pagar</span><b class="num">${brl(c.apagar)}</b></div></div>
+    ${orcH}
+    ${st.length?`<div class="tstats">${st.map(s=>`<div><span>${s[0]}</span><b class="num">${s[1]}</b><small>${s[2]}</small></div>`).join('')}</div>`:''}
+  </div>
+  ${bpTripModoHTML(t)}
+  ${bpPlanHTML(t)}
+  <div class="sec-title"><h3>Custos</h3><button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${t.id}')">+ Adicionar custo</button></div>
+  ${items.length?items.map(tiCard).join(''):'<div class="empty" style="padding:28px 16px"><b>Nenhum custo lançado</b><p>Adicione passagem, hospedagem, passeios… parcelado, com entrada, já pago ou a pagar.</p></div>'}
+  ${bpSplitHTML(t)}
+  ${tripChkHTML(t)}
+  ${tipos.length>1?`<div class="sec-title"><h3>Por tipo</h3></div><div class="card">${tipos.map(([k,val])=>`<div class="bar-row"><span>${esc(k)}</span><div class="prog"><i style="width:${Math.round(val/maxT*100)}%"></i></div><b class="num">${brl(val)}</b></div>`).join('')}</div>`:''}
+  ${t.notas?`<div class="sec-title"><h3>Observações</h3></div><div class="card" style="font-size:13.5px;color:var(--text-2);white-space:pre-wrap">${esc(t.notas)}</div>`:''}
+  <div style="margin-top:22px;text-align:center"><button class="btn btn-ghost btn-sm" style="width:auto;color:var(--loss)" onclick="delTrip('${t.id}')">Excluir viagem</button></div>`;
+}
+Object.assign(window,{openIMEI,bpImeiCopyOpen,bpImeiSet,openContrato,bpCTStart,bpCTGo,bpUsarPreco,bpSaveReserva,openReservas,bpReservaSet,openPlanItem,bpPlanPick,bpPlanRm,savePlanItem,delPlanItem,bpPlanAnexo,bpShareTrip,bpSharePix,bpShareWhats,bpShareOff});
 
 /* ============ BOOT ============ */
 $('#authBtn').onclick=doAuth;

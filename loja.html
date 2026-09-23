@@ -56,6 +56,14 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-sys
 .dwrap-wa{position:sticky;bottom:0;background:linear-gradient(transparent,var(--surface) 28%);padding:14px 18px calc(16px + env(safe-area-inset-bottom))}
 .wa{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--brand);color:#000;font-weight:800;text-decoration:none;border-radius:13px;padding:15px;font-size:15px}
 .wa svg{width:20px;height:20px}
+.rsv{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--brand);border:1.5px solid var(--brand);font-weight:800;border-radius:13px;padding:13px;font-size:15px;width:100%;cursor:pointer;margin-bottom:9px}
+.tag.res{background:rgba(242,184,75,.9);color:#1a1200}
+.fld{display:block;font-size:12px;font-weight:700;color:var(--text2);margin:14px 0 6px}
+.inp{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:13px;font-size:16px}
+.qrbox{display:flex;justify-content:center;background:#fff;border-radius:14px;padding:14px;margin:14px 0;min-height:228px;align-items:center}
+.code{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:11px;padding:10px;font-size:12px;word-break:break-all;resize:none}
+.note{font-size:12.5px;color:var(--text2);line-height:1.5}
+.err{color:#F07B7B;font-size:13px;margin-top:10px;min-height:18px}
 </style>
 </head>
 <body>
@@ -73,7 +81,14 @@ const ov=document.getElementById('ov'),sheet=document.getElementById('sheet');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const brl=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const waDigits=n=>(n||'').replace(/\D/g,'');
-let PRODS=[],LOJA={};
+let PRODS=[],LOJA={},RES={},TOK='';
+const sinalDe=p=>Math.round((p.preco||0)*(RES.pct||10))/100;
+function pf(id,v){v=String(v);return id+String(v.length).padStart(2,'0')+v;}
+function crc(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++){c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF;}}return c.toString(16).toUpperCase().padStart(4,'0');}
+function asc(s,m){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9 .\-]/g,'').replace(/\s+/g,' ').trim().toUpperCase().slice(0,m);}
+function pixKey(p){const k=String(p.chave||'').trim();if(p.tipo==='telefone'){let d=k.replace(/\D/g,'');if(!d.startsWith('55'))d='55'+d;return '+'+d;}if(p.tipo==='cpf')return k.replace(/\D/g,'');if(p.tipo==='email')return k.toLowerCase();return k;}
+function pixCode(p,valor,desc){let mai=pf('00','br.gov.bcb.pix')+pf('01',pixKey(p));const d=asc(desc,30);if(d&&(mai.length+d.length+4)<=99)mai+=pf('02',d);let s=pf('00','01')+pf('26',mai)+pf('52','0000')+pf('53','986')+(valor>0?pf('54',(Math.round(valor*100)/100).toFixed(2)):'')+pf('58','BR')+pf('59',asc(p.nome,25)||'RECEBEDOR')+pf('60',asc(String(p.cidade||'').split(/[\/,-]/)[0],15)||'BRASIL')+pf('62',pf('05','***'))+'6304';return s+crc(s);}
+function loadQR(cb){if(window.QRCode){cb();return;}const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js';s.onload=cb;document.body.appendChild(s);}
 function state(msg){app.innerHTML='<div class="state"><h2 style="color:var(--brand);font-size:20px">BRIQ PRO</h2><p>'+esc(msg)+'</p></div>';}
 function photos(p){return (p.fotos&&p.fotos.length)?p.fotos:(p.cover?[p.cover]:[]);}
 function waLink(p){const d=waDigits(LOJA.whatsapp);if(!d)return'';const num=d.length<=11?'55'+d:d;return 'https://wa.me/'+num+'?text='+encodeURIComponent('Olá! Tenho interesse no '+(p.nome||'produto')+(p.preco?(' ('+brl(p.preco)+')'):'')+'. Está disponível?');}
@@ -89,6 +104,7 @@ function openProd(i){
     </div>
     <div class="dbody">
       ${p.condicao?`<span class="dbadge">${esc(p.condicao)}</span>`:''}
+      ${p.reservado?'<span class="dbadge" style="background:rgba(242,184,75,.16);color:#F2B84B;margin-left:6px">Reservado</span>':''}
       <h2 class="dname">${esc(p.nome)}</h2>
       ${p.preco?`<div class="dprice">${brl(p.preco)}</div>`:''}
       <div class="drow">
@@ -99,25 +115,50 @@ function openProd(i){
       </div>
       ${p.descricao&&p.descricao.trim()?`<div class="ddesc">${esc(p.descricao)}</div>`:''}
     </div>
+    ${(RES.ativa&&!p.reservado&&p.preco)?`<div class="dwrap-wa" style="padding-bottom:0;position:static;background:none"><button class="rsv" onclick="openReserva(${i})">Reservar com sinal de ${brl(sinalDe(p))}</button></div>`:''}
     ${wa?`<div class="dwrap-wa"><a class="wa" href="${wa}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.7 15l-1.3 5 5.1-1.3A10 10 0 1012 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.1-.7-2.6-1.1-4.2-3.8-4.3-4-.1-.2-1-1.4-1-2.6s.6-1.8.9-2.1c.2-.2.5-.3.6-.3h.5c.2 0 .4 0 .6.5l.8 1.9c.1.2.1.4 0 .5l-.4.5c-.2.2-.3.4-.1.7.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.2.1.4.1.6-.1l.7-.9c.2-.2.4-.2.6-.1l1.8.9c.3.1.4.2.5.3.1.3.1.6-.1 1z"/></svg>Tenho interesse</a></div>`:`<div class="dwrap-wa"><div style="text-align:center;color:var(--text2);font-size:13px;padding:6px">Contato indisponível</div></div>`}`;
   ov.classList.add('open');document.body.style.overflow='hidden';
 }
+function openReserva(i){const p=PRODS[i];if(!p)return;
+  sheet.innerHTML=`<div class="dbody"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:18px">Reservar</b><button class="xbtn" style="position:static" onclick="openProd(${i})">×</button></div>
+  <p class="note" style="margin-top:8px"><b style="color:var(--text)">${esc(p.nome)}</b> · ${brl(p.preco)}</p>
+  <p class="note">Pague o sinal de <b style="color:var(--brand)">${brl(sinalDe(p))}</b> por Pix e o produto fica reservado para você por ${RES.horas||24}h. O restante você acerta direto com o vendedor.</p>
+  <label class="fld">Seu nome</label><input class="inp" id="r_nome" autocomplete="name">
+  <label class="fld">Seu WhatsApp</label><input class="inp" id="r_tel" inputmode="tel" autocomplete="tel" placeholder="(86) 9…">
+  <div class="err" id="r_err"></div>
+  <button class="wa" style="width:100%;border:0;cursor:pointer;margin-top:6px" id="r_btn" onclick="enviarReserva(${i})">Gerar Pix do sinal</button></div>`;}
+async function enviarReserva(i){const p=PRODS[i];const nome=document.getElementById('r_nome').value.trim(),tel=document.getElementById('r_tel').value.trim();const er=document.getElementById('r_err');const b=document.getElementById('r_btn');
+  if(nome.length<2){er.textContent='Informe seu nome.';return;}if(tel.replace(/\D/g,'').length<10){er.textContent='Informe um WhatsApp com DDD.';return;}
+  b.disabled=true;b.textContent='Reservando…';er.textContent='';
+  let r;try{const x=await sb.rpc('vitrine_reservar',{tok:TOK,pid:p.id,p_nome:nome,p_whats:tel});if(x.error)throw x.error;r=x.data;}catch(e){er.textContent='Não foi possível reservar agora. Tente de novo.';b.disabled=false;b.textContent='Gerar Pix do sinal';return;}
+  if(!r||r.erro){const M={reservado:'Este produto acabou de ser reservado por outra pessoa.',indisponivel:'Este produto não está mais disponível para reserva.',nome:'Informe seu nome.',whatsapp:'Informe um WhatsApp válido com DDD.',limite:'Muitas reservas hoje. Fale com o vendedor pelo WhatsApp.',preco:'Este produto não tem preço definido.'};er.textContent=M[r&&r.erro]||'Não foi possível reservar.';b.disabled=false;b.textContent='Gerar Pix do sinal';if(r&&r.erro==='reservado'){p.reservado=true;}return;}
+  p.reservado=true;const code=pixCode(r.pix||{},r.valor,'Sinal '+p.nome);const exp=new Date(r.expira_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const d=waDigits(LOJA.whatsapp);const msg=encodeURIComponent('Olá! Reservei o '+p.nome+' pela vitrine e paguei o sinal de '+brl(r.valor)+'. Segue o comprovante. Meu nome: '+nome+'.');
+  sheet.innerHTML=`<div class="dbody"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:18px">Pague o sinal</b><button class="xbtn" style="position:static" onclick="closeProd();location.reload()">×</button></div>
+  <p class="note" style="margin-top:8px">${esc(p.nome)} fica reservado até <b style="color:var(--text)">${exp}</b>. A reserva é confirmada quando o vendedor receber o sinal.</p>
+  <div style="font-size:28px;font-weight:800;color:var(--brand);margin-top:6px">${brl(r.valor)}</div>
+  <div class="qrbox" id="r_qr"></div><textarea class="code" id="r_code" rows="4" readonly>${esc(code)}</textarea>
+  <button class="rsv" style="margin-top:10px" onclick="copiarPix(this)">Copiar Pix copia e cola</button>
+  ${d?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${d.length<=11?'55'+d:d}?text=${msg}">Enviar comprovante no WhatsApp</a>`:''}</div>`;
+  loadQR(()=>{new QRCode(document.getElementById('r_qr'),{text:code,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});});}
+function copiarPix(b){const t=document.getElementById('r_code');try{navigator.clipboard.writeText(t.value);}catch(e){t.select();document.execCommand('copy');}b.textContent='Copiado!';setTimeout(()=>b.textContent='Copiar Pix copia e cola',1500);}
+window.openReserva=openReserva;window.enviarReserva=enviarReserva;window.copiarPix=copiarPix;
 function onTrack(el){const i=Math.round(el.scrollLeft/el.clientWidth);const dots=el.parentNode.querySelectorAll('.dot');dots.forEach((d,k)=>d.classList.toggle('on',k===i));}
 function closeProd(){ov.classList.remove('open');document.body.style.overflow='';}
 window.openProd=openProd;window.closeProd=closeProd;window.onTrack=onTrack;
 
 (async function(){
-  const tok=new URLSearchParams(location.search).get('loja');
+  const tok=new URLSearchParams(location.search).get('loja');TOK=tok||'';
   if(!tok){state('Link inválido. Peça o link do catálogo ao vendedor.');return;}
   let data=null;
   try{const r=await sb.rpc('vitrine_loja',{tok});if(r.error)throw r.error;data=r.data;}catch(e){state('Não foi possível carregar agora. Tente novamente em instantes.');return;}
   if(!data){state('Catálogo não encontrado ou indisponível no momento.');return;}
-  LOJA=data.loja||{};PRODS=data.produtos||[];
+  LOJA=data.loja||{};PRODS=data.produtos||[];RES=data.reserva||{};
   let html='<div class="head"><img src="icon-192.png" alt=""><h1>'+esc(LOJA.nome||'Catálogo')+'</h1></div>';
   html+='<p class="sub">'+(PRODS.length?PRODS.length+' produto(s) disponível(is) · toque para ver':'Sem produtos disponíveis no momento.')+'</p>';
   if(PRODS.length){
     html+='<div class="grid">'+PRODS.map((p,i)=>{const fts=photos(p);return `<div class="card" onclick="openProd(${i})">
-      <div class="ph"${fts[0]?` style="background-image:url('${encodeURI(fts[0])}')"`:''}>${fts[0]?'':'sem foto'}${p.condicao?`<span class="tag">${esc(p.condicao)}</span>`:''}${fts.length>1?`<span class="pcount">📷 ${fts.length}</span>`:''}</div>
+      <div class="ph"${fts[0]?` style="background-image:url('${encodeURI(fts[0])}')"`:''}>${fts[0]?'':'sem foto'}${p.reservado?'<span class="tag res">Reservado</span>':(p.condicao?`<span class="tag">${esc(p.condicao)}</span>`:'')}${fts.length>1?`<span class="pcount">📷 ${fts.length}</span>`:''}</div>
       <div class="bd"><div class="nm">${esc(p.nome)}</div>${(p.marca||p.modelo)?`<div class="meta">${esc([p.marca,p.modelo].filter(Boolean).join(' '))}</div>`:''}${p.preco?`<div class="price">${brl(p.preco)}</div>`:''}</div>
     </div>`;}).join('')+'</div>';
   }
