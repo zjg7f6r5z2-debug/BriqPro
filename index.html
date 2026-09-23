@@ -396,6 +396,39 @@ body.bp-priv .num:not(input){filter:blur(7px);user-select:none}
 .dtrip{display:flex;align-items:center;gap:12px;padding:12px 14px!important;margin-bottom:12px}
 .dtrip-img{width:52px;height:52px;flex:0 0 52px;border-radius:12px;background-size:cover;background-position:center}
 </style>
+<style id="bp-fin3">
+.fsub{font-size:12px;font-weight:700;color:var(--text-2);margin-top:18px;letter-spacing:.2px}
+.people-add{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}.people-add #tr_pn{grid-column:1/-1}
+.pchips{display:flex;flex-wrap:wrap;gap:7px}
+.pchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);border-radius:999px;padding:5px 6px 5px 12px;font-size:13px;font-weight:600}
+.pchip small{color:var(--text-3);font-weight:500}.pchip button{width:22px;height:22px;border-radius:50%;background:var(--surface-3);color:var(--text-2);display:grid;place-items:center;font-size:14px;line-height:1}
+.mchips{display:flex;flex-wrap:wrap;gap:7px}
+.ct-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:2px 0 14px}
+.ct-steps>div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text-3)}
+.ct-steps b{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--surface-3);font-size:12px;color:var(--text-2)}
+.ct-steps .on b{background:var(--brand);color:#03170C}.ct-steps .on{color:var(--text);font-weight:600}.ct-steps .done b{background:var(--brand-soft);color:var(--brand)}
+.ct-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ct-ph{min-width:0}.ct-ph .input{margin-top:6px;padding:8px 10px;font-size:13px}
+.ct-img{position:relative;aspect-ratio:4/3;border-radius:12px;background:var(--surface-3) center/cover no-repeat}
+.ct-img button{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:16px;display:grid;place-items:center}
+.ct-add{aspect-ratio:4/3;border-radius:12px;border:1px dashed var(--border-strong);background:transparent;color:var(--text-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer}
+.ct-add svg{width:24px;height:24px}
+.vk{margin:0!important;padding:10px 0;border-bottom:1px solid var(--border);color:var(--text)!important}.vk:last-child{border-bottom:0}
+.ct-decl{align-items:flex-start!important;background:var(--brand-soft);border:1px solid rgba(1,227,119,.3);border-radius:12px;padding:12px;color:var(--text)!important;line-height:1.45}
+.ct-decl input{margin-top:2px!important}
+.ct-read{border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.ct-read summary{font-size:13px;font-weight:700;color:var(--brand);cursor:pointer}
+.ct-text{max-height:260px;overflow:auto;font-size:12px;line-height:1.5;color:var(--text-2);margin-top:8px}.ct-text p{margin:0 0 8px}
+.sig-box{margin-top:12px}.sig-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px}
+.sig-pad{display:block;width:100%;height:150px;background:#fff;border-radius:12px;border:1px solid var(--border-strong);touch-action:none;cursor:crosshair}
+.sig-name{font-size:11.5px;color:var(--text-3);margin-top:4px;text-align:center}
+.ct-done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:10px 0 4px}
+.ct-done svg{width:44px;height:44px;color:var(--brand);margin-bottom:6px}.ct-done b{font-size:17px}.ct-done span{font-size:13px;color:var(--text-2)}.ct-done small{font-size:11px;color:var(--text-3)}
+.px-qr{display:flex;justify-content:center;margin-top:14px;padding:14px;background:#fff;border-radius:14px;min-height:228px;align-items:center}
+.px-qr img,.px-qr canvas{max-width:200px}
+.fech-prev canvas{width:100%;height:auto;border-radius:14px;display:block}
+.split-tr{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+</style>
 <style id="bp-polish">
 /* profundidade: o gradiente de fundo já existia como token e nunca era usado */
 body{background-image:var(--bg-grad);background-attachment:fixed;background-repeat:no-repeat}
@@ -772,7 +805,8 @@ function openMenu(){
     tile(T('metas'),'Metas','Alvo do mês e o ritmo pra bater',go('metas')),
     tile(T('iq'),'Insights','O que seus números já mostram',go('iq')),
     tile(T('radar'),'Radar','Garimpar boas compras',go('radar')),
-    tile(T('relatorios'),'Relatórios','Exportar PDF, Excel ou CSV',go('relatorios'))])}
+    tile(T('relatorios'),'Relatórios','Exportar PDF, Excel ou CSV',go('relatorios')),
+    tile('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>','Fechamento','Resumo do mês em imagem','openFechamento()')])}
   ${grp('Finanças',[
     tile(T('viagens'),'Viagens','Custos, parcelas e o que falta',go('viagens')),
     tile('<path d="M12 5v14M5 12h14"/>','Lançamento','Entrada ou saída do dia a dia',"openMov('retirada')"),
@@ -782,7 +816,9 @@ function openMenu(){
     tile(T('fornecedores'),'Fornecedores','Parceiros e orçamentos',go('fornecedores')),
     tile(T('garantias'),'Garantias','Prazos que estão vencendo',go('garantias')),
     tile(I.calc,'Calculadora','Lucro e preço de venda','openCalc()'),
-    tile(I.hand,'Negociar','Simular a oferta na hora','openNegoRapida()')])}
+    tile(I.hand,'Negociar','Simular a oferta na hora','openNegoRapida()'),
+    tile('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>','Contratos','Contratos de venda assinados','openContratos()'),
+    tile('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/>','Cobrar por Pix','QR Code e copia e cola','openPix(0)')])}
   ${grp('Conta',[
     tile(I.imei,'Consulta IMEI','Checar antes de comprar','openIMEIConsulta()'),
     tile(I.gear,'Configurações','Perfil, vitrine e backup',go('config')),
@@ -901,6 +937,7 @@ function rDash(v){
   </div>
   ${alerts}
   ${bpDashFin()}
+  ${bpPosVendaCard()}
 
   <div class="card metacard" style="margin-top:4px">
     <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:8px;align-items:center"><b style="font-size:15px">Meta do Mês</b></div><div style="display:flex;gap:4px"><button class="icon-btn" onclick="setTab('metas')" aria-label="Detalhe">${chart}</button><button class="icon-btn" onclick="openGoals()" aria-label="Editar">${pen}</button></div></div>
@@ -1115,7 +1152,7 @@ function openDetail(id){
     <div style="display:flex;justify-content:space-between;margin-top:14px"><b style="font-size:13.5px">Despesas</b><b class="num">${brl(d.despesas)}</b></div>
     ${exps.length?exps.map(e=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><span>${esc(e.descricao)} <small style="color:var(--text-3)">${fmtDate(e.data)}</small></span><b class="num">${brl(e.valor)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem despesas.</p>'}
     ${saleB}
-    <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${p.status!=='vendido'?`<button class="btn btn-ghost" style="width:auto" onclick="toggleVitrineProd('${p.id}')">${p.na_vitrine?'Tirar da vitrine':'Pôr na vitrine'}</button>`:''}${(p.imei||p.numero_serie)?`<button class="btn btn-ghost" style="width:auto" onclick="openIMEI('${p.id}')">IMEI</button>`:''}<button class="btn btn-ghost" style="width:auto" onclick="openEtiqueta('${p.id}')">Etiqueta</button>${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button><button class="btn btn-ghost" style="width:auto" onclick="reciboWhats('${p.id}')">Recibo no Zap</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
+    <div class="modal-foot"><button class="btn btn-ghost" style="width:auto" onclick="gerarAnuncio('${p.id}')">Anúncio</button><button class="btn btn-ghost" style="width:auto" onclick="msgRapida('${p.id}')">Mensagens</button>${p.status!=='vendido'?`<button class="btn btn-ghost" style="width:auto" onclick="toggleVitrineProd('${p.id}')">${p.na_vitrine?'Tirar da vitrine':'Pôr na vitrine'}</button>`:''}${(p.imei||p.numero_serie)?`<button class="btn btn-ghost" style="width:auto" onclick="openIMEI('${p.id}')">IMEI</button>`:''}<button class="btn btn-ghost" style="width:auto" onclick="openContrato('${p.id}')">Contrato</button><button class="btn btn-ghost" style="width:auto" onclick="bpPixProduto('${p.id}')">Pix</button>${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="bpPosVenda('${p.id}')">Pós-venda</button>`:''}<button class="btn btn-ghost" style="width:auto" onclick="openEtiqueta('${p.id}')">Etiqueta</button>${d.vendido?`<button class="btn btn-ghost" style="width:auto" onclick="reciboPDF('${p.id}')">Recibo</button><button class="btn btn-ghost" style="width:auto" onclick="reciboWhats('${p.id}')">Recibo no Zap</button>`:`<button class="btn btn-ghost" style="width:auto" onclick="toggleReserva('${p.id}')">${p.status==='reservado'?'Cancelar reserva':'Reservar'}</button>`}<button class="btn btn-ghost" onclick="openProductForm('${p.id}')">Editar</button>${d.vendido?`<button class="btn btn-ghost" onclick="openSale('${p.id}')">Editar venda</button>`:`<button class="btn btn-primary" onclick="openSale('${p.id}')">Registrar venda</button>`}</div>`);
 }
 
 /* ============ VENDA ============ */
@@ -1124,21 +1161,21 @@ function openSale(id){
   window.permItems=[];window.saleProof=null;const v=existing||{data_venda:todayISO(),valor_vendido:'',forma_pagamento:'Pix',comprador:''};const ct=derive(p).custo;
   openModal(`<div class="modal-head"><h3>Registrar venda</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
   <p style="font-size:13.5px;color:var(--text-2);margin-top:4px">${esc(p.nome)} · custo ${brl(ct)}</p>
-  <div class="frow"><div><label class="lbl">Data</label><input class="input" type="date" id="s_data" value="${v.data_venda}"></div><div><label class="lbl">Valor vendido (R$)</label><input class="input num" type="number" step="0.01" id="s_val" value="${v.valor_vendido}"></div><div><label class="lbl">Forma</label><select class="input" id="s_forma">${['Pix','Dinheiro','Cartão','Transferência','Outro'].map(x=>`<option ${x===v.forma_pagamento?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="lbl">Canal da venda</label><select class="input" id="s_canal">${['WhatsApp','OLX','Marketplace','Instagram','Loja física','Indicação','Outro'].map(x=>`<option ${x===(v.canal_venda||'WhatsApp')?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="lbl">Taxa plataforma (R$)</label><input class="input num" type="number" step="0.01" id="s_taxa" value="${v.taxa_venda||''}" placeholder="0,00"></div><div><label class="lbl">Comprador</label><input class="input" id="s_comp" value="${esc(v.comprador||'')}"></div></div>
+  <div class="frow"><div><label class="lbl">Data</label><input class="input" type="date" id="s_data" value="${v.data_venda}"></div><div><label class="lbl">Valor vendido (R$)</label><input class="input num" type="number" step="0.01" id="s_val" value="${v.valor_vendido}"></div><div><label class="lbl">Forma</label><select class="input" id="s_forma">${['Pix','Dinheiro','Cartão','Transferência','Outro'].map(x=>`<option ${x===v.forma_pagamento?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="lbl">Canal da venda</label><select class="input" id="s_canal">${['WhatsApp','OLX','Marketplace','Instagram','Loja física','Indicação','Outro'].map(x=>`<option ${x===(v.canal_venda||'WhatsApp')?'selected':''}>${x}</option>`).join('')}</select></div><div><label class="lbl">Taxa plataforma (R$)</label><input class="input num" type="number" step="0.01" id="s_taxa" value="${v.taxa_venda||''}" placeholder="0,00"></div><div><label class="lbl">Comprador</label><input class="input" id="s_comp" value="${esc(v.comprador||'')}"></div><div><label class="lbl">WhatsApp do comprador</label><input class="input" id="s_tel" inputmode="tel" value="${esc(v.comprador_contato||'')}" placeholder="(86) 9…"></div></div>
   <div class="card" style="margin-top:12px;padding:14px"><label style="display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer"><span><b style="font-size:13.5px">Recebi um produto na venda</b><br><small style="color:var(--text-2)">Cliente pagou parte ou tudo com um item</small></span><input type="checkbox" id="s_permuta" onchange="togglePermuta()"></label><div id="permWrap" style="display:none;margin-top:10px"><div id="permList"></div><button class="btn btn-ghost btn-sm" style="width:auto" onclick="addPermItem()">+ Adicionar item</button><div id="permResumo" style="font-size:12px;color:var(--text-2);margin-top:8px"></div></div></div><div class="card" style="margin-top:12px;padding:14px"><b style="font-size:13.5px">📸 Foto-comprovante do estado</b><br><small style="color:var(--text-2)">Registre o aparelho na hora da venda — sua proteção contra "veio com defeito".</small><div id="sProofPrev" style="margin-top:10px">${existing&&existing.foto_comprovante?`<img src="${existing.foto_comprovante}" style="max-width:150px;border-radius:10px;border:1px solid var(--border)">`:''}</div><button type="button" class="btn btn-ghost btn-sm" style="width:auto;margin-top:8px" onclick="pickSaleProof()">Anexar foto</button></div><div class="card" id="sPrev" style="margin-top:14px;padding:14px"></div>
   <div class="modal-foot">${existing?`<button class="btn btn-ghost" style="flex:0 0 auto" onclick="undoSale('${id}','${existing.id}')">Desfazer</button>`:''}<button class="btn btn-primary" id="saveSale">Confirmar</button></div>`);
   const upd=()=>{const val=numf($('#s_val').value),ll=val-ct,roi=ct>0?ll/ct*100:0,mg=val>0?ll/val*100:0;$('#sPrev').innerHTML=`<div class="dt-grid" style="margin:0"><div><div class="k">Lucro líquido</div><div class="v num ${ll>=0?'up':'down'}">${brl(ll)}</div></div><div><div class="k">ROI</div><div class="v num">${roi.toFixed(1)}%</div></div><div><div class="k">Margem</div><div class="v num">${mg.toFixed(1)}%</div></div><div><div class="k">Lucro bruto</div><div class="v num">${brl(val-numf(p.preco_pago))}</div></div></div>`;};
   $('#s_val').oninput=()=>{upd();permResumo();};upd();
   $('#saveSale').onclick=async()=>{
     const val=numf($('#s_val').value);if(val<=0){toast('Informe o valor');return;}
-    const _po=$('#s_permuta')&&$('#s_permuta').checked;const _pit=_po?window.permItems.filter(it=>(it.nome||'').trim()):[];const _pv=_pit.reduce((a,it)=>a+numf(it.valor),0);const payload={product_id:id,data_venda:$('#s_data').value,valor_vendido:val,forma_pagamento:$('#s_forma').value,canal_venda:$('#s_canal')?$('#s_canal').value:'',comprador:$('#s_comp').value.trim(),taxa_venda:numf($('#s_taxa')?$('#s_taxa').value:0),permuta_valor:_pv,permuta_itens:_pit.map(it=>({nome:(it.nome||'').trim(),valor:numf(it.valor)}))};
+    const _po=$('#s_permuta')&&$('#s_permuta').checked;const _pit=_po?window.permItems.filter(it=>(it.nome||'').trim()):[];const _pv=_pit.reduce((a,it)=>a+numf(it.valor),0);const payload={product_id:id,data_venda:$('#s_data').value,valor_vendido:val,forma_pagamento:$('#s_forma').value,canal_venda:$('#s_canal')?$('#s_canal').value:'',comprador:$('#s_comp').value.trim(),comprador_contato:($('#s_tel')&&$('#s_tel').value.trim())||null,taxa_venda:numf($('#s_taxa')?$('#s_taxa').value:0),permuta_valor:_pv,permuta_itens:_pit.map(it=>({nome:(it.nome||'').trim(),valor:numf(it.valor)}))};
     try{if(window.saleProof&&window.saleProof.blob){const fpath=`${USER.id}/sale_${id}/${uidStr()}.jpg`;const fup=await sb.storage.from('product-images').upload(fpath,window.saleProof.blob,{contentType:'image/jpeg',upsert:false});if(!fup.error){payload.foto_comprovante=sb.storage.from('product-images').getPublicUrl(fpath).data.publicUrl;}}else if(existing&&existing.foto_comprovante){payload.foto_comprovante=existing.foto_comprovante;}}catch(e){}
     if(existing)await sb.from('sales').update(payload).eq('id',existing.id);
     else await sb.from('sales').insert(payload);
     await sb.from('products').update({status:'vendido'}).eq('id',id);
     if(_pit.length){await sb.from('products').insert(_pit.map(it=>({nome:(it.nome||'').trim()||'Item recebido',preco_pago:numf(it.valor),valor_mercado:numf(it.valor),status:'comprado',condicao:'usado',categoria:'',origem:'Permuta',data_compra:todayISO()})));}
     await logAct('Venda registrada','sale',id);
-    await refresh('sales');await refresh('products');closeModal();toast('Venda registrada 🎉');render();
+    await refresh('sales');await refresh('products');closeModal();toast('Venda registrada 🎉');render();if(!existing)setTimeout(()=>bpAfterSale(id),350);
   };
 }
 function undoSale(pid,sid){confirmBox('Desfazer venda?','O produto volta ao estoque como Anunciado.',async()=>{await sb.from('sales').delete().eq('id',sid);await sb.from('products').update({status:'anunciado'}).eq('id',pid);await refresh('sales');await refresh('products');closeModal();toast('Venda desfeita');render();});}
@@ -1375,6 +1412,7 @@ function expCSV(){const head=['Produto','Categoria','Status','Score','Custo','Ve
 /* ============ CONFIG ============ */
 function rConfig(v){
   v.innerHTML=`<div class="card"><h3 style="font-size:16px">Perfil</h3><div class="frow"><div><label class="lbl">Nome</label><input class="input" id="p_name" value="${esc(PROFILE.full_name||'')}"></div><div><label class="lbl">Negócio</label><input class="input" id="p_biz" value="${esc(PROFILE.business_name||'')}"></div><div><label class="lbl">Telefone</label><input class="input" id="p_phone" value="${esc(PROFILE.phone||'')}"></div><div><label class="lbl">Dias p/ "parado"</label><input class="input num" type="number" id="p_stale" value="${S.settings.stale_days||30}"></div></div><div style="margin-top:14px"><button class="btn btn-primary" style="width:auto" onclick="saveProfile()">Salvar perfil</button></div></div>
+  ${bpSellerCard()}
   <div class="card" style="margin-top:14px"><h3 style="font-size:16px">Vitrine pública 🛍️</h3>
   <p style="font-size:12.5px;color:var(--text-2);margin:6px 0 12px">Um catálogo do seu estoque por link, pra mandar no WhatsApp. Mostra só foto, nome, condição e preço — <b>nunca seus custos</b>.</p>
   <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px"><input type="checkbox" id="vit_on" ${PROFILE.vitrine_ativa?'checked':''} onchange="toggleVitrineLoja(this.checked)"> Vitrine ativa</label>
@@ -1448,7 +1486,7 @@ function openRecvDetail(id){const r=S.receivables.find(x=>x.id===id);if(!r)retur
     <div><b>Parcela ${i.numero}</b><br><small style="color:${(!i.pago&&i.vencimento&&i.vencimento<todayISO())?'var(--loss)':'var(--text-2)'}">vence ${fmtDate(i.vencimento)}</small></div>
     <div style="display:flex;align-items:center;gap:10px"><b class="num">${brl(i.valor)}</b>
     <button class="btn ${i.pago?'btn-ghost':'btn-primary'} btn-sm" onclick="toggleParc('${i.id}',${i.pago?'false':'true'},'${r.id}')">${i.pago?'Pago ✓':'Receber'}</button></div></div>`).join('')}
-  <div class="modal-foot"><button class="btn btn-ghost" style="color:var(--loss)" onclick="delRecv('${r.id}')">Excluir conta</button></div>`);}
+  <div class="modal-foot"><button class="btn btn-primary" onclick="bpPixRecv('${r.id}')">Cobrar por Pix</button><button class="btn btn-ghost" style="color:var(--loss)" onclick="delRecv('${r.id}')">Excluir conta</button></div>`);}
 async function toggleParc(id,pago,rid){await sb.from('receivable_installments').update({pago:pago,data_pagamento:pago?todayISO():null}).eq('id',id);await refreshRecv();render();if(rid)openRecvDetail(rid);}
 async function delRecv(id){await sb.from('receivables').delete().eq('id',id);await refreshRecv();closeModal();toast('Excluído');render();}
 async function refreshRecv(){const a=await Promise.all([sb.from('receivables').select('*').order('created_at',{ascending:false}),sb.from('receivable_installments').select('*')]);S.receivables=a[0].data||[];S.installments=a[1].data||[];}
@@ -2181,7 +2219,7 @@ function rFinResumo(v){
     <div style="min-width:0"><b style="font-size:15px">Despesas fixas</b><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${fixAtivas} conta(s) recorrente(s)</div></div>
     <div style="text-align:right;flex-shrink:0"><div class="num down" style="font-size:19px;font-weight:800">${brl(fixedTotal())}</div><div style="font-size:10.5px;color:var(--text-2)">por mês</div></div>
   </div>
-  <div class="sec-title"><h3>Briques</h3></div>
+  <div class="sec-title"><h3>Briques</h3><button class="lnk-btn" onclick="openFechamento()">Fechamento do mês</button></div>
   <div class="card" style="margin-bottom:10px"><b style="font-size:14px">Lucro por canal de venda</b><div style="margin-top:6px">${canais.length?canais.map(([c,l])=>`<div class="bar-row"><span>${esc(c)}</span><div class="prog"><i style="width:${Math.round(Math.abs(l)/maxC*100)}%;${l<0?'background:var(--loss)':''}"></i></div><b class="num ${l>=0?'up':'down'}">${brl(l)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3);margin:0">Sem vendas ainda. O canal é registrado ao salvar cada venda.</p>'}</div></div>
   <div class="card" style="padding:16px">
     <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Faturamento MEI ${anoAtual}</b><span style="font-size:12px;color:var(--text-2)">limite R$ 81.000</span></div>
@@ -2260,95 +2298,12 @@ async function bpChkSave(tid,L,refocus){const t=(S.trips||[]).find(x=>x.id===tid
 function bpChkAdd(tid,txt){const t=(S.trips||[]).find(x=>x.id===tid);if(!t)return;const typed=!txt;const v=(txt||($('#chk_new')&&$('#chk_new').value)||'').trim();if(!v)return;bpChkSave(tid,[...(Array.isArray(t.checklist)?t.checklist:[]),{t:v,ok:false}],typed);}
 function bpChkToggle(tid,k){const t=(S.trips||[]).find(x=>x.id===tid);if(!t)return;const L=(t.checklist||[]).map((x,i)=>i===k?{...x,ok:!x.ok}:x);bpChkSave(tid,L);}
 function bpChkDel(tid,k){const t=(S.trips||[]).find(x=>x.id===tid);if(!t)return;bpChkSave(tid,(t.checklist||[]).filter((x,i)=>i!==k));}
-function rViagem(v,id){
-  const t=S.trips.find(x=>x.id===id);const c=tripCalc(id);const pct=c.total>0?Math.round(c.pago/c.total*100):0;
-  const dias=bpTripDias(t),pes=Math.max(1,parseInt(t.pessoas)||1),orc=numf(t.orcamento);
-  const items=c.items.slice().sort((a,b)=>{const ca=tiCalc(a),cb=tiCalc(b);if((ca.falta>0)!==(cb.falta>0))return ca.falta>0?-1:1;return String(ca.prox||'9999').localeCompare(String(cb.prox||'9999'));});
-  const byT={};c.items.forEach(i=>{const k=i.tipo||'Outros';byT[k]=(byT[k]||0)+tiCalc(i).total;});
-  const tipos=Object.entries(byT).sort((a,b)=>b[1]-a[1]);const maxT=Math.max(1,...tipos.map(x=>x[1]));
-  const st=[];if(pes>1)st.push(['Por pessoa',brl(c.total/pes),pes+' pessoas']);if(dias&&c.total>0)st.push(['Por dia',brl(c.total/dias),dias+' dias']);
-  let orcH='';if(orc>0){const u=c.total/orc*100;const col=u>100?'var(--loss)':(u>=90?'var(--amber)':'');orcH=`<div class="orc"><div class="orc-top"><span>Orçamento ${brl(orc)}</span><b class="num ${u>100?'down':''}">${u>100?'passou '+brl(c.total-orc):'sobram '+brl(orc-c.total)}</b></div><div class="prog" style="height:6px"><i style="width:${Math.min(100,u)}%;${col?'background:'+col:''}"></i></div></div>`;}
-  v.innerHTML=`<button class="btn btn-ghost btn-sm" style="width:auto;margin-bottom:12px" onclick="bpOpenTrip(null)">← Viagens</button>
-  ${tripCoverHTML(t,true)}
-  <div class="card" style="padding:16px">
-    <div style="font-size:12.5px;color:var(--text-2);font-weight:600">Falta pagar</div>
-    <div class="num" style="font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.5px;margin-top:2px">${brl(c.falta)}</div>
-    ${c.total>0?`<div class="prog"><i style="width:${pct}%"></i></div>`:''}
-    <div class="fin4"><div><span>Total</span><b class="num">${brl(c.total)}</b></div><div><span>Já pago</span><b class="num up">${brl(c.pago)}</b></div><div><span>Em parcelas</span><b class="num">${brl(c.parcelas)}</b></div><div><span>A pagar</span><b class="num">${brl(c.apagar)}</b></div></div>
-    ${orcH}
-    ${st.length?`<div class="tstats">${st.map(s=>`<div><span>${s[0]}</span><b class="num">${s[1]}</b><small>${s[2]}</small></div>`).join('')}</div>`:''}
-  </div>
-  <div class="sec-title"><h3>Custos</h3><button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${t.id}')">+ Adicionar custo</button></div>
-  ${items.length?items.map(tiCard).join(''):'<div class="empty" style="padding:28px 16px"><b>Nenhum custo lançado</b><p>Adicione passagem, hospedagem, passeios… parcelado, com entrada, já pago ou a pagar.</p></div>'}
-  ${tripChkHTML(t)}
-  ${tipos.length>1?`<div class="sec-title"><h3>Por tipo</h3></div><div class="card">${tipos.map(([k,val])=>`<div class="bar-row"><span>${esc(k)}</span><div class="prog"><i style="width:${Math.round(val/maxT*100)}%"></i></div><b class="num">${brl(val)}</b></div>`).join('')}</div>`:''}
-  ${t.notas?`<div class="sec-title"><h3>Observações</h3></div><div class="card" style="font-size:13.5px;color:var(--text-2);white-space:pre-wrap">${esc(t.notas)}</div>`:''}
-  <div style="margin-top:22px;text-align:center"><button class="btn btn-ghost btn-sm" style="width:auto;color:var(--loss)" onclick="delTrip('${t.id}')">Excluir viagem</button></div>`;
-}
-function tiCard(i){
-  const c=tiCalc(i);const late=c.falta>0&&c.prox&&c.prox<todayISO();let status,acao='';
-  if(c.parc){const pt=[];if(c.e>0)pt.push('Entrada '+brl(c.e)+(c.ep?' paga':''));pt.push(`${c.pg} de ${c.n} parcelas de ${brl(c.vp)}`);
-    status=pt.join(' + ')+(c.quitado?'':(c.prox?(c.proxEntrada?' · entrada vence ':' · próxima ')+fmtDate(c.prox):''));
-    if(!c.quitado)acao=`<button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTiPay('${i.id}')">${c.proxEntrada?'Pagar entrada':`Pagar parcela ${c.pg+1}/${c.n}`}</button>`;}
-  else if(i.pago){status='Pago'+(i.data_pagamento?' em '+fmtDate(i.data_pagamento):'');}
-  else{status='A pagar'+(i.vencimento?' · vence '+fmtDate(i.vencimento):'');acao=`<button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTiPay('${i.id}')">Marcar pago</button>`;}
-  const tags=(i.descricao?`<span class="pill" style="background:var(--surface-3);color:var(--text-2)">${esc(i.tipo||'Outros')}</span>`:'')+(late?'<span class="pill" style="background:var(--loss-soft);color:var(--loss)">vencido</span>':'');
-  return `<div class="card" style="margin-bottom:10px${late?';border-color:var(--loss)':''}">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0">${tags?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${tags}</div>`:''}<b style="display:block;font-size:14.5px">${esc(i.descricao||i.tipo||'Custo')}</b><div style="font-size:12px;color:var(--text-2);margin-top:3px">${status}</div></div>
-    <div style="text-align:right;flex-shrink:0"><b class="num">${brl(c.total)}</b>${c.falta>0?`<div class="num down" style="font-size:12px;margin-top:3px">falta ${brl(c.falta)}</div>`:'<div class="up" style="font-size:12px;margin-top:3px">quitado</div>'}</div></div>
-    ${c.parc?`<div class="prog" style="height:6px"><i style="width:${c.total>0?Math.round(c.pago/c.total*100):0}%"></i></div>`:''}
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${acao}<button class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${i.trip_id}','${i.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto;color:var(--loss)" onclick="delTripItem('${i.id}')">Excluir</button></div>
-  </div>`;
-}
-
 /* ---------- Viagens: formulários ---------- */
-function openTrip(id){
-  const t=id?(S.trips||[]).find(x=>x.id===id):null;window.bpTripCover=null;window.bpTripCoverDel=false;
-  openModal(`<div class="modal-head"><h3>${t?'Editar viagem':'Nova viagem'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
-  <div class="field" style="margin-top:4px"><label class="lbl">Foto de capa</label><div class="cover-pick" id="tr_cov" onclick="bpPickCover()" style="${t&&t.capa_url?`background-image:url('${esc(t.capa_url)}')`:''}">${t&&t.capa_url?'':'<span>Toque para escolher uma foto</span>'}</div><button type="button" class="lnk-btn" id="tr_cov_rm" style="margin-top:6px;${t&&t.capa_url?'':'display:none'}" onclick="bpRmCover()">Remover foto</button></div>
-  <div class="field"><label class="lbl">Viagem</label><input class="input" id="tr_nome" value="${t?esc(t.nome):''}" placeholder="Ex: Fortaleza, Congresso em Recife"></div>
-  <div class="field"><label class="lbl">Tipo</label>${bpChips('tr_tipo',TRIP_TIPOS,t?(t.tipo||''):'Lazer')}</div>
-  <div class="frow"><div><label class="lbl">Ida</label><input class="input" type="date" id="tr_ida" value="${(t&&t.data_ida)||''}"></div><div><label class="lbl">Volta</label><input class="input" type="date" id="tr_volta" value="${(t&&t.data_volta)||''}"></div><div><label class="lbl">Orçamento (R$, opcional)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="tr_orc" value="${t&&numf(t.orcamento)?numf(t.orcamento):''}" placeholder="Quanto pretende gastar"></div><div><label class="lbl">Pessoas na viagem</label><input class="input num" type="number" min="1" inputmode="numeric" id="tr_pes" value="${t?(t.pessoas||1):1}"></div></div>
-  <div class="field"><label class="lbl">Observações (opcional)</label><textarea class="input" id="tr_notas" rows="2">${t?esc(t.notas||''):''}</textarea></div>
-  <div class="modal-foot"><button class="btn btn-primary" id="tr_save" onclick="saveTrip(${t?`'${t.id}'`:'null'})">${t?'Salvar':'Criar viagem'}</button></div>`);
-}
 function bpPickCover(){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.style.display='none';
   inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;try{const b=await compressBlob(f,1600,.8);const url=URL.createObjectURL(b);window.bpTripCover={blob:b,url};window.bpTripCoverDel=false;const el=$('#tr_cov');if(el){el.style.backgroundImage=`url('${url}')`;el.innerHTML='';}const rm=$('#tr_cov_rm');if(rm)rm.style.display='';}catch(e){toast('Não foi possível ler a imagem');}inp.remove();};
   document.body.appendChild(inp);inp.click();}
 function bpRmCover(){window.bpTripCover=null;window.bpTripCoverDel=true;const el=$('#tr_cov');if(el){el.style.backgroundImage='';el.innerHTML='<span>Toque para escolher uma foto</span>';}const rm=$('#tr_cov_rm');if(rm)rm.style.display='none';}
 function bpStoragePath(url){const k='/product-images/';const i=String(url||'').indexOf(k);return i>=0?decodeURIComponent(url.slice(i+k.length)):null;}
-async function saveTrip(id){
-  const nome=$('#tr_nome').value.trim();if(!nome){toast('Dê um nome à viagem');return;}
-  const ida=$('#tr_ida').value||null,volta=$('#tr_volta').value||null;if(ida&&volta&&volta<ida){toast('A volta está antes da ida');return;}
-  const old=id?(S.trips||[]).find(x=>x.id===id):null;
-  const payload={nome,tipo:(window.bpSel||{}).tr_tipo||null,data_ida:ida,data_volta:volta,notas:$('#tr_notas').value.trim()||null,orcamento:numf($('#tr_orc').value)||null,pessoas:Math.max(1,parseInt($('#tr_pes').value)||1)};
-  if(window.bpTripCoverDel&&!window.bpTripCover)payload.capa_url=null;
-  const btn=$('#tr_save');if(btn){btn.disabled=true;btn.textContent='Salvando…';}
-  const r=id?await sb.from('trips').update(payload).eq('id',id):await sb.from('trips').insert(payload).select().single();
-  if(r.error){toast('Erro: '+r.error.message);if(btn){btn.disabled=false;btn.textContent='Salvar';}return;}
-  const tid=id||(r.data&&r.data.id);
-  if(tid&&window.bpTripCover&&window.bpTripCover.blob){
-    const path=`${USER.id}/trips/${tid}/${uidStr()}.jpg`;const up=await sb.storage.from('product-images').upload(path,window.bpTripCover.blob,{contentType:'image/jpeg',upsert:false});
-    if(up.error)toast('A foto não foi enviada: '+up.error.message);
-    else{const url=sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;await sb.from('trips').update({capa_url:url}).eq('id',tid);}
-  }
-  if(old&&old.capa_url&&(window.bpTripCover||window.bpTripCoverDel)){const op=bpStoragePath(old.capa_url);if(op)try{await sb.storage.from('product-images').remove([op]);}catch(e){}}
-  window.bpTripCover=null;window.bpTripCoverDel=false;
-  await refresh('trips');closeModal();toast(id?'Viagem salva':'Viagem criada');window.bpTrip=tid||null;setTab('viagens');
-}
-function openTripItem(tripId,id){
-  const i=id?(S.tripItems||[]).find(x=>x.id===id):null;
-  const sit=i?(i.forma==='parcelado'?'Parcelado':(i.pago?'Já pago':'A pagar')):'Parcelado';
-  window.bpTiEdit=i;
-  openModal(`<div class="modal-head"><h3>${i?'Editar custo':'Novo custo'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
-  <div class="field" style="margin-top:4px"><label class="lbl">Tipo</label>${bpChips('ti_tipo',TRIP_ITEM_TIPOS,i?(i.tipo||'Outros'):'Passagem')}</div>
-  <div class="field"><label class="lbl">Descrição (opcional)</label><input class="input" id="ti_desc" value="${i?esc(i.descricao||''):''}" placeholder="Ex: Latam ida e volta, hotel 4 noites"></div>
-  <div class="field"><label class="lbl">Pagamento</label>${bpChips('ti_sit',TI_SIT,sit)}</div>
-  <div id="ti_body"></div>
-  ${i?'':'<label class="chk" id="ti_chk"><input type="checkbox" id="ti_caixa"><span>Descontar do caixa o que já foi pago</span></label>'}
-  <div class="modal-foot"><button class="btn btn-primary" onclick="saveTripItem('${tripId}',${i?`'${i.id}'`:'null'})">Salvar custo</button></div>`);
-  tiSit(sit);
-}
 function tiSit(sit){
   const i=window.bpTiEdit;const b=$('#ti_body');if(!b)return;
   const keep=$('#ti_val')?$('#ti_val').value:'';const valAv=(i&&i.forma!=='parcelado')?numf(i.valor):keep;const isP=i&&i.forma==='parcelado';
@@ -2382,26 +2337,6 @@ function tiPrev(src){
   if(!n||!vp){p.style.display='none';return;}
   const tot=e+n*vp,pago=(ep?e:0)+pg*vp;p.style.display='';
   p.innerHTML=`<div><span>Total</span><b class="num">${brl(tot)}</b></div><div><span>Pago</span><b class="num up">${brl(pago)}</b></div><div><span>Falta</span><b class="num down">${brl(tot-pago)}</b></div>`;
-}
-async function saveTripItem(tripId,id){
-  const sel=window.bpSel||{};const sit=sel.ti_sit||'Parcelado';const tipo=sel.ti_tipo||'Outros';const descricao=$('#ti_desc').value.trim()||null;
-  const p={trip_id:tripId,tipo,descricao};let pagoAgora=0,dataPg=todayISO();
-  if(sit==='Parcelado'){
-    const n=parseInt($('#ti_n').value)||0,vp=numf($('#ti_vp').value),e=numf($('#ti_e').value);let pg=parseInt($('#ti_pg').value)||0;
-    if(n<1){toast('Informe o nº de parcelas');return;}if(vp<=0){toast('Informe o valor da parcela');return;}if(pg<0)pg=0;if(pg>n){toast('Parcelas pagas maior que o total');return;}
-    const ep=e>0&&$('#ti_ep').checked,de=e>0?($('#ti_de').value||null):null;
-    Object.assign(p,{forma:'parcelado',parcelas:n,valor_parcela:vp,parcelas_pagas:pg,primeira_parcela:$('#ti_1p').value||null,entrada:e,entrada_paga:ep,data_entrada:de,valor:e+n*vp,pago:pg>=n&&(e<=0||ep),vencimento:null,data_pagamento:null});
-    pagoAgora=(ep?e:0)+pg*vp;if(ep&&de&&!pg)dataPg=de;
-  }else{
-    const val=numf($('#ti_val').value);if(val<=0){toast('Informe o valor');return;}const pago=sit==='Já pago';
-    if(pago)dataPg=$('#ti_dp').value||todayISO();
-    Object.assign(p,{forma:'avista',valor:val,pago,data_pagamento:pago?dataPg:null,vencimento:pago?null:($('#ti_venc').value||null),parcelas:1,parcelas_pagas:pago?1:0,valor_parcela:val,primeira_parcela:null,entrada:0,entrada_paga:false,data_entrada:null});pagoAgora=pago?val:0;
-  }
-  const r=id?await sb.from('trip_items').update(p).eq('id',id):await sb.from('trip_items').insert(p);
-  if(r.error){toast('Erro: '+r.error.message);return;}
-  const ck=$('#ti_caixa');
-  if(!id&&ck&&ck.checked&&pagoAgora>0){const tr=(S.trips||[]).find(x=>x.id===tripId);const r2=await sb.from('cash_flow').insert({kind:'retirada',valor:pagoAgora,data:dataPg,nota:'Viagem '+(tr?tr.nome:'')+' · '+(descricao||tipo),categoria:'Viagem'});if(!r2.error)await refresh('cash');}
-  await refresh('trips');closeModal();toast('Custo salvo');render();
 }
 function openTiPay(id){
   const i=(S.tripItems||[]).find(x=>x.id===id);if(!i)return;const c=tiCalc(i);const tr=(S.trips||[]).find(x=>x.id===i.trip_id);
@@ -2504,6 +2439,488 @@ function delPayable(id){confirmBox('Excluir conta','Esta conta será removida.',
 function delPayGroup(g){const n=(S.payables||[]).filter(p=>p.grupo===g).length;confirmBox('Excluir parcelamento',`Remove a entrada e as ${n} linha(s) deste parcelamento.`,async()=>{const r=await sb.from('payables').delete().eq('grupo',g);if(r.error){toast('Erro: '+r.error.message);return;}S.payables=(S.payables||[]).filter(x=>x.grupo!==g);closeModal();toast('Parcelamento excluído');render();});}
 
 Object.assign(window,{rCaixa,bpTogglePriv,bpQuickPrev,bpQuickSave,openBudgets,saveBudgets,rFinResumo,bpDashFin,openTrip,saveTrip,bpPickCover,bpRmCover,openTripItem,tiSit,tiPrev,saveTripItem,openTiPay,payTi,bpChkAdd,bpChkToggle,bpChkDel,openPayable,pgModo,pgPrev,savePayable,pagarPayable,despagarPayable,openPayGroup,delPayable,delPayGroup});
+
+/* ===== BLOCO 13: v3 — contrato de venda, Pix, divisão da viagem, modo em viagem, pós-venda, fechamento do mês ===== */
+function bpFileToDataURL(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(b);});}
+function bpImgSize(src){return new Promise(res=>{const i=new Image();i.onload=()=>res({w:i.naturalWidth,h:i.naturalHeight});i.onerror=()=>res({w:4,h:3});i.src=src;});}
+function bpDataURLtoBlob(d){const [h,b]=d.split(',');const m=h.match(/:(.*?);/)[1];const bin=atob(b);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:m});}
+async function bpSha(txt){try{const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(txt));return Array.from(new Uint8Array(buf)).map(x=>x.toString(16).padStart(2,'0')).join('');}catch(e){let h=0;for(let i=0;i<txt.length;i++){h=(h*31+txt.charCodeAt(i))|0;}return ('00000000'+(h>>>0).toString(16)).slice(-8).repeat(4);}}
+function bpMoneyFx(v,m){try{return new Intl.NumberFormat('pt-BR',{style:'currency',currency:m||'BRL'}).format(+v||0);}catch(e){return (m||'')+' '+(+v||0).toFixed(2);}}
+function bpShareFile(blob,name,text){try{const f=new File([blob],name,{type:blob.type});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:name,text:text||''}).catch(()=>{});return true;}}catch(e){}return false;}
+function bpDownload(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+
+/* ---------- Valor por extenso ---------- */
+function bpExtenso(v){
+  const U=['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+  const D=['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+  const C=['','cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+  const g3=n=>{if(!n)return '';if(n===100)return 'cem';const p=[],c=Math.floor(n/100),r=n%100;if(c)p.push(C[c]);if(r)p.push(r<20?U[r]:D[Math.floor(r/10)]+(r%10?' e '+U[r%10]:''));return p.join(' e ');};
+  const int=n=>{if(!n)return 'zero';const mi=Math.floor(n/1e6),mil=Math.floor(n%1e6/1000),r=n%1000,p=[];
+    if(mi)p.push(mi===1?'um milhão':g3(mi)+' milhões');if(mil)p.push(mil===1?'mil':g3(mil)+' mil');
+    if(r){const e=p.length&&(r<100||r%100===0)?'e ':'';p.push(e+g3(r));}return p.join(' ');};
+  const n=Math.floor(+v||0),c=Math.round(((+v||0)-n)*100);let t='';
+  if(n)t=int(n)+(n%1e6===0&&n>=1e6?' de reais':(n===1?' real':' reais'));
+  if(c)t+=(t?' e ':'')+g3(c)+(c===1?' centavo':' centavos');
+  return t||'zero reais';
+}
+
+/* ---------- Pix (BR Code) ---------- */
+function bpPixF(id,v){v=String(v);return id+String(v.length).padStart(2,'0')+v;}
+function bpCRC16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++){c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF;}}return c.toString(16).toUpperCase().padStart(4,'0');}
+function bpAscii(s,max){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9 .\-]/g,'').replace(/\s+/g,' ').trim().toUpperCase().slice(0,max);}
+function bpPixKey(){const P=PROFILE||{};const t=P.pix_tipo,k=String(P.pix_chave||'').trim();if(!k)return '';
+  if(t==='telefone'){let d=k.replace(/\D/g,'');if(!d.startsWith('55'))d='55'+d;return '+'+d;}
+  if(t==='cpf')return k.replace(/\D/g,'');if(t==='email')return k.toLowerCase();return k;}
+function bpPixPayload(valor,desc){
+  const key=bpPixKey();if(!key)return '';
+  let mai=bpPixF('00','br.gov.bcb.pix')+bpPixF('01',key);const d=bpAscii(desc,30);if(d&&(mai.length+d.length+4)<=99)mai+=bpPixF('02',d);
+  const P=PROFILE||{};const cidade=bpAscii(String(P.cidade_uf||'').split(/[\/,-]/)[0],15)||'BRASIL';
+  let p=bpPixF('00','01')+bpPixF('26',mai)+bpPixF('52','0000')+bpPixF('53','986')+(valor>0?bpPixF('54',(Math.round(valor*100)/100).toFixed(2)):'')+bpPixF('58','BR')+bpPixF('59',bpAscii(P.full_name||P.business_name,25)||'RECEBEDOR')+bpPixF('60',cidade)+bpPixF('62',bpPixF('05','***'))+'6304';
+  return p+bpCRC16(p);
+}
+const PIX_TIPOS=[['cpf','CPF/CNPJ'],['telefone','Telefone'],['email','E-mail'],['aleatoria','Chave aleatória']];
+function openPix(valor,desc,msg,tel){
+  window.bpPixCtx={desc:desc||'',msg:msg||'',tel:tel||''};
+  if(!bpPixKey()){openModal(`<div class="modal-head"><h3>Configure sua chave Pix</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+    <p style="font-size:13px;color:var(--text-2);margin:0">Informe uma vez e o app passa a gerar o QR Code e o “copia e cola” com o valor certo.</p>
+    <div class="field"><label class="lbl">Tipo de chave</label><select class="input" id="px_tipo">${PIX_TIPOS.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></div>
+    <div class="field"><label class="lbl">Chave Pix</label><input class="input" id="px_chave"></div>
+    <div class="field"><label class="lbl">Nome do recebedor</label><input class="input" id="px_nome" value="${esc((PROFILE&&PROFILE.full_name)||'')}"></div>
+    <div class="field"><label class="lbl">Cidade</label><input class="input" id="px_cid" value="${esc((PROFILE&&PROFILE.cidade_uf)||'')}" placeholder="Ex: Teresina/PI"></div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="bpSavePixKey(${+valor||0})">Salvar e gerar Pix</button></div>`);return;}
+  openModal(`<div class="modal-head"><h3>Cobrar por Pix</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  ${desc?`<div style="font-size:13px;color:var(--text-2)">${esc(desc)}</div>`:''}
+  <div class="field"><label class="lbl">Valor (R$)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="px_val" value="${valor>0?(+valor).toFixed(2):''}" oninput="bpPixRender()" placeholder="Em branco: o pagador digita"></div>
+  <div id="px_qr" class="px-qr"></div>
+  <label class="lbl" style="margin-top:12px">Pix copia e cola</label><textarea class="input" id="px_code" rows="3" readonly style="font-size:12px;word-break:break-all"></textarea>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCopy($('#px_code').value)">Copiar código</button><button class="btn btn-primary" onclick="bpPixWhats()">Enviar no WhatsApp</button></div>`);
+  bpPixRender();
+}
+async function bpSavePixKey(valor){const tipo=$('#px_tipo').value,chave=$('#px_chave').value.trim(),nome=$('#px_nome').value.trim(),cid=$('#px_cid').value.trim();if(!chave){toast('Informe a chave');return;}
+  const r=await sb.from('profiles').update({pix_tipo:tipo,pix_chave:chave,full_name:nome||PROFILE.full_name,cidade_uf:cid||null}).eq('id',USER.id);if(r.error){toast('Erro: '+r.error.message);return;}
+  Object.assign(PROFILE,{pix_tipo:tipo,pix_chave:chave,full_name:nome||PROFILE.full_name,cidade_uf:cid||null});const c=window.bpPixCtx||{};openPix(valor,c.desc,c.msg,c.tel);}
+function bpPixRender(){const v=numf($('#px_val')&&$('#px_val').value);const code=bpPixPayload(v,(window.bpPixCtx||{}).desc);const ta=$('#px_code');if(ta)ta.value=code;const box=$('#px_qr');if(!box)return;box.innerHTML='';
+  bpLoadQR(()=>{const b=$('#px_qr');if(!b||!window.QRCode)return;b.innerHTML='';new QRCode(b,{text:code,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});});}
+function bpPixWhats(){const c=window.bpPixCtx||{};const v=numf($('#px_val').value);const code=$('#px_code').value;
+  const msg=(c.msg?c.msg+'\n\n':'')+(v>0?'Valor: '+brl(v)+'\n':'')+'Pix copia e cola:\n'+code;const d=String(c.tel||'').replace(/\D/g,'');
+  window.open('https://wa.me/'+(d?(d.length<=11?'55'+d:d):'')+'?text='+encodeURIComponent(msg),'_blank');}
+function bpPixProduto(pid){const p=S.products.find(x=>x.id===pid);if(!p)return;const d=derive(p);const v=d.vendido?d.receita:(numf(p.preco_anunciado)||numf(p.preco_ideal)||numf(p.valor_mercado));
+  openPix(v,p.nome,`Olá${d.vendido&&d.sale.comprador?' '+d.sale.comprador:''}! Segue o Pix referente a: ${p.nome}.`,d.vendido?d.sale.comprador_contato:'');}
+function bpPixRecv(rid){const r=S.receivables.find(x=>x.id===rid);if(!r)return;const ins=S.installments.filter(i=>i.receivable_id===rid&&!i.pago).sort((a,b)=>(a.numero||0)-(b.numero||0));const prox=ins[0];
+  openPix(prox?numf(prox.valor):0,(r.descricao||'Parcela')+(prox?' · parcela '+prox.numero:''),`Olá${r.cliente?' '+r.cliente:''}! Segue o Pix da parcela${prox?' '+prox.numero:''}${r.descricao?' referente a '+r.descricao:''}.`,'');}
+
+/* ---------- Dados do vendedor (Configurações) ---------- */
+function bpSellerCard(){const P=PROFILE||{};return `<div class="card" style="margin-top:14px"><h3 style="font-size:16px">Dados para contratos e Pix</h3>
+  <p style="font-size:12.5px;color:var(--text-2);margin:6px 0 4px">Entram automaticamente nos contratos de venda e nas cobranças por Pix. Ficam só na sua conta.</p>
+  <div class="frow"><div><label class="lbl">CPF ou CNPJ</label><input class="input" id="sd_cpf" inputmode="numeric" value="${esc(P.cpf||'')}"></div><div><label class="lbl">Cidade/UF</label><input class="input" id="sd_cid" value="${esc(P.cidade_uf||'')}" placeholder="Teresina/PI"></div><div class="full"><label class="lbl">Endereço</label><input class="input" id="sd_end" value="${esc(P.endereco||'')}" placeholder="Rua, número, bairro"></div><div><label class="lbl">Tipo de chave Pix</label><select class="input" id="sd_pxt">${PIX_TIPOS.map(x=>`<option value="${x[0]}" ${P.pix_tipo===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select></div><div><label class="lbl">Chave Pix</label><input class="input" id="sd_pxk" value="${esc(P.pix_chave||'')}"></div></div>
+  <div style="margin-top:14px"><button class="btn btn-primary" style="width:auto" onclick="bpSaveSeller()">Salvar dados</button></div></div>`;}
+async function bpSaveSeller(){const u={cpf:$('#sd_cpf').value.trim()||null,cidade_uf:$('#sd_cid').value.trim()||null,endereco:$('#sd_end').value.trim()||null,pix_tipo:$('#sd_pxt').value,pix_chave:$('#sd_pxk').value.trim()||null};
+  const r=await sb.from('profiles').update(u).eq('id',USER.id);if(r.error){toast('Erro: '+r.error.message);return;}Object.assign(PROFILE,u);toast('Dados salvos');}
+
+/* ---------- Contrato de venda ---------- */
+const VIST={
+  celular:['Liga e desliga normalmente','Tela e touch sem falhas','Câmeras frontal e traseira','Alto-falante e microfone','Carregamento e bateria','Wi-Fi, Bluetooth e sinal do chip','Botões físicos','Biometria / Face ID','IMEI confere com o aparelho','Sem conta vinculada (iCloud/Google) e sem bloqueio'],
+  videogame:['Liga e exibe imagem','Leitura de mídia / instalação de jogos','Controles funcionando','Conexão com a internet','Portas HDMI e USB','Sem ruídos anormais ou superaquecimento','Número de série confere','Sem conta vinculada ou bloqueio'],
+  notebook:['Liga e inicia o sistema','Tela sem manchas ou pixels mortos','Teclado e touchpad','Bateria e carregador','Wi-Fi e Bluetooth','Portas USB e vídeo','Áudio e câmera','Sem senha ou conta bloqueando o uso'],
+  tv:['Liga e exibe imagem','Tela sem manchas, linhas ou pixels mortos','Controle remoto','Entradas HDMI','Áudio','Wi-Fi e aplicativos (se smart)'],
+  geral:['Funcionamento geral testado','Estado físico conferido','Acessórios conferidos','Número de série confere']
+};
+const FOTO_SUG={celular:['Frente com a tela ligada','Traseira','Laterais e botões','Tela com o IMEI','Acessórios'],videogame:['Console ligado na tela inicial','Controles','Etiqueta com nº de série','Cabos e acessórios'],notebook:['Tela ligada','Teclado','Tampa e laterais','Etiqueta com nº de série'],tv:['Tela ligada','Traseira e entradas','Controle remoto'],geral:['Produto de frente','Detalhes do estado','Nº de série','Acessórios']};
+function bpCatKey(p){const c=String((p&&p.categoria)||'').toLowerCase();if(c.includes('celular')||c.includes('iphone')||c.includes('smart'))return 'celular';if(c.includes('video')||c.includes('game')||c.includes('console'))return 'videogame';if(c.includes('note')||c.includes('laptop'))return 'notebook';if(c==='tv'||c.includes('televis'))return 'tv';return 'geral';}
+function bpGarDias(txt){const s=String(txt||'').toLowerCase();const n=parseInt(s.replace(/\D/g,''))||0;if(!n)return 0;if(s.includes('ano'))return n*365;if(s.includes('mes')||s.includes('mês'))return n*30;return n;}
+
+function openContrato(pid){
+  const p=S.products.find(x=>x.id===pid);if(!p)return;
+  sb.from('contracts').select('*').eq('product_id',pid).order('created_at',{ascending:false}).then(r=>{
+    const list=(r&&r.data)||[];if(!list.length){bpCTStart(pid);return;}
+    openModal(`<div class="modal-head"><h3>Contratos</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:6px">${esc(p.nome)}</div>
+    ${list.map(bpCTRow).join('')}
+    <div class="modal-foot"><button class="btn btn-primary" onclick="bpCTStart('${pid}')">Novo contrato</button></div>`);});
+}
+function bpCTRow(c){const d=c.dados||{};return `<div class="up-row"><div style="min-width:0;flex:1"><div class="up-t">${esc((d.comprador&&d.comprador.nome)||'Comprador')} · ${esc((d.produto&&d.produto.descricao)||'')}</div><div class="up-o">${esc(c.codigo)} · ${fmtDate(String(c.created_at).slice(0,10))} · ${brl(d.pagamento&&d.pagamento.valor)}</div></div><button class="btn btn-ghost btn-sm" style="flex:0 0 auto;width:auto" onclick="bpCTOpenPDF('${c.id}')">PDF</button></div>`;}
+async function openContratos(){const r=await sb.from('contracts').select('*').order('created_at',{ascending:false}).limit(60);const list=(r&&r.data)||[];
+  openModal(`<div class="modal-head"><h3>Contratos de venda</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  ${list.length?list.map(bpCTRow).join(''):'<div class="empty" style="padding:24px 10px"><b>Nenhum contrato ainda</b><p>Abra um produto e toque em “Contrato”, ou gere logo após registrar a venda.</p></div>'}`);}
+async function bpCTOpenPDF(id){const r=await sb.from('contracts').select('*').eq('id',id).maybeSingle();const c=r&&r.data;if(!c||!c.pdf_path){toast('PDF não encontrado');return;}
+  toast('Abrindo contrato…');const dl=await sb.storage.from('documents').download(c.pdf_path);if(dl.error||!dl.data){toast('Erro ao baixar: '+((dl.error&&dl.error.message)||''));return;}
+  const blob=dl.data.type==='application/pdf'?dl.data:new Blob([dl.data],{type:'application/pdf'});const name='contrato-'+c.codigo+'.pdf';
+  if(!bpShareFile(blob,name,'Contrato de compra e venda '+c.codigo))bpDownload(blob,name);}
+function bpAfterSale(pid){const p=S.products.find(x=>x.id===pid);if(!p)return;
+  openModal(`<div class="modal-head"><h3>Venda registrada</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <p style="font-size:14px;color:var(--text-2);margin:0">Quer gerar agora o contrato de ${esc(p.nome)}, com fotos da entrega e assinatura das duas partes?</p>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Agora não</button><button class="btn btn-primary" onclick="bpCTStart('${pid}')">Gerar contrato</button></div>`);}
+
+function bpCTStart(pid){
+  const p=S.products.find(x=>x.id===pid);if(!p)return;const d=derive(p);const sale=d.sale||{};const P=PROFILE||{};const ck=bpCatKey(p);
+  window.bpCT={pid,sid:sale.id||null,step:1,ck,fotos:[],chk:{},decl:false,obsVist:'',sigV:null,sigC:null,
+    v:{nome:P.full_name||'',cpf:P.cpf||'',endereco:P.endereco||'',cidade:P.cidade_uf||'',tel:P.phone||''},
+    c:{nome:sale.comprador||'',cpf:'',tel:sale.comprador_contato||'',endereco:''},
+    pr:{descricao:p.nome||'',marca:[p.marca,p.modelo].filter(Boolean).join(' '),serie:p.imei||p.numero_serie||'',cor:p.cor||'',condicao:condLabel(p.condicao||'usado'),acessorios:'',estado:p.observacoes||''},
+    pg:{valor:d.vendido?d.receita:(numf(p.preco_anunciado)||numf(p.preco_ideal)),forma:sale.forma_pagamento||'Pix',permuta:(sale.permuta_itens||[]).map(x=>x.nome+' ('+brl(x.valor)+')').join(', ')},
+    gar:bpGarDias(p.garantia),local:(P.cidade_uf||p.cidade||''),data:sale.data_venda||todayISO()};
+  bpCTRender();
+}
+function bpCTCollect(){const C=window.bpCT;if(!C)return;const g=id=>{const e=$('#'+id);return e?e.value.trim():null;};
+  if(C.step===1){['nome','cpf','endereco','cidade','tel'].forEach(k=>{const v=g('ctv_'+k);if(v!==null)C.v[k]=v;});['nome','cpf','tel','endereco'].forEach(k=>{const v=g('ctc_'+k);if(v!==null)C.c[k]=v;});
+    ['descricao','marca','serie','cor','condicao','acessorios','estado'].forEach(k=>{const v=g('ctp_'+k);if(v!==null)C.pr[k]=v;});
+    const val=g('ctg_valor');if(val!==null)C.pg.valor=numf(val);const f=g('ctg_forma');if(f!==null)C.pg.forma=f;const gd=g('ctg_gar');if(gd!==null)C.gar=Math.max(0,parseInt(gd)||0);const lc=g('ctg_local');if(lc!==null)C.local=lc;const dt=g('ctg_data');if(dt)C.data=dt;}
+  if(C.step===2){document.querySelectorAll('[data-leg]').forEach(el=>{const f=C.fotos[+el.dataset.leg];if(f)f.legenda=el.value.trim();});}
+  if(C.step===3){document.querySelectorAll('[data-vk]').forEach(el=>{C.chk[el.dataset.vk]=el.checked;});const o=$('#ct_obs');if(o)C.obsVist=o.value.trim();const dc=$('#ct_decl');if(dc)C.decl=dc.checked;}
+  if(C.step===4){['V','C'].forEach(k=>{const cv=$('#sig'+k);if(cv&&!cv._empty)C['sig'+k]=cv.toDataURL('image/png');});}
+}
+function bpCTGo(step){const C=window.bpCT;bpCTCollect();
+  if(step>C.step){
+    if(C.step===1){if(!C.v.nome){toast('Informe o nome do vendedor');return;}if(!C.c.nome){toast('Informe o nome do comprador');return;}if(!(C.pg.valor>0)){toast('Informe o valor da venda');return;}}
+    if(C.step===3&&!C.decl){toast('O comprador precisa confirmar a declaração de vistoria');return;}
+  }
+  C.step=step;bpCTRender();const m=$('#modal');if(m)m.scrollTop=0;}
+function bpCTSteps(n){return `<div class="ct-steps">${['Dados','Fotos','Vistoria','Assinar'].map((s,i)=>`<div class="${i+1===n?'on':(i+1<n?'done':'')}"><b>${i+1}</b><span>${s}</span></div>`).join('')}</div>`;}
+function bpCTRender(){
+  const C=window.bpCT;if(!C)return;const head=`<div class="modal-head"><h3>Contrato de venda</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>${bpCTSteps(C.step)}`;
+  const inp=(id,lbl,val,extra)=>`<div${extra&&extra.full?' class="full"':''}><label class="lbl">${lbl}</label><input class="input" id="${id}" value="${esc(val||'')}"${extra&&extra.attrs?' '+extra.attrs:''}></div>`;
+  if(C.step===1){
+    openModal(head+`<div class="fsub">Vendedor</div><div class="frow" style="margin-top:6px">${inp('ctv_nome','Nome completo',C.v.nome,{full:1})}${inp('ctv_cpf','CPF ou CNPJ',C.v.cpf,{attrs:'inputmode="numeric"'})}${inp('ctv_tel','Telefone',C.v.tel,{attrs:'inputmode="tel"'})}${inp('ctv_endereco','Endereço',C.v.endereco,{full:1})}${inp('ctv_cidade','Cidade/UF',C.v.cidade)}</div>
+    <div class="fsub">Comprador</div><div class="frow" style="margin-top:6px">${inp('ctc_nome','Nome completo',C.c.nome,{full:1})}${inp('ctc_cpf','CPF',C.c.cpf,{attrs:'inputmode="numeric"'})}${inp('ctc_tel','WhatsApp',C.c.tel,{attrs:'inputmode="tel"'})}${inp('ctc_endereco','Endereço (opcional)',C.c.endereco,{full:1})}</div>
+    <div class="fsub">Produto</div><div class="frow" style="margin-top:6px">${inp('ctp_descricao','Descrição',C.pr.descricao,{full:1})}${inp('ctp_marca','Marca e modelo',C.pr.marca)}${inp('ctp_serie','IMEI ou nº de série',C.pr.serie)}${inp('ctp_cor','Cor',C.pr.cor)}${inp('ctp_condicao','Condição',C.pr.condicao)}${inp('ctp_acessorios','Acompanha',C.pr.acessorios,{full:1,attrs:'placeholder="Ex: carregador, cabo, 2 controles, caixa"'})}<div class="full"><label class="lbl">Estado do produto / avarias</label><textarea class="input" id="ctp_estado" rows="2" placeholder="Ex: pequeno risco na lateral, bateria 86%">${esc(C.pr.estado)}</textarea></div></div>
+    <div class="fsub">Venda</div><div class="frow" style="margin-top:6px">${inp('ctg_valor','Valor (R$)',C.pg.valor?(+C.pg.valor).toFixed(2):'',{attrs:'type="number" step="0.01" inputmode="decimal"'})}${inp('ctg_forma','Forma de pagamento',C.pg.forma)}${inp('ctg_gar','Garantia do vendedor (dias)',String(C.gar),{attrs:'type="number" min="0" inputmode="numeric"'})}${inp('ctg_data','Data da venda',C.data,{attrs:'type="date"'})}${inp('ctg_local','Cidade da assinatura',C.local,{full:1})}</div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="bpCTGo(2)">Continuar para fotos</button></div>`);
+  }else if(C.step===2){
+    const sug=FOTO_SUG[C.ck]||FOTO_SUG.geral;const p=S.products.find(x=>x.id===C.pid);
+    openModal(head+`<p style="font-size:13px;color:var(--text-2);margin:0 0 10px">Fotografe o produto na hora da entrega, na frente do comprador. As fotos vão para o Anexo I do contrato com data e hora.</p>
+    <div class="sugs" style="margin:0 0 12px">${sug.map(s=>`<span class="chip" style="cursor:default">${esc(s)}</span>`).join('')}</div>
+    <div class="ct-photos">${C.fotos.map((f,k)=>`<div class="ct-ph"><div class="ct-img" style="background-image:url('${f.url}')"><button onclick="bpCTRmFoto(${k})" aria-label="Remover foto">×</button></div><input class="input" data-leg="${k}" value="${esc(f.legenda||'')}" placeholder="Legenda"></div>`).join('')}
+      <button class="ct-add" onclick="bpCTAddFoto(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Câmera</span></button>
+      <button class="ct-add" onclick="bpCTAddFoto(false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Galeria</span></button></div>
+    ${p&&p.cover_url&&!C.fotos.some(f=>f.cover)?`<button class="lnk-btn" style="margin-top:10px" onclick="bpCTCover()">Incluir a foto do cadastro do produto</button>`:''}
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(1)">Voltar</button><button class="btn btn-primary" onclick="bpCTGo(3)">${C.fotos.length?'Continuar para vistoria':'Continuar sem fotos'}</button></div>`);
+  }else if(C.step===3){
+    const items=VIST[C.ck]||VIST.geral;
+    openModal(head+`<p style="font-size:13px;color:var(--text-2);margin:0 0 8px">Passe o aparelho com o app para o comprador marcar o que ele testou.</p>
+    <div class="card" style="padding:6px 14px">${items.map((it,k)=>`<label class="chk vk"><input type="checkbox" data-vk="${esc(it)}" ${C.chk[it]?'checked':''}><span>${esc(it)}</span></label>`).join('')}</div>
+    <button class="lnk-btn" style="margin-top:8px" onclick="document.querySelectorAll('[data-vk]').forEach(e=>e.checked=true)">Marcar todos</button>
+    <div class="field"><label class="lbl">Observações da vistoria (opcional)</label><textarea class="input" id="ct_obs" rows="2" placeholder="Ex: comprador testou por 15 min, jogou uma partida online">${esc(C.obsVist)}</textarea></div>
+    <label class="chk ct-decl"><input type="checkbox" id="ct_decl" ${C.decl?'checked':''}><span>Eu, comprador, testei o produto, conferi as fotos da entrega e declaro que o recebo em perfeito estado de funcionamento e conservação, conforme descrito.</span></label>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(2)">Voltar</button><button class="btn btn-primary" onclick="bpCTGo(4)">Continuar para assinaturas</button></div>`);
+  }else if(C.step===4){
+    openModal(head+`<details class="ct-read"><summary>Ler o contrato completo</summary><div class="ct-text">${bpCTClauses(C,{}).map(s=>`<p><b>${esc(s.t)}</b></p>${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}`).join('')}</div></details>
+    <div class="sig-box"><div class="sig-top"><b>Assinatura do vendedor</b><button class="lnk-btn" onclick="bpSigClear('sigV')">Limpar</button></div><canvas id="sigV" class="sig-pad"></canvas><div class="sig-name">${esc(C.v.nome)}</div></div>
+    <div class="sig-box"><div class="sig-top"><b>Assinatura do comprador</b><button class="lnk-btn" onclick="bpSigClear('sigC')">Limpar</button></div><canvas id="sigC" class="sig-pad"></canvas><div class="sig-name">${esc(C.c.nome)}</div></div>
+    <p style="font-size:11.5px;color:var(--text-3);margin:8px 0 0">Assine com o dedo dentro do quadro.</p>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTGo(3)">Voltar</button><button class="btn btn-primary" id="ct_gen" onclick="bpCTGerar()">Gerar contrato em PDF</button></div>`);
+    setTimeout(()=>{bpSigPad('sigV',C.sigV);bpSigPad('sigC',C.sigC);},30);
+  }
+}
+async function bpCTAddFoto(cam){const C=window.bpCT;bpCTCollect();const inp=document.createElement('input');inp.type='file';inp.accept='image/*';if(cam)inp.setAttribute('capture','environment');else inp.multiple=true;inp.style.display='none';
+  inp.onchange=async()=>{const files=Array.from(inp.files||[]);for(const f of files){if(C.fotos.length>=12){toast('Máximo de 12 fotos');break;}try{const b=await compressBlob(f,1400,.78);C.fotos.push({blob:b,url:URL.createObjectURL(b),legenda:'',ts:new Date().toISOString()});}catch(e){}}inp.remove();bpCTRender();};
+  document.body.appendChild(inp);inp.click();}
+function bpCTRmFoto(k){const C=window.bpCT;bpCTCollect();C.fotos.splice(k,1);bpCTRender();}
+async function bpCTCover(){const C=window.bpCT;bpCTCollect();const p=S.products.find(x=>x.id===C.pid);if(!p||!p.cover_url)return;try{const r=await fetch(p.cover_url);const b=await r.blob();C.fotos.unshift({blob:b,url:URL.createObjectURL(b),legenda:'Foto do cadastro do produto',ts:null,cover:true});bpCTRender();}catch(e){toast('Não consegui carregar a foto');}}
+function bpSigPad(id,prev){const cv=$('#'+id);if(!cv)return;const r=cv.getBoundingClientRect();const dpr=window.devicePixelRatio||1;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  ctx.lineWidth=2.3;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#0B1F3A';ctx.fillStyle='#0B1F3A';cv._empty=true;
+  if(prev){const im=new Image();im.onload=()=>{ctx.drawImage(im,0,0,r.width,r.height);cv._empty=false;};im.src=prev;}
+  let down=false,last=null;const pos=e=>{const b=cv.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top};};
+  cv.onpointerdown=e=>{e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(_){}down=true;last=pos(e);ctx.beginPath();ctx.arc(last.x,last.y,1.1,0,Math.PI*2);ctx.fill();cv._empty=false;};
+  cv.onpointermove=e=>{if(!down)return;e.preventDefault();const p=pos(e);const mx=(last.x+p.x)/2,my=(last.y+p.y)/2;ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.quadraticCurveTo(last.x,last.y,mx,my);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;};
+  cv.onpointerup=cv.onpointercancel=cv.onpointerleave=()=>{down=false;};}
+function bpSigClear(id){const cv=$('#'+id);if(!cv)return;cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv._empty=true;const C=window.bpCT;if(C)C[id]=null;}
+
+function bpCTClauses(C,meta){
+  const v=C.v,c=C.c,pr=C.pr,pg=C.pg;const cid=C.local||v.cidade||'';
+  const items=(VIST[C.ck]||VIST.geral).filter(it=>C.chk[it]);
+  const ident=(x,papel)=>`${papel}: ${x.nome||'—'}${x.cpf?', inscrito(a) no CPF/CNPJ sob o nº '+x.cpf:''}${x.endereco?', residente em '+x.endereco:''}${papel==='VENDEDOR'&&x.cidade?', '+x.cidade:''}${x.tel?', telefone '+x.tel:''}.`;
+  const obj=[pr.descricao,pr.marca?'marca/modelo '+pr.marca:'',pr.cor?'cor '+pr.cor:'',pr.serie?'IMEI/número de série '+pr.serie:'',pr.condicao?'condição: '+String(pr.condicao).toLowerCase():''].filter(Boolean).join(', ');
+  const S1=[
+    {t:'IDENTIFICAÇÃO DAS PARTES',p:[ident(v,'VENDEDOR'),ident(c,'COMPRADOR'),'As partes acima identificadas têm entre si justo e contratado o presente Contrato Particular de Compra e Venda de Bem Móvel Usado, que se regerá pelas cláusulas a seguir.']},
+    {t:'CLÁUSULA 1ª – DO OBJETO',p:[`O VENDEDOR vende ao COMPRADOR o seguinte bem: ${obj}. Acompanha(m) o bem: ${pr.acessorios||'nenhum acessório adicional'}. Estado declarado do bem: ${pr.estado||'sem avarias declaradas'}.`]},
+    {t:'CLÁUSULA 2ª – DO PREÇO E DO PAGAMENTO',p:[`O preço total da venda é de ${brl(pg.valor)} (${bpExtenso(pg.valor)}), pago por meio de ${pg.forma||'forma combinada entre as partes'}${pg.permuta?', incluída a entrega, pelo COMPRADOR, do(s) seguinte(s) item(ns) em permuta: '+pg.permuta:''}. Com o recebimento integral do valor, o VENDEDOR dá ao COMPRADOR plena e geral quitação.`]},
+    {t:'CLÁUSULA 3ª – DA PROPRIEDADE E PROCEDÊNCIA',p:['O VENDEDOR declara que o bem é de sua legítima propriedade, de procedência lícita, livre e desembaraçado de quaisquer ônus, dívidas ou restrições, que não possui registro de roubo, furto ou extravio, nem bloqueio de operadora ou de conta vinculada, responsabilizando-se civil e criminalmente pela veracidade desta declaração.']},
+    {t:'CLÁUSULA 4ª – DA ENTREGA, VISTORIA E ACEITE',p:[`O bem é entregue ao COMPRADOR em ${fmtDate(C.data)}, que declara tê-lo examinado e testado pessoalmente no ato da entrega, recebendo-o em perfeito estado de funcionamento e conservação, conforme descrito neste contrato e registrado no Anexo I (registro fotográfico da entrega), nada tendo a reclamar quanto ao estado do bem verificado nessa ocasião.`,
+      items.length?'Itens testados e aprovados pelo COMPRADOR: '+items.join('; ')+'.':'O COMPRADOR declara ter testado o funcionamento geral do bem.',
+      C.obsVist?'Observações da vistoria: '+C.obsVist:''].filter(Boolean)},
+    {t:'CLÁUSULA 5ª – DA GARANTIA',p:[C.gar>0?`O VENDEDOR concede garantia de ${C.gar} (${bpExtenso(C.gar).replace(/ reais?$/,'')}) dias, contados da entrega, exclusivamente para defeitos de funcionamento preexistentes à entrega. A garantia não cobre danos ocorridos após a entrega, tais como quedas, contato com líquidos, oxidação, mau uso, desgaste natural da bateria, violação de lacres ou reparos feitos por terceiros.`:'O bem é usado e é vendido no estado em que se encontra, conforme vistoriado e aceito pelo COMPRADOR, não havendo garantia adicional concedida pelo VENDEDOR além das previstas em lei.']},
+    {t:'CLÁUSULA 6ª – DA RESPONSABILIDADE APÓS A ENTREGA',p:['A partir da entrega, o COMPRADOR assume integral responsabilidade pela guarda, uso e conservação do bem, bem como por quaisquer danos, perdas ou obrigações dele decorrentes.']},
+    {t:'CLÁUSULA 7ª – DOS DADOS PESSOAIS',p:['Os dados pessoais informados neste instrumento serão utilizados exclusivamente para a formalização e a comprovação desta compra e venda, nos termos da Lei nº 13.709/2018 (LGPD).']},
+    {t:'CLÁUSULA 8ª – DA ASSINATURA ELETRÔNICA E DO FORO',p:[`As partes reconhecem como válida a assinatura manuscrita capturada em dispositivo eletrônico neste documento, nos termos do art. 10, § 2º, da Medida Provisória nº 2.200-2/2001. Fica eleito o foro da comarca de ${cid||'domicílio do VENDEDOR'} para dirimir quaisquer questões oriundas deste contrato.`,`E, por estarem de acordo, as partes assinam o presente instrumento em ${cid?cid+', ':''}${new Date(meta.assISO||Date.now()).toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}${meta.hora?', às '+meta.hora:''}.`]}
+  ];
+  return S1;
+}
+async function bpCTBuildPDF(C,meta){
+  if(!window.jspdf){throw new Error('Gerador de PDF indisponível. Verifique a internet e tente de novo.');}
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=210,H=297,M=18,CW=W-2*M;let y=M;
+  const biz=(PROFILE&&(PROFILE.business_name||PROFILE.full_name))||'BRIQPRO';
+  const ensure=h=>{if(y+h>H-18){doc.addPage();y=M;}};
+  const txt=(t,size,style,color,gapAfter)=>{doc.setFont('helvetica',style||'normal');doc.setFontSize(size);doc.setTextColor(...(color||[25,28,32]));const lh=size*0.43;doc.splitTextToSize(String(t),CW).forEach(l=>{ensure(lh);doc.text(l,M,y);y+=lh;});y+=(gapAfter==null?2:gapAfter);};
+  // cabeçalho
+  doc.setFillColor(1,227,119);doc.rect(0,0,W,3,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(90,96,105);doc.text(String(biz).toUpperCase(),M,y);doc.text('Nº '+meta.codigo,W-M,y,{align:'right'});y+=9;
+  doc.setFontSize(14);doc.setTextColor(15,18,22);doc.splitTextToSize('CONTRATO PARTICULAR DE COMPRA E VENDA DE BEM MÓVEL USADO',CW).forEach(l=>{doc.text(l,W/2,y,{align:'center'});y+=6.2;});y+=3;
+  bpCTClauses(C,meta).forEach(s=>{ensure(12);txt(s.t,10,'bold',[15,18,22],1.2);s.p.forEach(pp=>txt(pp,9.6,'normal',[40,44,50],2.2));y+=1.2;});
+  // assinaturas
+  ensure(80);y+=3;txt('ASSINATURAS',10,'bold',[15,18,22],1.2);txt(`Referente ao contrato nº ${meta.codigo}: ${C.pr.descricao}${C.pr.serie?' (IMEI/série '+C.pr.serie+')':''}, pelo valor de ${brl(C.pg.valor)}.`,8.8,'normal',[80,86,95],6);const colW=(CW-12)/2;const sy=y;
+  const sig=async(src,x,nome,doc2,papel)=>{if(src){const sz=await bpImgSize(src);const hh=22,ww=Math.min(colW,hh*sz.w/sz.h);doc.addImage(src,'PNG',x+(colW-ww)/2,sy,ww,hh);}
+    doc.setDrawColor(120);doc.line(x,sy+25,x+colW,sy+25);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(15,18,22);doc.text(papel,x+colW/2,sy+30,{align:'center'});doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(60,64,70);doc.splitTextToSize(nome+(doc2?' · '+doc2:''),colW).forEach((l,i)=>doc.text(l,x+colW/2,sy+34.5+i*4,{align:'center'}));};
+  await sig(C.sigV,M,C.v.nome,C.v.cpf,'VENDEDOR');await sig(C.sigC,M+colW+12,C.c.nome,C.c.cpf,'COMPRADOR');
+  y=sy+46;txt(`Assinado eletronicamente em ${meta.quando}. Registro do dispositivo: ${meta.ua}.`,7.8,'normal',[110,116,125],1);
+  // anexo de fotos
+  if(meta.fotos.length){doc.addPage();y=M;txt('ANEXO I – REGISTRO FOTOGRÁFICO DA ENTREGA',11,'bold',[15,18,22],1.5);txt(`Fotos do bem no momento da entrega, conferidas pelo COMPRADOR. Contrato nº ${meta.codigo}.`,9,'normal',[80,86,95],4);
+    const gap=6,cw=(CW-gap)/2,ch=cw*0.75;let col=0;
+    for(const f of meta.fotos){if(col===0)ensure(ch+12);const x=M+col*(cw+gap);const sz=await bpImgSize(f.src);let ww=cw,hh=cw*sz.h/sz.w;if(hh>ch){hh=ch;ww=ch*sz.w/sz.h;}
+      doc.setFillColor(244,246,250);doc.rect(x,y,cw,ch,'F');doc.addImage(f.src,f.src.startsWith('data:image/png')?'PNG':'JPEG',x+(cw-ww)/2,y+(ch-hh)/2,ww,hh);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(60,64,70);doc.text(doc.splitTextToSize((f.legenda||'Foto '+(f.i+1))+(f.ts?' · '+new Date(f.ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):''),cw)[0],x,y+ch+4.5);
+      if(col===1){y+=ch+10;col=0;}else col=1;}
+    if(col===1)y+=ch+10;}
+  // rodapé
+  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(130,136,145);doc.text(`Contrato nº ${meta.codigo} · Código de verificação ${meta.hashCurto}`,M,H-9);doc.text(`Página ${i} de ${n}`,W-M,H-9,{align:'right'});}
+  return doc.output('blob');
+}
+async function bpCTGerar(){
+  const C=window.bpCT;bpCTCollect();
+  if(!C.sigV){toast('Falta a assinatura do vendedor');return;}if(!C.sigC){toast('Falta a assinatura do comprador');return;}
+  const btn=$('#ct_gen');if(btn){btn.disabled=true;btn.textContent='Gerando PDF…';}
+  try{
+    const id=bpUUID();const now=new Date();const codigo='BP-'+bpISO(now).replace(/-/g,'')+'-'+id.slice(0,4).toUpperCase();
+    const quando=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});const hora=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const ua=(navigator.userAgent.match(/\(([^)]+)\)/)||[,''])[1].split(';').slice(0,2).join(';').trim()||'navegador';
+    const fotos=[];for(let i=0;i<C.fotos.length;i++){const f=C.fotos[i];fotos.push({src:await bpFileToDataURL(f.blob),legenda:f.legenda,ts:f.ts,i});}
+    const dados={vendedor:C.v,comprador:C.c,produto:C.pr,pagamento:C.pg,garantia_dias:C.gar,local:C.local,data:C.data,vistoria:{categoria:C.ck,itens:(VIST[C.ck]||VIST.geral).filter(it=>C.chk[it]),obs:C.obsVist,declaracao:true},assinado_em:now.toISOString(),dispositivo:ua};
+    const hash=await bpSha(JSON.stringify({codigo,dados,f:fotos.map(f=>f.src.length),sv:C.sigV.length,sc:C.sigC.length}));
+    const meta={codigo,quando,hora,ua,fotos,assISO:now.toISOString(),hashCurto:hash.slice(0,16).toUpperCase().match(/.{4}/g).join('-')};
+    const pdf=await bpCTBuildPDF(C,meta);window.bpCTLast={blob:pdf,name:'contrato-'+codigo+'.pdf',codigo,tel:C.c.tel,comprador:C.c.nome};
+    // salvar arquivos (privados) e registro
+    const base=`${USER.id}/contracts/${id}`;const up=async(path,blob,type)=>{const r=await sb.storage.from('documents').upload(path,blob,{contentType:type,upsert:true});return r.error?null:path;};
+    const fotosSalvas=[];for(let i=0;i<C.fotos.length;i++){const pth=await up(`${base}/foto_${i+1}.jpg`,C.fotos[i].blob,'image/jpeg');if(pth)fotosSalvas.push({path:pth,legenda:C.fotos[i].legenda||'',ts:C.fotos[i].ts});}
+    const sv=await up(`${base}/assinatura_vendedor.png`,bpDataURLtoBlob(C.sigV),'image/png');const sc=await up(`${base}/assinatura_comprador.png`,bpDataURLtoBlob(C.sigC),'image/png');
+    const pp=await up(`${base}/contrato-${codigo}.pdf`,pdf,'application/pdf');
+    const ins=await sb.from('contracts').insert({id,codigo,product_id:C.pid,sale_id:C.sid,dados,fotos:fotosSalvas,assinatura_vendedor:sv,assinatura_comprador:sc,pdf_path:pp,hash});
+    const pf={};if(C.v.cpf&&C.v.cpf!==(PROFILE.cpf||''))pf.cpf=C.v.cpf;if(C.v.endereco&&C.v.endereco!==(PROFILE.endereco||''))pf.endereco=C.v.endereco;if(C.v.cidade&&C.v.cidade!==(PROFILE.cidade_uf||''))pf.cidade_uf=C.v.cidade;
+    if(Object.keys(pf).length){await sb.from('profiles').update(pf).eq('id',USER.id);Object.assign(PROFILE,pf);}
+    if(C.sid&&(C.c.nome||C.c.tel)){await sb.from('sales').update({comprador:C.c.nome||null,comprador_contato:C.c.tel||null}).eq('id',C.sid);await refresh('sales');}
+    openModal(`<div class="modal-head"><h3>Contrato pronto</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+    <div class="ct-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg><b>${esc(codigo)}</b><span>${esc(C.c.nome)} · ${brl(C.pg.valor)}</span><small>Código de verificação ${meta.hashCurto}</small></div>
+    ${ins.error||!pp?`<p style="font-size:12.5px;color:var(--amber);margin:10px 0 0">O PDF foi gerado, mas não consegui guardar uma cópia na nuvem${ins.error?' ('+esc(ins.error.message)+')':''}. Baixe agora para não perder.</p>`:'<p style="font-size:12.5px;color:var(--text-2);margin:10px 0 0">Uma cópia fica guardada no app, em Contratos.</p>'}
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="bpCTLastDownload()">Baixar PDF</button><button class="btn btn-primary" onclick="bpCTLastShare()">Enviar ao comprador</button></div>`);
+    window.bpCT=null;
+  }catch(e){toast('Erro ao gerar: '+(e.message||e));if(btn){btn.disabled=false;btn.textContent='Gerar contrato em PDF';}}
+}
+function bpCTLastDownload(){const L=window.bpCTLast;if(L)bpDownload(L.blob,L.name);}
+function bpCTLastShare(){const L=window.bpCTLast;if(!L)return;if(bpShareFile(L.blob,L.name,'Contrato de compra e venda '+L.codigo))return;bpDownload(L.blob,L.name);const d=String(L.tel||'').replace(/\D/g,'');setTimeout(()=>window.open('https://wa.me/'+(d?(d.length<=11?'55'+d:d):'')+'?text='+encodeURIComponent(`Olá${L.comprador?' '+L.comprador.split(' ')[0]:''}! Segue o contrato da nossa venda (${L.codigo}). Estou te enviando o PDF aqui.`),'_blank'),600);}
+
+/* ---------- Pós-venda ---------- */
+function bpPosVendaList(){const t=todayISO();return (S.sales||[]).filter(s=>{if(s.posvenda_ok||!s.data_venda)return false;const dd=bpDiff(s.data_venda,t);return dd>=2&&dd<=10;}).map(s=>({s,p:S.products.find(p=>p.id===s.product_id)})).filter(x=>x.p);}
+function bpPosVendaMsg(s,p){const eu=((PROFILE&&PROFILE.full_name)||'').split(' ')[0];return `Oi${s.comprador?' '+String(s.comprador).split(' ')[0]:''}! ${eu?'Aqui é '+eu+'. ':''}Passando pra saber se está tudo certo com o ${p.nome}. Qualquer coisa, é só me chamar. E se puder, me indica pros amigos 🙏`;}
+function bpPosVenda(pid){const p=S.products.find(x=>x.id===pid);const s=p&&S.sales.find(x=>x.product_id===pid);if(!s)return;const d=String(s.comprador_contato||'').replace(/\D/g,'');
+  window.open('https://wa.me/'+(d?(d.length<=11?'55'+d:d):'')+'?text='+encodeURIComponent(bpPosVendaMsg(s,p)),'_blank');bpPosVendaOk(s.id,true);}
+async function bpPosVendaOk(sid,silent){await sb.from('sales').update({posvenda_ok:true}).eq('id',sid);const s=S.sales.find(x=>x.id===sid);if(s)s.posvenda_ok=true;if(!silent)toast('Pós-venda concluído');render();}
+function bpPosVendaCard(){const L=bpPosVendaList();if(!L.length)return '';
+  return `<div class="card" style="padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Pós-venda</b><span style="font-size:11.5px;color:var(--text-3)">${L.length} cliente(s) para acompanhar</span></div>
+  ${L.slice(0,3).map(x=>`<div class="up-row"><div style="min-width:0;flex:1"><div class="up-t">${esc(x.s.comprador||'Comprador')} · ${esc(x.p.nome)}</div><div class="up-o">vendido há ${bpDiff(x.s.data_venda,todayISO())} dias${x.s.comprador_contato?'':' · sem WhatsApp salvo'}</div></div><button class="btn btn-primary btn-sm" style="flex:0 0 auto;width:auto" onclick="bpPosVenda('${x.p.id}')">Mensagem</button><button class="icon-btn" style="width:34px;height:34px;min-width:34px;min-height:34px" onclick="bpPosVendaOk('${x.s.id}')" aria-label="Concluir">✓</button></div>`).join('')}</div>`;}
+
+/* ---------- Fechamento do mês (imagem) ---------- */
+function openFechamento(){window.bpFechMes=window.bpFechMes||'atual';const opts=[['atual','Este mês'],['anterior','Mês passado']];
+  openModal(`<div class="modal-head"><h3>Fechamento do mês</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div class="seg seg-fill" style="margin:0 0 12px">${opts.map(o=>`<button class="${window.bpFechMes===o[0]?'on':''}" onclick="window.bpFechMes='${o[0]}';openFechamento()">${o[1]}</button>`).join('')}</div>
+  <div class="fech-prev"><canvas id="fech_cv" width="1080" height="1350"></canvas></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="bpFechSave(false)">Baixar imagem</button><button class="btn btn-primary" onclick="bpFechSave(true)">Compartilhar</button></div>`);
+  setTimeout(bpFechDraw,30);}
+function bpFechDraw(){const cv=$('#fech_cv');if(!cv)return;const x=cv.getContext('2d');const W=1080,H=1350;
+  const d0=new Date(todayISO()+'T00:00:00');d0.setDate(1);if(window.bpFechMes==='anterior')d0.setMonth(d0.getMonth()-1);const mk=bpISO(d0).slice(0,7);
+  const mesNome=d0.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const vendas=(S.products||[]).map(p=>({p,d:derive(p)})).filter(o=>o.d.vendido&&monthKey(o.d.sale.data_venda)===mk);
+  const fat=vendas.reduce((a,o)=>a+o.d.receita,0),luc=vendas.reduce((a,o)=>a+o.d.lucroLiq,0);const best=vendas.slice().sort((a,b)=>b.d.lucroLiq-a.d.lucroLiq)[0];
+  const m=bpMesTotais(mk);const saldo=m.entradas-m.saidas;const topCat=Object.entries(m.cats).sort((a,b)=>b[1]-a[1])[0];
+  const brand='#01E377',txt='#EDEFF2',mut='#9AA4B1';const F=(w,s)=>`${w} ${s}px "Space Grotesk", Inter, system-ui, sans-serif`;
+  x.fillStyle='#0C0E11';x.fillRect(0,0,W,H);const g=x.createRadialGradient(W*.9,0,10,W*.9,0,900);g.addColorStop(0,'rgba(1,227,119,.22)');g.addColorStop(1,'rgba(1,227,119,0)');x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.fillStyle=brand;x.fillRect(80,96,56,8);
+  x.fillStyle=mut;x.font=F(600,34);x.fillText(((PROFILE&&(PROFILE.business_name||PROFILE.full_name))||'BRIQPRO'),80,168);
+  x.fillStyle=txt;x.font=F(700,76);x.fillText('Fechamento',80,262);x.fillStyle=brand;x.fillText(mesNome.charAt(0).toUpperCase()+mesNome.slice(1),80,346);
+  x.fillStyle=mut;x.font=F(500,32);x.fillText('Lucro dos briques',80,470);x.fillStyle=luc>=0?brand:'#EC7A7A';x.font=F(700,124);x.fillText(brl(luc),80,590);
+  const box=(bx,by,lab,val,col)=>{x.fillStyle='rgba(255,255,255,.05)';x.beginPath();x.roundRect?x.roundRect(bx,by,440,150,28):x.rect(bx,by,440,150);x.fill();x.fillStyle=mut;x.font=F(500,28);x.fillText(lab,bx+32,by+54);x.fillStyle=col||txt;x.font=F(700,52);x.fillText(val,bx+32,by+116);};
+  box(80,650,'Vendas',String(vendas.length));box(560,650,'Faturamento',brl(fat));
+  box(80,830,'Entradas do mês',brl(m.entradas),'#2DD4A7');box(560,830,'Saídas do mês',brl(m.saidas),'#EC7A7A');
+  x.fillStyle=mut;x.font=F(500,30);x.fillText('Saldo do mês',80,1060);x.fillStyle=saldo>=0?brand:'#EC7A7A';x.font=F(700,64);x.fillText(brl(saldo),80,1132);
+  x.fillStyle=mut;x.font=F(500,28);let yy=1210;if(best){x.fillText('Melhor venda: '+String(best.p.nome).slice(0,34)+' · '+brl(best.d.lucroLiq),80,yy);yy+=44;}if(topCat)x.fillText('Maior gasto: '+topCat[0]+' · '+brl(topCat[1]),80,yy);
+  x.fillStyle='rgba(255,255,255,.35)';x.font=F(600,24);x.fillText('BRIQPRO',W-80-x.measureText('BRIQPRO').width,H-60);}
+function bpFechSave(share){const cv=$('#fech_cv');if(!cv)return;cv.toBlob(b=>{if(!b)return;const name='fechamento-'+(window.bpFechMes==='anterior'?'mes-passado':'mes-atual')+'.png';if(share&&bpShareFile(b,name,'Fechamento do mês'))return;bpDownload(b,name);},'image/png');}
+
+/* ---------- Viagem: participantes, divisão, moeda, gasto diário ---------- */
+const TRIP_MOEDAS=[['BRL','Real (R$)'],['USD','Dólar (US$)'],['EUR','Euro (€)'],['ARS','Peso argentino'],['CLP','Peso chileno'],['UYU','Peso uruguaio'],['GBP','Libra (£)'],['PYG','Guarani']];
+function bpTripPeople(t){return ['Você',...((t&&Array.isArray(t.participantes))?t.participantes.map(p=>p.nome).filter(Boolean):[])];}
+function bpPeoplePaint(){const w=$('#tr_people');if(!w)return;const L=window.bpTripPpl||[];
+  w.innerHTML=L.length?`<div class="pchips">${L.map((p,k)=>`<span class="pchip">${esc(p.nome)}${p.tel?`<small>${esc(p.tel)}</small>`:''}<button type="button" onclick="bpPeopleDel(${k})" aria-label="Remover">×</button></span>`).join('')}</div>`:'<div style="font-size:12.5px;color:var(--text-3)">Só você. Adicione quem vai junto para dividir os custos.</div>';}
+function bpPeopleAdd(){const n=$('#tr_pn').value.trim(),t=$('#tr_pt').value.trim();if(!n){toast('Informe o nome');return;}if(n.toLowerCase()==='você'||n.toLowerCase()==='voce'){toast('Você já está incluído');return;}(window.bpTripPpl=window.bpTripPpl||[]).push({nome:n,tel:t});$('#tr_pn').value='';$('#tr_pt').value='';bpPeoplePaint();$('#tr_pn').focus();}
+function bpPeopleDel(k){(window.bpTripPpl||[]).splice(k,1);bpPeoplePaint();}
+function bpMoedaChange(){const m=$('#tr_moeda')&&$('#tr_moeda').value;const w=$('#tr_cot_w');if(w)w.style.display=(m&&m!=='BRL')?'':'none';const l=$('#tr_cot_l');if(l)l.textContent='Cotação (R$ por 1 '+m+')';}
+async function bpBuscarCotacao(){const m=$('#tr_moeda').value;if(!m||m==='BRL')return;toast('Buscando cotação…');
+  try{const r=await fetch('https://economia.awesomeapi.com.br/json/last/'+m+'-BRL');const j=await r.json();const v=parseFloat((j[m+'BRL']||{}).bid);if(!(v>0))throw 0;$('#tr_cot').value=v.toFixed(4);toast('1 '+m+' = '+brl(v));}
+  catch(e){toast('Não consegui buscar agora. Informe a cotação manualmente.');}}
+function openTrip(id){
+  const t=id?(S.trips||[]).find(x=>x.id===id):null;window.bpTripCover=null;window.bpTripCoverDel=false;
+  window.bpTripPpl=(t&&Array.isArray(t.participantes)?t.participantes:[]).map(p=>({nome:p.nome,tel:p.tel||''}));
+  const moeda=(t&&t.moeda)||'BRL';
+  openModal(`<div class="modal-head"><h3>${t?'Editar viagem':'Nova viagem'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div class="field" style="margin-top:4px"><label class="lbl">Foto de capa</label><div class="cover-pick" id="tr_cov" onclick="bpPickCover()" style="${t&&t.capa_url?`background-image:url('${esc(t.capa_url)}')`:''}">${t&&t.capa_url?'':'<span>Toque para escolher uma foto</span>'}</div><button type="button" class="lnk-btn" id="tr_cov_rm" style="margin-top:6px;${t&&t.capa_url?'':'display:none'}" onclick="bpRmCover()">Remover foto</button></div>
+  <div class="field"><label class="lbl">Viagem</label><input class="input" id="tr_nome" value="${t?esc(t.nome):''}" placeholder="Ex: Fortaleza, Congresso em Recife"></div>
+  <div class="field"><label class="lbl">Tipo</label>${bpChips('tr_tipo',TRIP_TIPOS,t?(t.tipo||''):'Lazer')}</div>
+  <div class="frow"><div><label class="lbl">Ida</label><input class="input" type="date" id="tr_ida" value="${(t&&t.data_ida)||''}"></div><div><label class="lbl">Volta</label><input class="input" type="date" id="tr_volta" value="${(t&&t.data_volta)||''}"></div></div>
+  <div class="fsub">Quem vai com você</div>
+  <div id="tr_people" style="margin-top:8px"></div>
+  <div class="people-add"><input class="input" id="tr_pn" placeholder="Nome" onkeydown="if(event.key==='Enter'){event.preventDefault();bpPeopleAdd()}"><input class="input" id="tr_pt" placeholder="WhatsApp (opcional)" inputmode="tel"><button class="btn btn-ghost" style="flex:0 0 auto;width:auto" onclick="bpPeopleAdd()">Adicionar</button></div>
+  <div class="fsub">Dinheiro</div>
+  <div class="frow" style="margin-top:8px"><div><label class="lbl">Orçamento total (R$)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="tr_orc" value="${t&&numf(t.orcamento)?numf(t.orcamento):''}" placeholder="Opcional"></div><div><label class="lbl">Limite de gasto por dia (R$)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="tr_lim" value="${t&&numf(t.limite_diario)?numf(t.limite_diario):''}" placeholder="Opcional"></div>
+    <div><label class="lbl">Moeda do destino</label><select class="input" id="tr_moeda" onchange="bpMoedaChange()">${TRIP_MOEDAS.map(m=>`<option value="${m[0]}" ${moeda===m[0]?'selected':''}>${m[1]}</option>`).join('')}</select></div>
+    <div id="tr_cot_w"><label class="lbl" id="tr_cot_l">Cotação</label><div style="display:flex;gap:8px"><input class="input num" type="number" step="0.0001" inputmode="decimal" id="tr_cot" value="${t&&numf(t.cotacao)?numf(t.cotacao):''}" style="min-width:0"><button class="btn btn-ghost" style="flex:0 0 auto;width:auto" onclick="bpBuscarCotacao()">Buscar</button></div></div></div>
+  <div class="field"><label class="lbl">Observações (opcional)</label><textarea class="input" id="tr_notas" rows="2">${t?esc(t.notas||''):''}</textarea></div>
+  <div class="modal-foot"><button class="btn btn-primary" id="tr_save" onclick="saveTrip(${t?`'${t.id}'`:'null'})">${t?'Salvar':'Criar viagem'}</button></div>`);
+  bpPeoplePaint();bpMoedaChange();
+}
+async function saveTrip(id){
+  const nome=$('#tr_nome').value.trim();if(!nome){toast('Dê um nome à viagem');return;}
+  const ida=$('#tr_ida').value||null,volta=$('#tr_volta').value||null;if(ida&&volta&&volta<ida){toast('A volta está antes da ida');return;}
+  const old=id?(S.trips||[]).find(x=>x.id===id):null;const ppl=(window.bpTripPpl||[]).filter(p=>p.nome);const moeda=$('#tr_moeda').value||'BRL';const cot=numf($('#tr_cot').value);
+  if(moeda!=='BRL'&&!(cot>0)){toast('Informe a cotação da moeda');return;}
+  const payload={nome,tipo:(window.bpSel||{}).tr_tipo||null,data_ida:ida,data_volta:volta,notas:$('#tr_notas').value.trim()||null,orcamento:numf($('#tr_orc').value)||null,limite_diario:numf($('#tr_lim').value)||null,participantes:ppl,pessoas:1+ppl.length,moeda:moeda==='BRL'?null:moeda,cotacao:moeda==='BRL'?null:cot};
+  if(window.bpTripCoverDel&&!window.bpTripCover)payload.capa_url=null;
+  const btn=$('#tr_save');if(btn){btn.disabled=true;btn.textContent='Salvando…';}
+  const r=id?await sb.from('trips').update(payload).eq('id',id):await sb.from('trips').insert(payload).select().single();
+  if(r.error){toast('Erro: '+r.error.message);if(btn){btn.disabled=false;btn.textContent='Salvar';}return;}
+  const tid=id||(r.data&&r.data.id);
+  if(tid&&window.bpTripCover&&window.bpTripCover.blob){const path=`${USER.id}/trips/${tid}/${uidStr()}.jpg`;const up=await sb.storage.from('product-images').upload(path,window.bpTripCover.blob,{contentType:'image/jpeg',upsert:false});
+    if(up.error)toast('A foto não foi enviada: '+up.error.message);else{const url=sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;await sb.from('trips').update({capa_url:url}).eq('id',tid);}}
+  if(old&&old.capa_url&&(window.bpTripCover||window.bpTripCoverDel)){const op=bpStoragePath(old.capa_url);if(op)try{await sb.storage.from('product-images').remove([op]);}catch(e){}}
+  window.bpTripCover=null;window.bpTripCoverDel=false;
+  await refresh('trips');closeModal();toast(id?'Viagem salva':'Viagem criada');window.bpTrip=tid||null;setTab('viagens');
+}
+/* seleção múltipla (dividir entre) */
+function bpMChips(id,opts,sel){window.bpSel=window.bpSel||{};window.bpSel[id]=sel.slice();return `<div class="mchips" data-group="${id}">${opts.map(o=>`<button type="button" class="chip${sel.includes(o)?' on':''}" data-v="${esc(o)}">${sel.includes(o)?'✓ ':''}${esc(o)}</button>`).join('')}</div>`;}
+document.addEventListener('click',e=>{const b=e.target.closest('.mchips .chip');if(!b)return;const g=b.parentElement;const arr=(window.bpSel=window.bpSel||{})[g.dataset.group]||[];const v=b.dataset.v;const k=arr.indexOf(v);if(k>=0){if(arr.length===1){toast('Pelo menos uma pessoa');return;}arr.splice(k,1);}else arr.push(v);window.bpSel[g.dataset.group]=arr;b.classList.toggle('on',arr.includes(v));b.textContent=(arr.includes(v)?'✓ ':'')+v;});
+function openTripItem(tripId,id){
+  const i=id?(S.tripItems||[]).find(x=>x.id===id):null;const t=(S.trips||[]).find(x=>x.id===tripId);const ppl=bpTripPeople(t);
+  const sit=i?(i.forma==='parcelado'?'Parcelado':(i.pago?'Já pago':'A pagar')):'Parcelado';
+  window.bpTiEdit=i;
+  const split=ppl.length>1?`<div class="field"><label class="lbl">Quem pagou</label>${bpChips('ti_payer',ppl,i&&ppl.includes(i.pago_por)?i.pago_por:'Você')}</div><div class="field"><label class="lbl">Dividir entre</label>${bpMChips('ti_div',ppl,i&&Array.isArray(i.divisao)&&i.divisao.length?i.divisao.filter(n=>ppl.includes(n)):ppl)}</div>`:'';
+  openModal(`<div class="modal-head"><h3>${i?'Editar custo':'Novo custo'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div class="field" style="margin-top:4px"><label class="lbl">Tipo</label>${bpChips('ti_tipo',TRIP_ITEM_TIPOS,i?(i.tipo||'Outros'):'Passagem')}</div>
+  <div class="field"><label class="lbl">Descrição (opcional)</label><input class="input" id="ti_desc" value="${i?esc(i.descricao||''):''}" placeholder="Ex: Latam ida e volta, hotel 4 noites"></div>
+  <div class="field"><label class="lbl">Pagamento</label>${bpChips('ti_sit',TI_SIT,sit)}</div>
+  <div id="ti_body"></div>
+  ${split}
+  ${i?'':'<label class="chk" id="ti_chk"><input type="checkbox" id="ti_caixa"><span>Descontar do caixa o que já foi pago</span></label>'}
+  <div class="modal-foot"><button class="btn btn-primary" onclick="saveTripItem('${tripId}',${i?`'${i.id}'`:'null'})">Salvar custo</button></div>`);
+  tiSit(sit);
+}
+async function saveTripItem(tripId,id){
+  const sel=window.bpSel||{};const sit=sel.ti_sit||'Parcelado';const tipo=sel.ti_tipo||'Outros';const descricao=$('#ti_desc').value.trim()||null;
+  const t=(S.trips||[]).find(x=>x.id===tripId);const ppl=bpTripPeople(t);
+  const p={trip_id:tripId,tipo,descricao};let pagoAgora=0,dataPg=todayISO();
+  if(ppl.length>1){p.pago_por=sel.ti_payer||'Você';const dv=(sel.ti_div||ppl).filter(n=>ppl.includes(n));p.divisao=dv.length===ppl.length?null:dv;}
+  if(sit==='Parcelado'){
+    const n=parseInt($('#ti_n').value)||0,vp=numf($('#ti_vp').value),e=numf($('#ti_e').value);let pg=parseInt($('#ti_pg').value)||0;
+    if(n<1){toast('Informe o nº de parcelas');return;}if(vp<=0){toast('Informe o valor da parcela');return;}if(pg<0)pg=0;if(pg>n){toast('Parcelas pagas maior que o total');return;}
+    const ep=e>0&&$('#ti_ep').checked,de=e>0?($('#ti_de').value||null):null;
+    Object.assign(p,{forma:'parcelado',parcelas:n,valor_parcela:vp,parcelas_pagas:pg,primeira_parcela:$('#ti_1p').value||null,entrada:e,entrada_paga:ep,data_entrada:de,valor:e+n*vp,pago:pg>=n&&(e<=0||ep),vencimento:null,data_pagamento:null});
+    pagoAgora=(ep?e:0)+pg*vp;if(ep&&de&&!pg)dataPg=de;
+  }else{
+    const val=numf($('#ti_val').value);if(val<=0){toast('Informe o valor');return;}const pago=sit==='Já pago';
+    if(pago)dataPg=$('#ti_dp').value||todayISO();
+    Object.assign(p,{forma:'avista',valor:val,pago,data_pagamento:pago?dataPg:null,vencimento:pago?null:($('#ti_venc').value||null),parcelas:1,parcelas_pagas:pago?1:0,valor_parcela:val,primeira_parcela:null,entrada:0,entrada_paga:false,data_entrada:null});pagoAgora=pago?val:0;
+  }
+  const r=id?await sb.from('trip_items').update(p).eq('id',id):await sb.from('trip_items').insert(p);
+  if(r.error){toast('Erro: '+r.error.message);return;}
+  const ck=$('#ti_caixa');
+  if(!id&&ck&&ck.checked&&pagoAgora>0&&(!p.pago_por||p.pago_por==='Você')){const r2=await sb.from('cash_flow').insert({kind:'retirada',valor:pagoAgora,data:dataPg,nota:'Viagem '+(t?t.nome:'')+' · '+(descricao||tipo),categoria:'Viagem'});if(!r2.error)await refresh('cash');}
+  await refresh('trips');closeModal();toast('Custo salvo');render();
+}
+/* divisão de despesas */
+function bpTripSplit(t){const all=bpTripPeople(t);if(all.length<2)return null;const bal={},pagou={},parte={};all.forEach(n=>{bal[n]=0;pagou[n]=0;parte[n]=0;});
+  (S.tripItems||[]).filter(i=>i.trip_id===t.id).forEach(i=>{const c=tiCalc(i);if(!(c.total>0))return;const payer=all.includes(i.pago_por)?i.pago_por:'Você';let div=Array.isArray(i.divisao)&&i.divisao.length?i.divisao.filter(n=>all.includes(n)):all;if(!div.length)div=all;const sh=c.total/div.length;pagou[payer]+=c.total;bal[payer]+=c.total;div.forEach(n=>{parte[n]+=sh;bal[n]-=sh;});});
+  (Array.isArray(t.acertos)?t.acertos:[]).forEach(a=>{if(bal[a.de]!=null)bal[a.de]+=numf(a.valor);if(bal[a.para]!=null)bal[a.para]-=numf(a.valor);});
+  const deb=all.filter(n=>bal[n]<-0.009).map(n=>({n,v:-bal[n]})).sort((a,b)=>b.v-a.v),cre=all.filter(n=>bal[n]>0.009).map(n=>({n,v:bal[n]})).sort((a,b)=>b.v-a.v);const tr=[];let i=0,j=0;
+  while(i<deb.length&&j<cre.length){const x=Math.min(deb[i].v,cre[j].v);if(x>0.009)tr.push({de:deb[i].n,para:cre[j].n,valor:Math.round(x*100)/100});deb[i].v-=x;cre[j].v-=x;if(deb[i].v<0.01)i++;if(cre[j].v<0.01)j++;}
+  return{all,bal,pagou,parte,tr};}
+function bpSplitHTML(t){const s=bpTripSplit(t);if(!s)return '';
+  return `<div class="sec-title"><h3>Divisão entre ${s.all.length} pessoas</h3><span class="hint">quem pagou e quem deve</span></div>
+  <div class="card">${s.all.map(n=>`<div class="up-row"><div style="min-width:0;flex:1"><div class="up-t">${esc(n)}</div><div class="up-o">pagou ${brl(s.pagou[n])} · parte ${brl(s.parte[n])}</div></div><b class="num ${s.bal[n]>0.009?'up':(s.bal[n]<-0.009?'down':'')}" style="flex-shrink:0">${s.bal[n]>0.009?'recebe '+brl(s.bal[n]):(s.bal[n]<-0.009?'deve '+brl(-s.bal[n]):'em dia')}</b></div>`).join('')}
+  ${s.tr.length?`<div class="fsub" style="margin-top:14px">Para acertar</div>${s.tr.map((x,k)=>`<div class="split-tr"><div style="min-width:0;flex:1"><b>${esc(x.de)}</b> paga <b class="num">${brl(x.valor)}</b> para <b>${esc(x.para)}</b></div><div style="display:flex;gap:6px;flex-shrink:0">${x.para==='Você'?`<button class="btn btn-primary btn-sm" style="width:auto" onclick="bpSplitCobrar('${t.id}',${k})">Cobrar</button>`:''}<button class="btn btn-ghost btn-sm" style="width:auto" onclick="bpSplitAcertar('${t.id}',${k})">Acertado</button></div></div>`).join('')}`:'<div style="font-size:12.5px;color:var(--brand);margin-top:12px;font-weight:600">Tudo acertado entre vocês.</div>'}
+  ${(t.acertos||[]).length?`<div style="font-size:11.5px;color:var(--text-3);margin-top:10px">${t.acertos.length} acerto(s) registrado(s) · <button class="lnk-btn" style="font-size:11.5px" onclick="bpSplitUndo('${t.id}')">desfazer o último</button></div>`:''}</div>`;}
+function bpSplitCobrar(tid,k){const t=S.trips.find(x=>x.id===tid);const s=bpTripSplit(t);const x=s&&s.tr[k];if(!x)return;const pp=(t.participantes||[]).find(p=>p.nome===x.de)||{};
+  openPix(x.valor,'Viagem '+t.nome,`Oi ${x.de}! Sua parte da viagem ${t.nome} ficou em ${brl(x.valor)}.`,pp.tel||'');}
+async function bpSplitAcertar(tid,k){const t=S.trips.find(x=>x.id===tid);const s=bpTripSplit(t);const x=s&&s.tr[k];if(!x)return;const L=[...(Array.isArray(t.acertos)?t.acertos:[]),{de:x.de,para:x.para,valor:x.valor,data:todayISO()}];
+  const r=await sb.from('trips').update({acertos:L}).eq('id',tid);if(r.error){toast('Erro: '+r.error.message);return;}t.acertos=L;
+  if(x.para==='Você'&&confirm(`Lançar ${brl(x.valor)} recebido de ${x.de} como entrada no caixa?`)){await sb.from('cash_flow').insert({kind:'aporte',valor:x.valor,data:todayISO(),nota:'Acerto da viagem '+t.nome+' · '+x.de,categoria:'Reembolso'});await refresh('cash');}
+  toast('Acerto registrado');render();}
+async function bpSplitUndo(tid){const t=S.trips.find(x=>x.id===tid);const L=(t.acertos||[]).slice(0,-1);const r=await sb.from('trips').update({acertos:L}).eq('id',tid);if(!r.error){t.acertos=L;render();}}
+/* modo em viagem: gasto rápido + limite diário */
+const TRIP_FIXOS=['Passagem','Hospedagem','Seguro'];
+function bpTripDiario(i,t){return i.trip_id===t.id&&i.forma!=='parcelado'&&i.pago&&i.data_pagamento&&!TRIP_FIXOS.includes(i.tipo);}
+function bpTripHoje(t){const hoje=todayISO();return (S.tripItems||[]).filter(i=>bpTripDiario(i,t)&&i.data_pagamento===hoje).reduce((a,i)=>a+numf(i.valor),0);}
+function bpTripModoHTML(t){const cd=bpTripCount(t);const ativo=cd&&(cd.fase==='durante'||(cd.fase==='antes'&&+cd.big<=1));if(!ativo&&!numf(t.limite_diario))return '';
+  const hoje=bpTripHoje(t),lim=numf(t.limite_diario),m=t.moeda,cot=numf(t.cotacao),ppl=bpTripPeople(t);
+  const dias={};(S.tripItems||[]).filter(i=>bpTripDiario(i,t)&&t.data_ida&&i.data_pagamento>=t.data_ida&&i.data_pagamento<=(t.data_volta||t.data_ida)).forEach(i=>{dias[i.data_pagamento]=(dias[i.data_pagamento]||0)+numf(i.valor);});
+  const dk=Object.keys(dias).sort();const mx=Math.max(lim||0,...dk.map(k=>dias[k]),1);
+  return `<div class="sec-title"><h3>${ativo?'Em viagem':'Gasto por dia'}</h3><span class="hint">gastos do dia a dia${m&&cot?' · 1 '+esc(m)+' = '+brl(cot):''}</span></div>
+  <div class="card">
+    ${lim?`<div class="orc-top" style="margin:0"><span>Hoje</span><b class="num ${hoje>lim?'down':''}">${brl(hoje)} de ${brl(lim)}</b></div><div class="prog" style="height:7px;margin-top:7px"><i style="width:${Math.min(100,hoje/lim*100)}%;${hoje>lim?'background:var(--loss)':(hoje>=lim*.85?'background:var(--amber)':'')}"></i></div><div style="font-size:11.5px;color:var(--text-3);margin-top:5px">${hoje>lim?'passou '+brl(hoje-lim)+' do limite de hoje':'ainda pode gastar '+brl(lim-hoje)+' hoje'}</div>`:''}
+    ${ativo?`<div class="fsub" style="margin-top:${lim?14:0}px">Lançar gasto</div>
+    <div class="quick-row" style="margin-top:8px"><input class="input num" id="tg_val" type="number" step="0.01" inputmode="decimal" placeholder="${m?'Valor em '+esc(m):'Valor em R$'}" oninput="bpTgPrev('${t.id}')" style="min-width:0"><button class="btn btn-primary" style="flex:0 0 auto;width:auto" onclick="bpTgSave('${t.id}')">Lançar</button></div>
+    <div id="tg_prev" style="font-size:12px;color:var(--text-2);margin-top:6px;min-height:16px"></div>
+    ${bpChips('tg_cat',['Alimentação','Transporte','Passeios','Compras','Outros'],'Alimentação')}
+    ${ppl.length>1?`<div style="margin-top:10px">${bpChips('tg_payer',ppl,'Você')}</div>`:''}
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="tg_caixa" checked><span>Descontar do caixa</span></label>`:''}
+    ${dk.length?`<div class="fsub" style="margin-top:14px">Por dia</div>${dk.map(k=>`<div class="bar-row"><span>${fmtDate(k).slice(0,5)}</span><div class="prog"><i style="width:${Math.round(dias[k]/mx*100)}%;${lim&&dias[k]>lim?'background:var(--loss)':''}"></i></div><b class="num">${brl(dias[k])}</b></div>`).join('')}`:''}
+  </div>`;}
+function bpTgPrev(tid){const t=S.trips.find(x=>x.id===tid);const v=numf($('#tg_val').value);const p=$('#tg_prev');if(!p)return;if(t&&t.moeda&&numf(t.cotacao)&&v>0)p.textContent=bpMoneyFx(v,t.moeda)+' ≈ '+brl(v*numf(t.cotacao));else p.textContent='';}
+async function bpTgSave(tid){const t=S.trips.find(x=>x.id===tid);if(!t)return;const v=numf($('#tg_val').value);if(v<=0){toast('Informe o valor');return;}
+  const sel=window.bpSel||{};const cat=sel.tg_cat||'Outros';const fx=t.moeda&&numf(t.cotacao)?numf(t.cotacao):1;const brlV=Math.round(v*fx*100)/100;const ppl=bpTripPeople(t);
+  const row={trip_id:tid,tipo:cat,descricao:cat+(t.moeda?' · '+bpMoneyFx(v,t.moeda):''),forma:'avista',valor:brlV,pago:true,data_pagamento:todayISO(),parcelas:1,parcelas_pagas:1,valor_parcela:brlV,moeda:t.moeda||null,valor_moeda:t.moeda?v:null};
+  if(ppl.length>1)row.pago_por=sel.tg_payer||'Você';
+  const r=await sb.from('trip_items').insert(row);if(r.error){toast('Erro: '+r.error.message);return;}
+  if($('#tg_caixa')&&$('#tg_caixa').checked&&(!row.pago_por||row.pago_por==='Você')){await sb.from('cash_flow').insert({kind:'retirada',valor:brlV,data:todayISO(),nota:'Viagem '+t.nome+' · '+row.descricao,categoria:'Viagem'});await refresh('cash');}
+  await refresh('trips');toast('Gasto lançado · '+brl(brlV));render();}
+function rViagem(v,id){
+  const t=S.trips.find(x=>x.id===id);const c=tripCalc(id);const pct=c.total>0?Math.round(c.pago/c.total*100):0;
+  const dias=bpTripDias(t),pes=bpTripPeople(t).length,orc=numf(t.orcamento);
+  const items=c.items.slice().sort((a,b)=>{const ca=tiCalc(a),cb=tiCalc(b);if((ca.falta>0)!==(cb.falta>0))return ca.falta>0?-1:1;if(ca.falta>0)return String(ca.prox||'9999').localeCompare(String(cb.prox||'9999'));return String(b.data_pagamento||'').localeCompare(String(a.data_pagamento||''));});
+  const byT={};c.items.forEach(i=>{const k=i.tipo||'Outros';byT[k]=(byT[k]||0)+tiCalc(i).total;});
+  const tipos=Object.entries(byT).sort((a,b)=>b[1]-a[1]);const maxT=Math.max(1,...tipos.map(x=>x[1]));
+  const st=[];if(pes>1)st.push(['Por pessoa',brl(c.total/pes),pes+' pessoas']);if(dias&&c.total>0)st.push(['Por dia',brl(c.total/dias),dias+' dias']);
+  let orcH='';if(orc>0){const u=c.total/orc*100;const col=u>100?'var(--loss)':(u>=90?'var(--amber)':'');orcH=`<div class="orc"><div class="orc-top"><span>Orçamento ${brl(orc)}</span><b class="num ${u>100?'down':''}">${u>100?'passou '+brl(c.total-orc):'sobram '+brl(orc-c.total)}</b></div><div class="prog" style="height:6px"><i style="width:${Math.min(100,u)}%;${col?'background:'+col:''}"></i></div></div>`;}
+  v.innerHTML=`<button class="btn btn-ghost btn-sm" style="width:auto;margin-bottom:12px" onclick="bpOpenTrip(null)">← Viagens</button>
+  ${tripCoverHTML(t,true)}
+  <div class="card" style="padding:16px">
+    <div style="font-size:12.5px;color:var(--text-2);font-weight:600">Falta pagar</div>
+    <div class="num" style="font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.5px;margin-top:2px">${brl(c.falta)}</div>
+    ${c.total>0?`<div class="prog"><i style="width:${pct}%"></i></div>`:''}
+    <div class="fin4"><div><span>Total</span><b class="num">${brl(c.total)}</b></div><div><span>Já pago</span><b class="num up">${brl(c.pago)}</b></div><div><span>Em parcelas</span><b class="num">${brl(c.parcelas)}</b></div><div><span>A pagar</span><b class="num">${brl(c.apagar)}</b></div></div>
+    ${orcH}
+    ${st.length?`<div class="tstats">${st.map(s=>`<div><span>${s[0]}</span><b class="num">${s[1]}</b><small>${s[2]}</small></div>`).join('')}</div>`:''}
+  </div>
+  ${bpTripModoHTML(t)}
+  <div class="sec-title"><h3>Custos</h3><button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${t.id}')">+ Adicionar custo</button></div>
+  ${items.length?items.map(tiCard).join(''):'<div class="empty" style="padding:28px 16px"><b>Nenhum custo lançado</b><p>Adicione passagem, hospedagem, passeios… parcelado, com entrada, já pago ou a pagar.</p></div>'}
+  ${bpSplitHTML(t)}
+  ${tripChkHTML(t)}
+  ${tipos.length>1?`<div class="sec-title"><h3>Por tipo</h3></div><div class="card">${tipos.map(([k,val])=>`<div class="bar-row"><span>${esc(k)}</span><div class="prog"><i style="width:${Math.round(val/maxT*100)}%"></i></div><b class="num">${brl(val)}</b></div>`).join('')}</div>`:''}
+  ${t.notas?`<div class="sec-title"><h3>Observações</h3></div><div class="card" style="font-size:13.5px;color:var(--text-2);white-space:pre-wrap">${esc(t.notas)}</div>`:''}
+  <div style="margin-top:22px;text-align:center"><button class="btn btn-ghost btn-sm" style="width:auto;color:var(--loss)" onclick="delTrip('${t.id}')">Excluir viagem</button></div>`;
+}
+function tiCard(i){
+  const c=tiCalc(i);const late=c.falta>0&&c.prox&&c.prox<todayISO();let status,acao='';const t=(S.trips||[]).find(x=>x.id===i.trip_id);const ppl=bpTripPeople(t);
+  if(c.parc){const pt=[];if(c.e>0)pt.push('Entrada '+brl(c.e)+(c.ep?' paga':''));pt.push(`${c.pg} de ${c.n} parcelas de ${brl(c.vp)}`);
+    status=pt.join(' + ')+(c.quitado?'':(c.prox?(c.proxEntrada?' · entrada vence ':' · próxima ')+fmtDate(c.prox):''));
+    if(!c.quitado)acao=`<button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTiPay('${i.id}')">${c.proxEntrada?'Pagar entrada':`Pagar parcela ${c.pg+1}/${c.n}`}</button>`;}
+  else if(i.pago){status='Pago'+(i.data_pagamento?' em '+fmtDate(i.data_pagamento):'');}
+  else{status='A pagar'+(i.vencimento?' · vence '+fmtDate(i.vencimento):'');acao=`<button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTiPay('${i.id}')">Marcar pago</button>`;}
+  if(ppl.length>1){const payer=ppl.includes(i.pago_por)?i.pago_por:'Você';const dv=Array.isArray(i.divisao)&&i.divisao.length?i.divisao:null;status+=`<br>${payer==='Você'?'Você pagou':esc(payer)+' pagou'} · ${dv?'dividido com '+dv.map(esc).join(', '):'dividido entre todos'}`;}
+  const tags=(i.descricao?`<span class="pill" style="background:var(--surface-3);color:var(--text-2)">${esc(i.tipo||'Outros')}</span>`:'')+(late?'<span class="pill" style="background:var(--loss-soft);color:var(--loss)">vencido</span>':'');
+  return `<div class="card" style="margin-bottom:10px${late?';border-color:var(--loss)':''}">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0">${tags?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${tags}</div>`:''}<b style="display:block;font-size:14.5px">${esc(i.descricao||i.tipo||'Custo')}</b><div style="font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.45">${status}</div></div>
+    <div style="text-align:right;flex-shrink:0"><b class="num">${brl(c.total)}</b>${c.falta>0?`<div class="num down" style="font-size:12px;margin-top:3px">falta ${brl(c.falta)}</div>`:'<div class="up" style="font-size:12px;margin-top:3px">quitado</div>'}</div></div>
+    ${c.parc?`<div class="prog" style="height:6px"><i style="width:${c.total>0?Math.round(c.pago/c.total*100):0}%"></i></div>`:''}
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${acao}<button class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${i.trip_id}','${i.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto;color:var(--loss)" onclick="delTripItem('${i.id}')">Excluir</button></div>
+  </div>`;
+}
+Object.assign(window,{openPix,bpSavePixKey,bpPixRender,bpPixWhats,bpPixProduto,bpPixRecv,bpSaveSeller,openContrato,openContratos,bpCTOpenPDF,bpAfterSale,bpCTStart,bpCTGo,bpCTAddFoto,bpCTRmFoto,bpCTCover,bpSigClear,bpCTGerar,bpCTLastDownload,bpCTLastShare,bpPosVenda,bpPosVendaOk,openFechamento,bpFechSave,bpPeopleAdd,bpPeopleDel,bpMoedaChange,bpBuscarCotacao,openTrip,saveTrip,openTripItem,saveTripItem,bpSplitCobrar,bpSplitAcertar,bpSplitUndo,bpTgPrev,bpTgSave});
 
 /* ============ BOOT ============ */
 $('#authBtn').onclick=doAuth;
