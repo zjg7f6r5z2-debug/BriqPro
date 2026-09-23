@@ -314,6 +314,28 @@ html,body{overflow-x:hidden}
 .qa span{font-size:10.5px;font-weight:600;color:var(--text-2);letter-spacing:.1px}
 @media(min-width:920px){.qa{max-width:440px}}
 </style>
+<style id="bp-fin">
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--border);background:transparent;color:var(--text-2);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;line-height:1.2}
+.chip.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.chk{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:13.5px;color:var(--text-2);cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--brand);flex-shrink:0;margin:0}
+.fin3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.fin3>div{min-width:0}
+.fin3 span{display:block;font-size:11.5px;color:var(--text-2)}
+.fin3 b{display:block;font-size:16px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ti-prev{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;background:var(--surface-3);border-radius:12px;padding:10px 12px}
+.ti-prev>div{min-width:0}
+.ti-prev span{display:block;font-size:11px;color:var(--text-2)}
+.ti-prev b{display:block;font-size:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row{display:flex;align-items:center;gap:10px;padding:7px 0}
+.bar-row span{font-size:13px;flex:0 0 100px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .prog{flex:1;min-width:0;margin-top:0}
+.bar-row b{font-size:13px;flex:0 0 auto}
+.trip-list{display:grid;gap:10px}
+@media(min-width:760px){.trip-list{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.fin3 b{font-size:14.5px}.bar-row span{flex-basis:88px}}
+</style>
 <style id="bp-polish">
 /* profundidade: o gradiente de fundo já existia como token e nunca era usado */
 body{background-image:var(--bg-grad);background-attachment:fixed;background-repeat:no-repeat}
@@ -441,7 +463,7 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storage:s
 
 /* ============ STATE ============ */
 let USER=null, PROFILE=null;
-const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[],fixed:[],payables:[]};
+const S={settings:{theme:'dark',capital_inicial:0,stale_days:30},goals:{},products:[],expenses:[],sales:[],cash:[],contacts:[],negos:[],notifs:[],sub:null,suppliers:[],receivables:[],installments:[],watch:[],opps:[],quotes:[],agenda:[],fixed:[],payables:[],trips:[],tripItems:[]};
 const charts={};
 let filters={status:'todos',q:''};
 let draft=null;
@@ -537,6 +559,7 @@ async function loadAll(){
   try{const [wl,op]=await Promise.all([sb.from('watchlist').select('*').order('created_at',{ascending:false}),sb.from('opportunities').select('*').order('created_at',{ascending:false})]);S.watch=wl.data||[];S.opps=op.data||[];}catch(e){}
   try{S.quotes=(await sb.from('quotes').select('*').order('created_at',{ascending:false})).data||[];}catch(e){}
   try{S.payables=(await sb.from('payables').select('*').order('vencimento',{ascending:true})).data||[];}catch(e){}
+  await refresh('trips');
 }
 async function refresh(part){
   if(!part||part==='products')S.products=(await sb.from('products').select('*').order('data_compra',{ascending:false})).data||[];
@@ -547,6 +570,7 @@ async function refresh(part){
   if(!part||part==='agenda')S.agenda=(await sb.from('agenda').select('*').order('data',{ascending:true})).data||[];
   if(!part||part==='fixed')S.fixed=(await sb.from('fixed_expenses').select('*').order('dia',{ascending:true})).data||[];
   if(!part||part==='negos')S.negos=(await sb.from('negotiations').select('*').order('updated_at',{ascending:false})).data||[];
+  if(!part||part==='trips')try{const [tr,ti]=await Promise.all([sb.from('trips').select('*').order('data_ida',{ascending:false}),sb.from('trip_items').select('*').order('created_at',{ascending:true})]);S.trips=tr.data||[];S.tripItems=ti.data||[];}catch(e){}
   if(!part||part==='notifs')S.notifs=(await sb.from('notifications').select('*').order('created_at',{ascending:false}).limit(40)).data||[];
 }
 
@@ -643,6 +667,7 @@ const TABS=[
   {id:'estoque',label:'Estoque',icon:'<path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/>'},
   {id:'crm',label:'Negócios',icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>'},
   {id:'financeiro',label:'Financeiro',icon:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M16 15h2"/>'},
+  {id:'viagens',label:'Viagens',icon:'<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'},
   {id:'caixa',label:'Caixa',icon:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/>'},
   {id:'metas',label:'Metas',icon:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>'},
   {id:'iq',label:'Insights',icon:'<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/>'},
@@ -686,6 +711,11 @@ function openMenu(){
     tile(T('iq'),'Insights','O que seus números já mostram',go('iq')),
     tile(T('radar'),'Radar','Garimpar boas compras',go('radar')),
     tile(T('relatorios'),'Relatórios','Exportar PDF, Excel ou CSV',go('relatorios'))])}
+  ${grp('Finanças',[
+    tile(T('viagens'),'Viagens','Custos, parcelas e o que falta',go('viagens')),
+    tile('<path d="M12 5v14M5 12h14"/>','Lançamento','Entrada ou saída do dia a dia',"openMov('retirada')"),
+    tile('<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','Despesas fixas','Contas que se repetem','openFixed()'),
+    tile(T('financeiro'),'Financeiro','Resumo do mês e contas',go('financeiro'))])}
   ${grp('Operar',[
     tile(T('fornecedores'),'Fornecedores','Parceiros e orçamentos',go('fornecedores')),
     tile(T('garantias'),'Garantias','Prazos que estão vencendo',go('garantias')),
@@ -700,10 +730,11 @@ function openMenu(){
 }
 function setTab(id){
   if(id==='caixa'){window.bpFinSub='caixa';id='financeiro';}else if(id==='recebiveis'){window.bpFinSub='receber';id='financeiro';}
+  if(id!=='viagens')window.bpTrip=null;
   current=id;
   document.querySelectorAll('.navbtn[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
   document.querySelectorAll('.bnav[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
-  const T={dashboard:['Dashboard','Visão executiva'],produtos:['Produtos','Catálogo e rentabilidade'],estoque:['Estoque','Giro e produtos parados'],crm:['Negócios','Pipeline e leads'],caixa:['Caixa','Capital e fluxo'],financeiro:['Financeiro','Resumo, contas e caixa'],metas:['Metas','Objetivos do período'],iq:['Insights','Inteligência do negócio'],relatorios:['Relatórios','Exportações'],recebiveis:['Recebíveis','Contas e parcelas'],fornecedores:['Fornecedores','Parceiros de compra'],garantias:['Garantias','Vencimentos e alertas'],radar:['Radar de Oportunidades','Garimpe as melhores compras'],master:['Painel Master','Plataforma e assinantes'],config:['Configurações','Conta e dados']};
+  const T={dashboard:['Dashboard','Visão executiva'],produtos:['Produtos','Catálogo e rentabilidade'],estoque:['Estoque','Giro e produtos parados'],crm:['Negócios','Pipeline e leads'],caixa:['Caixa','Capital e fluxo'],financeiro:['Financeiro','Resumo, contas e caixa'],metas:['Metas','Objetivos do período'],iq:['Insights','Inteligência do negócio'],relatorios:['Relatórios','Exportações'],recebiveis:['Recebíveis','Contas e parcelas'],fornecedores:['Fornecedores','Parceiros de compra'],garantias:['Garantias','Vencimentos e alertas'],radar:['Radar de Oportunidades','Garimpe as melhores compras'],master:['Painel Master','Plataforma e assinantes'],config:['Configurações','Conta e dados'],viagens:['Viagens','Custos, parcelas e o que falta pagar']};
   $('#pageTitle').textContent=T[id][0];$('#pageSub').textContent=T[id][1];
   $('#fab').style.display=['produtos','dashboard','estoque'].includes(id)?'grid':'none';
   window.scrollTo(0,0);render();updateNotifBadge();
@@ -711,7 +742,7 @@ function setTab(id){
 function render(){
   Object.values(charts).forEach(c=>{try{c.destroy()}catch(e){}});
   const v=$('#view');
-  ({dashboard:rDash,financeiro:rFinanceiro,produtos:rProd,estoque:rEstoque,crm:rCRM,caixa:rCaixa,metas:rMetas,iq:rIQ,relatorios:rRel,recebiveis:rReceivables,fornecedores:rSuppliers,garantias:rWarranties,radar:rRadar,master:rMaster,config:rConfig}[current]||rDash)(v);
+  ({dashboard:rDash,financeiro:rFinanceiro,viagens:rViagens,produtos:rProd,estoque:rEstoque,crm:rCRM,caixa:rCaixa,metas:rMetas,iq:rIQ,relatorios:rRel,recebiveis:rReceivables,fornecedores:rSuppliers,garantias:rWarranties,radar:rRadar,master:rMaster,config:rConfig}[current]||rDash)(v);
 }
 function updateNotifBadge(){const n=S.notifs.filter(x=>!x.read).length;let b=$('#notifBtn .dotbadge');if(n&&!b){const d=document.createElement('span');d.className='dotbadge';$('#notifBtn').appendChild(d);}else if(!n&&b)b.remove();}
 
@@ -719,8 +750,8 @@ function updateNotifBadge(){const n=S.notifs.filter(x=>!x.read).length;let b=$('
 function kpi(l,v,e){return `<div class="card kpi hover"><div class="lab">${l}</div><div class="val num">${v}</div>${e||''}</div>`;}
 function rDash(v){
   const s=stats();
-  if(!S.products.length&&!S.cash.length&&!s.capIni){
-    v.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg><b>Bem-vindo ao BRIQPRO</b><p>Defina seu capital e cadastre o primeiro produto para o app ganhar vida.</p><div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap"><button class="btn btn-ghost" onclick="openCapital()">Definir capital</button><button class="btn btn-primary" style="width:auto" onclick="openProductForm()">+ Produto</button></div></div>`;return;
+  if(!S.products.length&&!S.cash.length&&!s.capIni&&!(S.trips||[]).length){
+    v.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg><b>Bem-vindo ao BRIQPRO</b><p>Seus briques e o seu dinheiro no mesmo lugar. Defina o capital inicial, cadastre um produto ou registre um gasto.</p><div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap"><button class="btn btn-ghost" style="flex:0 0 auto" onclick="openCapital()">Definir capital</button><button class="btn btn-ghost" style="flex:0 0 auto" onclick="openMov('retirada')">+ Lançamento</button><button class="btn btn-primary" style="width:auto;flex:0 0 auto" onclick="openProductForm()">+ Produto</button></div></div>`;return;
   }
   const nome=(PROFILE&&(PROFILE.full_name||'').trim().split(' ').slice(0,2).join(' '))||'vendedor';
   const per=window.bpDashPeriod||'mes';
@@ -748,6 +779,7 @@ function rDash(v){
   const oppExc=(S.opps||[]).filter(o=>o.status==='nova'&&Number(o.score)>=8).length;
   if(oppExc>0)alerts+=alertBar('warn',oppExc+' oportunidade(s) com preço excelente no Radar',"setTab('radar')");
   const pgVenc=(S.payables||[]).filter(p=>!p.pago&&p.vencimento&&p.vencimento<today).length;
+  const tVenc=bpTripVencidas();if(tVenc>0)alerts+=alertBar('warn',tVenc+' pagamento(s) de viagem vencido(s)',"setTab('viagens')");
   if(pgVenc>0)alerts+=alertBar('warn',pgVenc+' conta(s) a pagar vencida(s)',"window.bpFinSub='pagar';setTab('financeiro')");
   // agenda
   if(window.bpWeek===undefined)window.bpWeek=0;const wk=window.bpWeek;
@@ -805,6 +837,7 @@ function rDash(v){
     ${kcard('Qtd. Vendas',ps.qtd,'dark')}
   </div>
   ${alerts}
+  ${bpDashFin()}
 
   <div class="card metacard" style="margin-top:4px">
     <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:8px;align-items:center"><b style="font-size:15px">Meta do Mês</b></div><div style="display:flex;gap:4px"><button class="icon-btn" onclick="setTab('metas')" aria-label="Detalhe">${chart}</button><button class="icon-btn" onclick="openGoals()" aria-label="Editar">${pen}</button></div></div>
@@ -1199,19 +1232,6 @@ function delContact(id){confirmBox('Excluir contato?','',async()=>{await sb.from
 /* ============ CAIXA ============ */
 function openCapital(){openModal(`<div class="modal-head"><h3>Capital inicial</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div><p style="font-size:13.5px;color:var(--text-2)">Quanto havia em caixa para começar?</p><div class="field"><label class="lbl">Capital inicial (R$)</label><input class="input num" type="number" step="0.01" id="capIni" value="${S.settings.capital_inicial||''}"></div><div class="modal-foot"><button class="btn btn-primary" onclick="saveCapital()">Salvar</button></div>`);}
 async function saveCapital(){const v=numf($('#capIni').value);await sb.from('settings').upsert({user_id:USER.id,capital_inicial:v},{onConflict:'user_id'});S.settings.capital_inicial=v;closeModal();toast('Capital atualizado');render();}
-function rCaixa(v){
-  const s=stats();const led=[];
-  if(s.capIni)led.push({d:'',t:'Capital inicial',v:s.capIni,k:'in'});
-  S.cash.forEach(c=>led.push({id:c.id,d:c.data,t:(c.kind==='aporte'?'Aporte':c.kind==='retirada'?'Retirada':'Ajuste')+(c.nota?' · '+c.nota:''),v:c.kind==='retirada'?-numf(c.valor):numf(c.valor),k:c.kind==='retirada'?'out':'in',ed:true}));
-  S.products.forEach(p=>{const d=derive(p);led.push({d:p.data_compra,t:'Compra · '+p.nome,v:-d.custo,k:'out'});if(d.vendido)led.push({d:d.sale.data_venda,t:'Venda · '+p.nome,v:d.receita,k:'in'});});
-  led.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
-  v.innerHTML=`<div class="hero"><div class="lab"><span class="dot" style="background:var(--profit)"></span> Capital em caixa</div><div class="big num">${brl(s.caixa)}</div><div class="row"><div class="mini"><b class="num">${brl(s.capIni)}</b><span>Inicial</span></div><div class="mini"><b class="num up">${brl(s.aportes)}</b><span>Aportes</span></div><div class="mini"><b class="num down">${brl(s.retiradas)}</b><span>Retiradas</span></div><div class="mini"><b class="num">${brl(s.estCusto)}</b><span>Em estoque</span></div></div></div>
-  <div class="toolbar" style="margin-top:16px"><button class="btn btn-ghost" onclick="openCapital()">Capital inicial</button><button class="btn btn-ghost" style="color:var(--profit)" onclick="openMov('aporte')">+ Aporte</button><button class="btn btn-ghost" style="color:var(--loss)" onclick="openMov('retirada')">− Retirada</button></div>
-  <div class="sec-title"><h3>Movimentações</h3><span class="hint">compras e vendas automáticas</span></div>
-  <div class="card scroll-x" style="padding:6px"><table class="tbl"><thead><tr><th>Descrição</th><th>Data</th><th style="text-align:right">Valor</th></tr></thead><tbody>${led.map(l=>`<tr><td>${esc(l.t)}${l.ed?` <button onclick="delMov('${l.id}')" style="color:var(--loss);font-size:11px;font-weight:700">excluir</button>`:''}</td><td style="color:var(--text-2)">${l.d?fmtDate(l.d):'—'}</td><td class="num ${l.k==='in'?'up':'down'}" style="text-align:right">${l.v>=0?'+':''}${brl(l.v)}</td></tr>`).join('')}</tbody></table></div>`;
-}
-function openMov(kind){openModal(`<div class="modal-head"><h3>${kind==='aporte'?'Aporte':'Retirada'}</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div><div class="frow"><div><label class="lbl">Valor (R$)</label><input class="input num" type="number" step="0.01" id="m_val"></div><div><label class="lbl">Data</label><input class="input" type="date" id="m_data" value="${todayISO()}"></div><div class="full"><label class="lbl">Descrição</label><input class="input" id="m_desc"></div></div><div class="modal-foot"><button class="btn btn-primary" onclick="saveMov('${kind}')">Salvar</button></div>`);}
-async function saveMov(kind){const val=numf($('#m_val').value);if(val<=0){toast('Informe um valor');return;}await sb.from('cash_flow').insert({kind,valor:val,data:$('#m_data').value,nota:$('#m_desc').value});await refresh('cash');closeModal();toast('Registrado');render();}
 function delMov(id){sb.from('cash_flow').delete().eq('id',id).then(async()=>{await refresh('cash');toast('Removido');render();});}
 
 /* ============ METAS ============ */
@@ -1286,7 +1306,7 @@ function tablePeriod(type){const m=aggSold((p,d)=>type==='mes'?monthKey(d.sale.d
 function tableCat(){const m=aggSold(p=>p.categoria||'Outros');const ks=Object.keys(m).sort((a,b)=>m[b].l-m[a].l);if(!ks.length)return`<div class="empty"><p>Sem vendas.</p></div>`;return `<div class="card scroll-x" style="padding:6px"><table class="tbl"><thead><tr><th>Categoria</th><th>Vendas</th><th>Faturamento</th><th>Lucro</th><th>Margem</th></tr></thead><tbody>${ks.map(k=>{const r=m[k];return `<tr><td><b>${esc(k)}</b></td><td class="num">${r.q}</td><td class="num">${brl(r.fat)}</td><td class="num ${r.l>=0?'up':'down'}">${brl(r.l)}</td><td class="num">${r.fat>0?(r.l/r.fat*100).toFixed(0):0}%</td></tr>`;}).join('')}</tbody></table></div>`;}
 function soldRows(){return S.products.filter(p=>derive(p).vendido).map(p=>{const d=derive(p);return [p.nome,p.categoria||'',fmtDate(d.sale.data_venda),brl(d.custo),brl(d.receita),brl(d.lucroLiq),d.roi.toFixed(0)+'%'];});}
 function expPDF(){if(!window.jspdf){toast('PDF indisponível');return;}const {jsPDF}=window.jspdf;const doc=new jsPDF();const s=stats();doc.setFontSize(20);doc.text('BRIQPRO — Relatório',14,20);doc.setFontSize(10);doc.setTextColor(120);doc.text('Gerado '+new Date().toLocaleString('pt-BR'),14,27);doc.setTextColor(20);doc.autoTable({startY:34,head:[['Indicador','Valor']],body:[['Patrimônio',brl(s.patrimonio)],['Caixa',brl(s.caixa)],['Lucro acumulado',brl(s.lucro)],['Faturamento',brl(s.receita)],['Vendidos',''+s.sold.length],['Em estoque',''+s.stock.length],['Ticket médio',brl(s.ticket)],['ROI médio',s.roiMedio.toFixed(1)+'%'],['Margem média',s.margemMedia.toFixed(1)+'%']],theme:'grid',headStyles:{fillColor:[1,227,119]}});const rows=soldRows();if(rows.length){doc.text('Vendas',14,doc.lastAutoTable.finalY+12);doc.autoTable({startY:doc.lastAutoTable.finalY+16,head:[['Produto','Cat.','Data','Custo','Vendido','Lucro','ROI']],body:rows,theme:'striped',headStyles:{fillColor:[45,212,167]},styles:{fontSize:8}});}doc.save('brique-pro-relatorio.pdf');toast('PDF gerado');}
-function expXLS(){if(!window.XLSX){toast('Excel indisponível');return;}const rows=S.products.map(p=>{const d=derive(p);return {Produto:p.nome,Categoria:p.categoria,Marca:p.marca,Modelo:p.modelo,Condicao:condLabel(p.condicao),Status:stLabel(p.status),Score:p.opportunity_score,'Data compra':p.data_compra,'Preco pago':numf(p.preco_pago),Despesas:d.despesas,'Custo total':d.custo,'Valor mercado':numf(p.valor_mercado),'Data venda':d.vendido?d.sale.data_venda:'','Vendido':d.vendido?d.receita:'','Lucro liquido':d.vendido?d.lucroLiq:'','ROI%':d.vendido?+d.roi.toFixed(1):'','Margem%':d.vendido?+d.margem.toFixed(1):''};});const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Produtos');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.cash.map(c=>({Tipo:c.kind,Valor:numf(c.valor),Data:c.data,Descricao:c.nota}))),'Caixa');XLSX.writeFile(wb,'brique-pro.xlsx');toast('Excel gerado');}
+function expXLS(){if(!window.XLSX){toast('Excel indisponível');return;}const rows=S.products.map(p=>{const d=derive(p);return {Produto:p.nome,Categoria:p.categoria,Marca:p.marca,Modelo:p.modelo,Condicao:condLabel(p.condicao),Status:stLabel(p.status),Score:p.opportunity_score,'Data compra':p.data_compra,'Preco pago':numf(p.preco_pago),Despesas:d.despesas,'Custo total':d.custo,'Valor mercado':numf(p.valor_mercado),'Data venda':d.vendido?d.sale.data_venda:'','Vendido':d.vendido?d.receita:'','Lucro liquido':d.vendido?d.lucroLiq:'','ROI%':d.vendido?+d.roi.toFixed(1):'','Margem%':d.vendido?+d.margem.toFixed(1):''};});const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Produtos');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(S.cash.map(c=>({Tipo:c.kind==='aporte'?'Entrada':c.kind==='retirada'?'Saída':'Ajuste',Categoria:c.categoria||'',Valor:numf(c.valor),Data:c.data,Descricao:c.nota}))),'Caixa');XLSX.writeFile(wb,'brique-pro.xlsx');toast('Excel gerado');}
 function expCSV(){const head=['Produto','Categoria','Status','Score','Custo','Vendido','Lucro','ROI%'];const rows=S.products.map(p=>{const d=derive(p);return [p.nome,p.categoria,stLabel(p.status),p.opportunity_score,d.custo.toFixed(2),d.vendido?d.receita.toFixed(2):'',d.vendido?d.lucroLiq.toFixed(2):'',d.vendido?d.roi.toFixed(1):''];});const csv=[head].concat(rows).map(r=>r.map(c=>`"${(''+c).replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='brique-pro.csv';a.click();toast('CSV gerado');}
 
 /* ============ CONFIG ============ */
@@ -1304,7 +1324,7 @@ function rConfig(v){
 async function saveProfile(){await sb.from('profiles').upsert({id:USER.id,email:USER.email,full_name:$('#p_name').value,business_name:$('#p_biz').value,phone:$('#p_phone').value},{onConflict:'id'});PROFILE.full_name=$('#p_name').value;const sd=numf($('#p_stale').value)||30;await sb.from('settings').upsert({user_id:USER.id,stale_days:sd},{onConflict:'user_id'});S.settings.stale_days=sd;$('#sideUser').textContent=PROFILE.full_name||USER.email;toast('Perfil salvo');}
 function openChangePw(){openModal(`<div class="modal-head"><h3>Alterar senha</h3><button class="icon-btn" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div><div class="field"><label class="lbl">Nova senha</label><input class="input" type="password" id="np"></div><div class="err" id="npe"></div><div class="modal-foot"><button class="btn btn-primary" onclick="changePw()">Salvar</button></div>`);}
 async function changePw(){const pw=$('#np').value;if(pw.length<6){$('#npe').textContent='Mínimo 6 caracteres.';return;}const {error}=await sb.auth.updateUser({password:pw});if(error){$('#npe').textContent=error.message;return;}closeModal();toast('Senha alterada');}
-async function backupJSON(){const data={exported:new Date().toISOString(),profile:PROFILE,settings:S.settings,goals:S.goals,products:S.products,expenses:S.expenses,sales:S.sales,cash:S.cash,contacts:S.contacts,negotiations:S.negos};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='brique-pro-backup-'+todayISO()+'.json';a.click();toast('Backup exportado');}
+async function backupJSON(){const data={exported:new Date().toISOString(),profile:PROFILE,settings:S.settings,goals:S.goals,products:S.products,expenses:S.expenses,sales:S.sales,cash:S.cash,contacts:S.contacts,negotiations:S.negos,trips:S.trips,trip_items:S.tripItems};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='brique-pro-backup-'+todayISO()+'.json';a.click();toast('Backup exportado');}
 
 /* ============ ACTIVITY LOG ============ */
 async function logAct(acao,entidade,id){try{await sb.from('activity_logs').insert({acao,entidade,entidade_id:id});}catch(e){}}
@@ -1772,51 +1792,6 @@ function rFinanceiro(v){
   const body=$('#finBody');
   if(sub==='caixa')rCaixa(body);else if(sub==='receber')rReceivables(body);else if(sub==='pagar')rPagar(body);else rFinResumo(body);
 }
-function bpMesTotais(mkey){
-  let rec=0,luc=0,desp=0;
-  (S.products||[]).forEach(p=>{const d=derive(p);if(d.vendido&&d.sale.data_venda&&monthKey(d.sale.data_venda)===mkey){rec+=d.receita;luc+=d.lucroLiq;}
-    if(p.data_compra&&monthKey(p.data_compra)===mkey)desp+=numf(p.preco_pago);});
-  (S.expenses||[]).forEach(e=>{if(e.data&&monthKey(e.data)===mkey)desp+=numf(e.valor);});
-  (S.payables||[]).forEach(pg=>{if(pg.pago&&pg.data_pagamento&&monthKey(pg.data_pagamento)===mkey)desp+=numf(pg.valor);});
-  return{rec,luc,desp};
-}
-function bpChip(cur,prev){
-  if(prev<=0&&cur<=0)return '<span style="font-size:11.5px;color:var(--text-3)">— vs mês anterior</span>';
-  const p=prev>0?Math.round((cur-prev)/prev*100):100;
-  const up=p>=0;return `<span class="${up?'up':'down'}" style="font-size:11.5px;font-weight:700">${up?'▲':'▼'} ${Math.abs(p)}% vs mês anterior</span>`;
-}
-function rFinResumo(v){
-  const t=todayISO();const mk=monthKey(t);
-  const pv=new Date(t+'T00:00:00');pv.setMonth(pv.getMonth()-1);const mkPrev=pv.toISOString().slice(0,7);
-  const cur=bpMesTotais(mk),ant=bpMesTotais(mkPrev);
-  const rs=recvStats();const aReceber=rs.areceber+rs.atrasado;
-  const aPagar=(S.payables||[]).filter(p=>!p.pago).reduce((a,p)=>a+numf(p.valor),0);
-  const anoAtual=new Date().getFullYear();const MEI_LIM=81000;
-  const meiFat=(S.products||[]).reduce((a,p)=>{const d=derive(p);return (d.vendido&&d.sale.data_venda&&String(d.sale.data_venda).slice(0,4)==anoAtual)?a+d.receita:a;},0);
-  const meiPct=Math.min(100,meiFat/MEI_LIM*100);
-  const fixAtivas=(S.fixed||[]).filter(f=>f.ativo!==false).length;
-  const byC={};(S.products||[]).forEach(p=>{const d=derive(p);if(d.vendido){const c=(d.sale.canal_venda||'Não informado');byC[c]=(byC[c]||0)+d.lucroLiq;}});
-  const canais=Object.entries(byC).sort((a,b)=>b[1]-a[1]);const maxC=Math.max(1,...canais.map(c=>Math.abs(c[1])));
-  v.innerHTML=`<div class="grid kpis" style="grid-template-columns:repeat(2,1fr)">
-    <div class="card kpi"><div class="lab">Receita do mês</div><div class="val num">${brl(cur.rec)}</div><div style="margin-top:6px">${bpChip(cur.rec,ant.rec)}</div></div>
-    <div class="card kpi"><div class="lab">Despesas do mês</div><div class="val num">${brl(cur.desp)}</div><div style="margin-top:6px">${bpChip(cur.desp,ant.desp)}</div></div>
-    <div class="card kpi"><div class="lab">A receber</div><div class="val num up">${brl(aReceber)}</div><div style="margin-top:6px;font-size:11.5px;color:var(--text-3)">pendente total${rs.atrasado>0?' · <span class="down">'+brl(rs.atrasado)+' atrasado</span>':''}</div></div>
-    <div class="card kpi"><div class="lab">A pagar</div><div class="val num ${aPagar>0?'down':''}">${brl(aPagar)}</div><div style="margin-top:6px;font-size:11.5px;color:var(--text-3)">em aberto</div></div>
-  </div>
-  <div class="sec-title"><h3>Lucro por canal de venda</h3></div>
-  <div class="card">${canais.length?canais.map(([c,l])=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0"><span style="font-size:13px;flex:0 0 108px">${esc(c)}</span><div class="prog" style="flex:1"><i style="width:${Math.round(Math.abs(l)/maxC*100)}%;${l<0?'background:var(--loss)':''}"></i></div><b class="num ${l>=0?'up':'down'}" style="font-size:13px;flex:0 0 auto">${brl(l)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3)">Sem vendas ainda. O canal é registrado ao salvar cada venda.</p>'}</div>
-  <div class="sec-title"><h3>Compromissos do mês</h3></div>
-  <div class="card" style="padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:10px" onclick="openFixed()">
-    <div><b style="font-size:15px">Despesas fixas</b><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${fixAtivas} conta(s) recorrente(s) · toque para gerenciar</div></div>
-    <div style="text-align:right;flex-shrink:0"><div class="num down" style="font-size:19px;font-weight:800">${brl(fixedTotal())}</div><div style="font-size:10.5px;color:var(--text-2)">por mês</div></div>
-  </div>
-  <div class="card" style="padding:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Faturamento MEI ${anoAtual}</b><span style="font-size:12px;color:var(--text-2)">limite R$ 81.000</span></div>
-    <div class="big num" style="font-size:24px;margin-top:8px">${brl(meiFat)}</div>
-    <div class="prog" style="margin:8px 0"><i style="width:${meiPct}%;${meiPct>=100?'background:var(--loss)':(meiPct>=80?'background:var(--amber)':'')}"></i></div>
-    <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text-2)">${meiPct.toFixed(0)}% do limite</span><span style="${meiPct>=100?'color:var(--loss)':(meiPct>=80?'color:var(--amber)':'color:var(--text-2)')};font-weight:700">${meiPct>=100?'Acima do limite!':(meiPct>=80?'Perto do limite':'Dentro do limite')}</span></div>
-  </div>`;
-}
 function rPagar(v){
   const t=todayISO();const list=(S.payables||[]).slice().sort((a,b)=>String(a.vencimento||'9999').localeCompare(String(b.vencimento||'9999')));
   const aberto=list.filter(p=>!p.pago);const tot=aberto.reduce((a,p)=>a+numf(p.valor),0);const venc=aberto.filter(p=>p.vencimento&&p.vencimento<t).length;
@@ -1948,6 +1923,290 @@ Object.assign(window,{openFixed,addFixed,delFixed,agendarFixas,fixedTotal});
 
 
 
+
+
+
+/* ===== BLOCO 11: Finanças gerais (categorias) + Viagens ===== */
+const CAT_OUT=['Brique','Moradia','Contas','Mercado','Alimentação','Transporte','Saúde','Educação','Lazer','Viagem','Compras','Outros'];
+const CAT_IN=['Salário','Brique','Renda extra','Reembolso','Investimentos','Outros'];
+const TRIP_TIPOS=['Lazer','Trabalho','Congresso','Família','Outro'];
+const TRIP_ITEM_TIPOS=['Passagem','Hospedagem','Transporte','Alimentação','Passeios','Seguro','Compras','Outros'];
+const TI_SIT=['Parcelado','Já pago','A pagar'];
+const PEN_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>';
+
+/* chips de seleção única (delegação de clique) */
+function bpChips(id,opts,sel){window.bpSel=window.bpSel||{};window.bpSel[id]=sel||'';return `<div class="chips" data-group="${id}">${opts.map(o=>`<button type="button" class="chip${o===sel?' on':''}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;}
+document.addEventListener('click',e=>{const b=e.target.closest('.chips .chip');if(!b)return;const g=b.parentElement;g.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));window.bpSel=window.bpSel||{};window.bpSel[g.dataset.group]=b.dataset.v;if(g.dataset.group==='ti_sit')tiSit(b.dataset.v);});
+
+/* ---------- Lançamentos do dia a dia (caixa com categoria) ---------- */
+function openMov(kind){
+  const isIn=kind==='aporte';
+  openModal(`<div class="modal-head"><h3>${isIn?'Nova entrada':'Nova saída'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div class="frow"><div><label class="lbl">Valor (R$)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="m_val"></div><div><label class="lbl">Data</label><input class="input" type="date" id="m_data" value="${todayISO()}"></div></div>
+  <div class="field"><label class="lbl">Categoria</label>${bpChips('m_cat',isIn?CAT_IN:CAT_OUT,'')}</div>
+  <div class="field"><label class="lbl">Descrição</label><input class="input" id="m_desc" placeholder="${isIn?'Ex: Salário de setembro':'Ex: Mercado, gasolina, conta de luz'}"></div>
+  <div class="modal-foot"><button class="btn btn-primary" onclick="saveMov('${kind}')">Salvar</button></div>`);
+}
+async function saveMov(kind){
+  const val=numf($('#m_val').value);if(val<=0){toast('Informe um valor');return;}
+  const categoria=(window.bpSel||{}).m_cat||null;
+  const r=await sb.from('cash_flow').insert({kind,valor:val,data:$('#m_data').value||todayISO(),nota:$('#m_desc').value.trim(),categoria});
+  if(r.error){toast('Erro: '+r.error.message);return;}
+  await refresh('cash');closeModal();toast(kind==='aporte'?'Entrada registrada':'Saída registrada');render();
+}
+function rCaixa(v){
+  const s=stats();const led=[];
+  if(s.capIni)led.push({d:'',t:'Capital inicial',c:'',v:s.capIni,k:'in'});
+  S.cash.forEach(c=>{const out=c.kind==='retirada';const base=c.kind==='aporte'?'Entrada':out?'Saída':'Ajuste';led.push({id:c.id,d:c.data,t:c.nota||base,c:c.categoria||'',v:out?-numf(c.valor):numf(c.valor),k:out?'out':'in',ed:true});});
+  S.products.forEach(p=>{const d=derive(p);led.push({d:p.data_compra,t:'Compra · '+p.nome,c:'Brique',v:-d.custo,k:'out'});if(d.vendido)led.push({d:d.sale.data_venda,t:'Venda · '+p.nome,c:'Brique',v:d.receita,k:'in'});});
+  led.sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  v.innerHTML=`<div class="hero"><div class="lab"><span class="dot" style="background:var(--profit)"></span> Saldo em caixa</div><div class="big num">${brl(s.caixa)}</div><div class="row"><div class="mini"><b class="num">${brl(s.capIni)}</b><span>Inicial</span></div><div class="mini"><b class="num up">${brl(s.aportes)}</b><span>Entradas</span></div><div class="mini"><b class="num down">${brl(s.retiradas)}</b><span>Saídas</span></div><div class="mini"><b class="num">${brl(s.estCusto)}</b><span>Em estoque</span></div></div></div>
+  <div class="toolbar" style="margin-top:16px"><button class="btn btn-ghost" onclick="openCapital()">Capital inicial</button><button class="btn btn-ghost" style="color:var(--profit)" onclick="openMov('aporte')">+ Entrada</button><button class="btn btn-ghost" style="color:var(--loss)" onclick="openMov('retirada')">− Saída</button></div>
+  <div class="sec-title"><h3>Movimentações</h3><span class="hint">compras e vendas entram sozinhas</span></div>
+  ${led.length?`<div class="card scroll-x" style="padding:6px"><table class="tbl"><thead><tr><th>Descrição</th><th>Data</th><th style="text-align:right">Valor</th></tr></thead><tbody>${led.map(l=>`<tr><td>${esc(l.t)}${l.c?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${esc(l.c)}</div>`:''}${l.ed?` <button onclick="delMov('${l.id}')" style="color:var(--loss);font-size:11px;font-weight:700">excluir</button>`:''}</td><td style="color:var(--text-2)">${l.d?fmtDate(l.d):'—'}</td><td class="num ${l.k==='in'?'up':'down'}" style="text-align:right">${l.v>=0?'+':''}${brl(l.v)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty" style="padding:28px 16px"><b>Nenhuma movimentação</b><p>Registre entradas e saídas do dia a dia. Compras e vendas de produtos aparecem aqui automaticamente.</p></div>'}`;
+}
+
+/* ---------- Totais do mês: briques + vida financeira ---------- */
+function bpMesTotais(mkey){
+  let rec=0,luc=0,desp=0,ent=0,sai=0;const cats={};const add=(c,v)=>{cats[c]=(cats[c]||0)+v;};
+  (S.products||[]).forEach(p=>{const d=derive(p);if(d.vendido&&d.sale.data_venda&&monthKey(d.sale.data_venda)===mkey){rec+=d.receita;luc+=d.lucroLiq;}
+    if(p.data_compra&&monthKey(p.data_compra)===mkey){desp+=numf(p.preco_pago);add('Brique',numf(p.preco_pago));}});
+  (S.expenses||[]).forEach(e=>{if(e.data&&monthKey(e.data)===mkey){desp+=numf(e.valor);add('Brique',numf(e.valor));}});
+  (S.payables||[]).forEach(pg=>{if(pg.pago&&pg.data_pagamento&&monthKey(pg.data_pagamento)===mkey){desp+=numf(pg.valor);add('Contas',numf(pg.valor));}});
+  (S.cash||[]).forEach(c=>{if(!c.data||monthKey(c.data)!==mkey)return;const v=numf(c.valor);if(c.kind==='aporte')ent+=v;else if(c.kind==='retirada'){sai+=v;add(c.categoria||'Sem categoria',v);}});
+  return{rec,luc,desp,ent,sai,entradas:rec+ent,saidas:desp+sai,cats};
+}
+function bpChip(cur,prev,inv){
+  if(prev<=0&&cur<=0)return '<span style="font-size:11.5px;color:var(--text-3)">— vs mês anterior</span>';
+  const p=prev>0?Math.round((cur-prev)/prev*100):100;const up=p>=0;const good=inv?!up:up;
+  return `<span class="${good?'up':'down'}" style="font-size:11.5px;font-weight:700">${up?'▲':'▼'} ${Math.abs(p)}% vs mês anterior</span>`;
+}
+function rFinResumo(v){
+  const t=todayISO();const mk=monthKey(t);
+  const pv=new Date(t+'T00:00:00');pv.setDate(1);pv.setMonth(pv.getMonth()-1);const mkPrev=pv.getFullYear()+'-'+String(pv.getMonth()+1).padStart(2,'0');
+  const cur=bpMesTotais(mk),ant=bpMesTotais(mkPrev);const saldo=cur.entradas-cur.saidas;
+  const rs=recvStats();const aReceber=rs.areceber+rs.atrasado;
+  const aPagar=(S.payables||[]).filter(p=>!p.pago).reduce((a,p)=>a+numf(p.valor),0);
+  const anoAtual=new Date().getFullYear();const MEI_LIM=81000;
+  const meiFat=(S.products||[]).reduce((a,p)=>{const d=derive(p);return (d.vendido&&d.sale.data_venda&&String(d.sale.data_venda).slice(0,4)==anoAtual)?a+d.receita:a;},0);
+  const meiPct=Math.min(100,meiFat/MEI_LIM*100);
+  const fixAtivas=(S.fixed||[]).filter(f=>f.ativo!==false).length;
+  const byC={};(S.products||[]).forEach(p=>{const d=derive(p);if(d.vendido){const c=(d.sale.canal_venda||'Não informado');byC[c]=(byC[c]||0)+d.lucroLiq;}});
+  const canais=Object.entries(byC).sort((a,b)=>b[1]-a[1]);const maxC=Math.max(1,...canais.map(c=>Math.abs(c[1])));
+  const cats=Object.entries(cur.cats).sort((a,b)=>b[1]-a[1]);const maxK=Math.max(1,...cats.map(c=>c[1]));
+  const trs=bpTripsResumo(),trm=bpTripsMes();
+  v.innerHTML=`<div class="grid kpis" style="grid-template-columns:repeat(2,1fr)">
+    <div class="card kpi"><div class="lab">Entradas do mês</div><div class="val num up">${brl(cur.entradas)}</div><div style="margin-top:6px">${bpChip(cur.entradas,ant.entradas)}</div></div>
+    <div class="card kpi"><div class="lab">Saídas do mês</div><div class="val num down">${brl(cur.saidas)}</div><div style="margin-top:6px">${bpChip(cur.saidas,ant.saidas,true)}</div></div>
+    <div class="card kpi"><div class="lab">A receber</div><div class="val num up">${brl(aReceber)}</div><div style="margin-top:6px;font-size:11.5px;color:var(--text-3)">pendente total${rs.atrasado>0?' · <span class="down">'+brl(rs.atrasado)+' atrasado</span>':''}</div></div>
+    <div class="card kpi"><div class="lab">A pagar</div><div class="val num ${aPagar>0?'down':''}">${brl(aPagar)}</div><div style="margin-top:6px;font-size:11.5px;color:var(--text-3)">em aberto</div></div>
+  </div>
+  <div class="card" style="padding:16px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+    <div style="min-width:0"><b style="font-size:15px">Saldo do mês</b><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${brl(cur.rec)} em vendas · ${brl(cur.ent)} em outras entradas</div></div>
+    <b class="num ${saldo>=0?'up':'down'}" style="font-size:20px;flex-shrink:0">${brl(saldo)}</b>
+  </div>
+  <div class="toolbar" style="margin-top:12px"><button class="btn btn-ghost" style="color:var(--profit)" onclick="openMov('aporte')">+ Entrada</button><button class="btn btn-ghost" style="color:var(--loss)" onclick="openMov('retirada')">− Saída</button></div>
+  <div class="sec-title"><h3>Para onde foi o dinheiro</h3><span class="hint">este mês</span></div>
+  <div class="card">${cats.length?cats.map(([c,val])=>`<div class="bar-row"><span>${esc(c)}</span><div class="prog"><i style="width:${Math.round(val/maxK*100)}%"></i></div><b class="num">${brl(val)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3);margin:0">Nenhuma saída neste mês. Use “− Saída” para registrar gastos com categoria.</p>'}</div>
+  <div class="sec-title"><h3>Compromissos</h3></div>
+  <div class="card hover" style="padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px" onclick="setTab('viagens')">
+    <div style="min-width:0"><b style="font-size:15px">Viagens</b><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${trs.total>0?(trm.q?trm.q+' pagamento(s) no mês · '+brl(trm.v):'nada vencendo este mês'):'cadastre custos e parcelas'}</div></div>
+    <div style="text-align:right;flex-shrink:0"><div class="num ${trs.falta>0?'down':''}" style="font-size:19px;font-weight:800">${brl(trs.falta)}</div><div style="font-size:10.5px;color:var(--text-2)">falta pagar</div></div>
+  </div>
+  <div class="card hover" style="padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px" onclick="openFixed()">
+    <div style="min-width:0"><b style="font-size:15px">Despesas fixas</b><div style="font-size:11.5px;color:var(--text-2);margin-top:4px">${fixAtivas} conta(s) recorrente(s)</div></div>
+    <div style="text-align:right;flex-shrink:0"><div class="num down" style="font-size:19px;font-weight:800">${brl(fixedTotal())}</div><div style="font-size:10.5px;color:var(--text-2)">por mês</div></div>
+  </div>
+  <div class="sec-title"><h3>Briques</h3></div>
+  <div class="card" style="margin-bottom:10px"><b style="font-size:14px">Lucro por canal de venda</b><div style="margin-top:6px">${canais.length?canais.map(([c,l])=>`<div class="bar-row"><span>${esc(c)}</span><div class="prog"><i style="width:${Math.round(Math.abs(l)/maxC*100)}%;${l<0?'background:var(--loss)':''}"></i></div><b class="num ${l>=0?'up':'down'}">${brl(l)}</b></div>`).join(''):'<p style="font-size:13px;color:var(--text-3);margin:0">Sem vendas ainda. O canal é registrado ao salvar cada venda.</p>'}</div></div>
+  <div class="card" style="padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Faturamento MEI ${anoAtual}</b><span style="font-size:12px;color:var(--text-2)">limite R$ 81.000</span></div>
+    <div class="big num" style="font-size:24px;margin-top:8px">${brl(meiFat)}</div>
+    <div class="prog" style="margin:8px 0"><i style="width:${meiPct}%;${meiPct>=100?'background:var(--loss)':(meiPct>=80?'background:var(--amber)':'')}"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text-2)">${meiPct.toFixed(0)}% do limite</span><span style="${meiPct>=100?'color:var(--loss)':(meiPct>=80?'color:var(--amber)':'color:var(--text-2)')};font-weight:700">${meiPct>=100?'Acima do limite!':(meiPct>=80?'Perto do limite':'Dentro do limite')}</span></div>
+  </div>`;
+}
+function bpDashFin(){
+  const m=bpMesTotais(monthKey(todayISO()));const saldo=m.entradas-m.saidas;const tr=bpTripsResumo();
+  let h=`<div class="card hover" style="padding:16px;margin-bottom:12px" onclick="window.bpFinSub='resumo';setTab('financeiro')">
+    <b style="font-size:15px">Este mês</b>
+    <div class="fin3"><div><span>Entradas</span><b class="num up">${brl(m.entradas)}</b></div><div><span>Saídas</span><b class="num down">${brl(m.saidas)}</b></div><div><span>Saldo</span><b class="num ${saldo>=0?'up':'down'}">${brl(saldo)}</b></div></div>
+    <div style="display:flex;gap:8px;margin-top:12px" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="openMov('aporte')">+ Entrada</button><button class="btn btn-ghost btn-sm" onclick="openMov('retirada')">− Saída</button></div>
+  </div>`;
+  if(tr.falta>0)h+=`<div class="card hover" style="padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px" onclick="setTab('viagens')">
+    <div style="min-width:0"><b style="font-size:14.5px">Viagens</b><div style="font-size:11.5px;color:var(--text-2);margin-top:3px">${tr.prox?(tr.prox.data<todayISO()?'vencido desde ':'próximo pagamento ')+fmtDate(tr.prox.data)+' · '+brl(tr.prox.valor):'falta pagar'}</div></div>
+    <b class="num down" style="font-size:17px;flex-shrink:0">${brl(tr.falta)}</b></div>`;
+  return h;
+}
+
+/* ---------- Viagens: cálculos ---------- */
+function bpAddMonths(iso,k){if(!iso)return null;const [y,m,d]=iso.split('-').map(Number);const last=new Date(y,m+k,0).getDate();const dt=new Date(y,m-1+k,Math.min(d,last));return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');}
+function tiCalc(it){
+  if(it.forma==='parcelado'){
+    const n=Math.max(1,parseInt(it.parcelas)||1),pg=Math.min(n,Math.max(0,parseInt(it.parcelas_pagas)||0)),vp=numf(it.valor_parcela);
+    const total=n*vp,pago=pg*vp;
+    return{total,pago,falta:total-pago,n,pg,vp,parc:true,quitado:pg>=n,prox:pg<n?bpAddMonths(it.primeira_parcela,pg):null,proxValor:pg<n?vp:0};
+  }
+  const total=numf(it.valor),pago=it.pago?total:0;
+  return{total,pago,falta:total-pago,parc:false,quitado:!!it.pago,prox:it.pago?null:(it.vencimento||null),proxValor:it.pago?0:total};
+}
+function tripCalc(tid){
+  const items=(S.tripItems||[]).filter(i=>i.trip_id===tid);let total=0,pago=0,parcelas=0,apagar=0;
+  items.forEach(i=>{const c=tiCalc(i);total+=c.total;pago+=c.pago;if(c.parc)parcelas+=c.falta;else apagar+=c.falta;});
+  return{items,total,pago,parcelas,apagar,falta:parcelas+apagar};
+}
+function bpTripsResumo(){
+  let total=0,pago=0,parcelas=0,apagar=0,prox=null;
+  (S.tripItems||[]).forEach(i=>{const c=tiCalc(i);total+=c.total;pago+=c.pago;if(c.parc)parcelas+=c.falta;else apagar+=c.falta;if(c.prox&&c.falta>0&&(!prox||c.prox<prox.data))prox={data:c.prox,valor:c.proxValor};});
+  return{total,pago,parcelas,apagar,falta:parcelas+apagar,prox};
+}
+function bpTripVencidas(){const t=todayISO();return (S.tripItems||[]).filter(i=>{const c=tiCalc(i);return c.falta>0&&c.prox&&c.prox<t;}).length;}
+function bpTripsMes(){const t=todayISO(),mk=monthKey(t);let v=0,q=0;(S.tripItems||[]).forEach(i=>{const c=tiCalc(i);if(c.falta>0&&c.prox&&(monthKey(c.prox)===mk||c.prox<t)){v+=c.proxValor;q++;}});return{v,q};}
+function bpTripDatas(t){const f=d=>{const p=String(d).split('-');return p[2]+'/'+p[1];};if(t.data_ida&&t.data_volta)return f(t.data_ida)+' – '+f(t.data_volta)+'/'+String(t.data_volta).slice(2,4);if(t.data_ida)return 'ida '+fmtDate(t.data_ida);return '';}
+
+/* ---------- Viagens: telas ---------- */
+function bpOpenTrip(id){window.bpTrip=id;render();window.scrollTo(0,0);}
+function rViagens(v){
+  if(window.bpTrip&&(S.trips||[]).some(t=>t.id===window.bpTrip)){rViagem(v,window.bpTrip);return;}
+  window.bpTrip=null;
+  const t0=todayISO();
+  const trips=(S.trips||[]).slice().sort((a,b)=>{const pa=(a.data_volta||a.data_ida||'9999')<t0,pb=(b.data_volta||b.data_ida||'9999')<t0;if(pa!==pb)return pa?1:-1;return pa?String(b.data_ida||'').localeCompare(String(a.data_ida||'')):String(a.data_ida||'9999').localeCompare(String(b.data_ida||'9999'));});
+  if(!trips.length){v.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">${(TABS.find(x=>x.id==='viagens')||{}).icon||''}</svg><b>Nenhuma viagem cadastrada</b><p>Crie a viagem e lance passagem, hospedagem e o resto. O app mostra o que já foi pago, as parcelas em andamento e quanto falta.</p><button class="btn btn-primary" style="width:auto;margin-top:18px" onclick="openTrip()">+ Nova viagem</button></div>`;return;}
+  const r=bpTripsResumo();
+  v.innerHTML=`<div class="hero" style="margin-bottom:14px"><div class="lab"><span class="dot" style="background:var(--loss)"></span> Falta pagar</div><div class="big num">${brl(r.falta)}</div>
+    <div class="row"><div class="mini"><b class="num">${brl(r.total)}</b><span>Total</span></div><div class="mini"><b class="num up">${brl(r.pago)}</b><span>Já pago</span></div><div class="mini"><b class="num">${brl(r.parcelas)}</b><span>Em parcelas</span></div><div class="mini"><b class="num">${brl(r.apagar)}</b><span>A pagar</span></div></div></div>
+  <div class="toolbar"><button class="btn btn-primary" style="width:auto;flex:0 0 auto" onclick="openTrip()">+ Nova viagem</button></div>
+  <div class="trip-list">${trips.map(tripCard).join('')}</div>`;
+}
+function tripCard(t){
+  const c=tripCalc(t.id);const pct=c.total>0?Math.round(c.pago/c.total*100):0;const meta=[t.tipo,bpTripDatas(t)].filter(Boolean).join(' · ');
+  const right=c.falta>0?`<b class="num down">${brl(c.falta)}</b><div style="font-size:11px;color:var(--text-3)">falta pagar</div>`:(c.total>0?'<span class="pill" style="background:var(--brand-soft);color:var(--brand)">Quitada</span>':'<span style="font-size:12px;color:var(--text-3)">sem custos</span>');
+  return `<div class="card hover" onclick="bpOpenTrip('${t.id}')"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><b style="font-size:15px">${esc(t.nome)}</b>${meta?`<div style="font-size:12px;color:var(--text-2);margin-top:3px">${esc(meta)}</div>`:''}</div><div style="text-align:right;flex-shrink:0">${right}</div></div>
+  ${c.total>0?`<div class="prog"><i style="width:${pct}%"></i></div><div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-2);margin-top:6px"><span>${brl(c.pago)} de ${brl(c.total)}</span><span>${pct}% pago</span></div>`:''}</div>`;
+}
+function rViagem(v,id){
+  const t=S.trips.find(x=>x.id===id);const c=tripCalc(id);const pct=c.total>0?Math.round(c.pago/c.total*100):0;const meta=[t.tipo,bpTripDatas(t)].filter(Boolean).join(' · ');
+  const items=c.items.slice().sort((a,b)=>{const ca=tiCalc(a),cb=tiCalc(b);if((ca.falta>0)!==(cb.falta>0))return ca.falta>0?-1:1;return String(ca.prox||'9999').localeCompare(String(cb.prox||'9999'));});
+  const byT={};c.items.forEach(i=>{const k=i.tipo||'Outros';byT[k]=(byT[k]||0)+tiCalc(i).total;});
+  const tipos=Object.entries(byT).sort((a,b)=>b[1]-a[1]);const maxT=Math.max(1,...tipos.map(x=>x[1]));
+  v.innerHTML=`<button class="btn btn-ghost btn-sm" style="width:auto;margin-bottom:12px" onclick="bpOpenTrip(null)">← Viagens</button>
+  <div class="hero" style="margin-bottom:6px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="min-width:0"><h2 style="font-size:20px;margin:0;line-height:1.2">${esc(t.nome)}</h2>${meta?`<div style="font-size:12.5px;color:var(--text-2);margin-top:4px">${esc(meta)}</div>`:''}</div><button class="icon-btn" onclick="openTrip('${t.id}')" aria-label="Editar viagem">${PEN_SVG}</button></div>
+    <div style="margin-top:14px;font-size:12.5px;color:var(--text-2);font-weight:600">Falta pagar</div>
+    <div class="big num" style="margin-top:2px">${brl(c.falta)}</div>
+    ${c.total>0?`<div class="prog"><i style="width:${pct}%"></i></div>`:''}
+    <div class="row"><div class="mini"><b class="num">${brl(c.total)}</b><span>Total</span></div><div class="mini"><b class="num up">${brl(c.pago)}</b><span>Já pago</span></div><div class="mini"><b class="num">${brl(c.parcelas)}</b><span>Em parcelas</span></div><div class="mini"><b class="num">${brl(c.apagar)}</b><span>A pagar</span></div></div>
+  </div>
+  <div class="sec-title"><h3>Custos</h3><button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${t.id}')">+ Adicionar custo</button></div>
+  ${items.length?items.map(tiCard).join(''):'<div class="empty" style="padding:28px 16px"><b>Nenhum custo lançado</b><p>Adicione passagem, hospedagem, passeios… parcelado, já pago ou ainda a pagar.</p></div>'}
+  ${tipos.length>1?`<div class="sec-title"><h3>Por tipo</h3></div><div class="card">${tipos.map(([k,val])=>`<div class="bar-row"><span>${esc(k)}</span><div class="prog"><i style="width:${Math.round(val/maxT*100)}%"></i></div><b class="num">${brl(val)}</b></div>`).join('')}</div>`:''}
+  ${t.notas?`<div class="sec-title"><h3>Observações</h3></div><div class="card" style="font-size:13.5px;color:var(--text-2);white-space:pre-wrap">${esc(t.notas)}</div>`:''}
+  <div style="margin-top:22px;text-align:center"><button class="btn btn-ghost btn-sm" style="width:auto;color:var(--loss)" onclick="delTrip('${t.id}')">Excluir viagem</button></div>`;
+}
+function tiCard(i){
+  const c=tiCalc(i);const late=c.falta>0&&c.prox&&c.prox<todayISO();let status,acao='';
+  if(c.parc){status=`${c.pg} de ${c.n} parcelas de ${brl(c.vp)}`+(c.quitado?'':(c.prox?' · próxima '+fmtDate(c.prox):''));if(!c.quitado)acao=`<button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTiPay('${i.id}')">Pagar parcela ${c.pg+1}/${c.n}</button>`;}
+  else if(i.pago){status='Pago'+(i.data_pagamento?' em '+fmtDate(i.data_pagamento):'');}
+  else{status='A pagar'+(i.vencimento?' · vence '+fmtDate(i.vencimento):'');acao=`<button class="btn btn-primary btn-sm" style="width:auto;flex:0 0 auto" onclick="openTiPay('${i.id}')">Marcar pago</button>`;}
+  const tags=(i.descricao?`<span class="pill" style="background:var(--surface-3);color:var(--text-2)">${esc(i.tipo||'Outros')}</span>`:'')+(late?'<span class="pill" style="background:var(--loss-soft);color:var(--loss)">vencido</span>':'');
+  return `<div class="card" style="margin-bottom:10px${late?';border-color:var(--loss)':''}">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0">${tags?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${tags}</div>`:''}<b style="display:block;font-size:14.5px">${esc(i.descricao||i.tipo||'Custo')}</b><div style="font-size:12px;color:var(--text-2);margin-top:3px">${status}</div></div>
+    <div style="text-align:right;flex-shrink:0"><b class="num">${brl(c.total)}</b>${c.falta>0?`<div class="num down" style="font-size:12px;margin-top:3px">falta ${brl(c.falta)}</div>`:'<div class="up" style="font-size:12px;margin-top:3px">quitado</div>'}</div></div>
+    ${c.parc?`<div class="prog" style="height:6px"><i style="width:${Math.round(c.pg/c.n*100)}%"></i></div>`:''}
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${acao}<button class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto" onclick="openTripItem('${i.trip_id}','${i.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="width:auto;flex:0 0 auto;color:var(--loss)" onclick="delTripItem('${i.id}')">Excluir</button></div>
+  </div>`;
+}
+
+/* ---------- Viagens: formulários ---------- */
+function openTrip(id){
+  const t=id?(S.trips||[]).find(x=>x.id===id):null;
+  openModal(`<div class="modal-head"><h3>${t?'Editar viagem':'Nova viagem'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div class="field" style="margin-top:4px"><label class="lbl">Viagem</label><input class="input" id="tr_nome" value="${t?esc(t.nome):''}" placeholder="Ex: Fortaleza, Congresso em Recife"></div>
+  <div class="field"><label class="lbl">Tipo</label>${bpChips('tr_tipo',TRIP_TIPOS,t?(t.tipo||''):'Lazer')}</div>
+  <div class="frow"><div><label class="lbl">Ida</label><input class="input" type="date" id="tr_ida" value="${(t&&t.data_ida)||''}"></div><div><label class="lbl">Volta</label><input class="input" type="date" id="tr_volta" value="${(t&&t.data_volta)||''}"></div></div>
+  <div class="field"><label class="lbl">Observações (opcional)</label><textarea class="input" id="tr_notas" rows="2">${t?esc(t.notas||''):''}</textarea></div>
+  <div class="modal-foot"><button class="btn btn-primary" onclick="saveTrip(${t?`'${t.id}'`:'null'})">${t?'Salvar':'Criar viagem'}</button></div>`);
+}
+async function saveTrip(id){
+  const nome=$('#tr_nome').value.trim();if(!nome){toast('Dê um nome à viagem');return;}
+  const ida=$('#tr_ida').value||null,volta=$('#tr_volta').value||null;if(ida&&volta&&volta<ida){toast('A volta está antes da ida');return;}
+  const payload={nome,tipo:(window.bpSel||{}).tr_tipo||null,data_ida:ida,data_volta:volta,notas:$('#tr_notas').value.trim()||null};
+  const r=id?await sb.from('trips').update(payload).eq('id',id):await sb.from('trips').insert(payload).select().single();
+  if(r.error){toast('Erro: '+r.error.message);return;}
+  await refresh('trips');closeModal();toast(id?'Viagem salva':'Viagem criada');window.bpTrip=id||(r.data&&r.data.id)||null;setTab('viagens');
+}
+function openTripItem(tripId,id){
+  const i=id?(S.tripItems||[]).find(x=>x.id===id):null;
+  const sit=i?(i.forma==='parcelado'?'Parcelado':(i.pago?'Já pago':'A pagar')):'Parcelado';
+  window.bpTiEdit=i;
+  openModal(`<div class="modal-head"><h3>${i?'Editar custo':'Novo custo'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div class="field" style="margin-top:4px"><label class="lbl">Tipo</label>${bpChips('ti_tipo',TRIP_ITEM_TIPOS,i?(i.tipo||'Outros'):'Passagem')}</div>
+  <div class="field"><label class="lbl">Descrição (opcional)</label><input class="input" id="ti_desc" value="${i?esc(i.descricao||''):''}" placeholder="Ex: Latam ida e volta, hotel 4 noites"></div>
+  <div class="field"><label class="lbl">Pagamento</label>${bpChips('ti_sit',TI_SIT,sit)}</div>
+  <div id="ti_body"></div>
+  ${i?'':'<label class="chk" id="ti_chk"><input type="checkbox" id="ti_caixa"><span>Descontar do caixa o que já foi pago</span></label>'}
+  <div class="modal-foot"><button class="btn btn-primary" onclick="saveTripItem('${tripId}',${i?`'${i.id}'`:'null'})">Salvar custo</button></div>`);
+  tiSit(sit);
+}
+function tiSit(sit){
+  const i=window.bpTiEdit;const b=$('#ti_body');if(!b)return;
+  const keep=$('#ti_val')?$('#ti_val').value:'';const valAv=(i&&i.forma!=='parcelado')?numf(i.valor):keep;const isP=i&&i.forma==='parcelado';
+  if(sit==='Parcelado'){
+    b.innerHTML=`<div class="frow"><div><label class="lbl">Nº de parcelas</label><input class="input num" type="number" min="1" inputmode="numeric" id="ti_n" value="${isP?i.parcelas:''}" oninput="tiPrev()"></div><div><label class="lbl">Valor de cada parcela (R$)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="ti_vp" value="${isP?numf(i.valor_parcela):''}" oninput="tiPrev()"></div><div><label class="lbl">Parcelas já pagas</label><input class="input num" type="number" min="0" inputmode="numeric" id="ti_pg" value="${isP?i.parcelas_pagas:0}" oninput="tiPrev()"></div><div><label class="lbl">1ª parcela em (opcional)</label><input class="input" type="date" id="ti_1p" value="${(isP&&i.primeira_parcela)||''}"></div></div><div id="ti_prev" class="ti-prev" style="display:none"></div>`;
+    tiPrev();
+  }else if(sit==='Já pago'){
+    b.innerHTML=`<div class="frow"><div><label class="lbl">Valor (R$)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="ti_val" value="${valAv||''}"></div><div><label class="lbl">Pago em</label><input class="input" type="date" id="ti_dp" value="${(i&&i.data_pagamento)||todayISO()}"></div></div>`;
+  }else{
+    b.innerHTML=`<div class="frow"><div><label class="lbl">Valor (R$)</label><input class="input num" type="number" step="0.01" inputmode="decimal" id="ti_val" value="${valAv||''}"></div><div><label class="lbl">Vencimento (opcional)</label><input class="input" type="date" id="ti_venc" value="${(i&&i.vencimento)||''}"></div></div>`;
+  }
+  const ck=$('#ti_chk');if(ck)ck.style.display=sit==='A pagar'?'none':'';
+}
+function tiPrev(){
+  const p=$('#ti_prev');if(!p)return;
+  const n=Math.max(0,parseInt($('#ti_n').value)||0),vp=numf($('#ti_vp').value),pg=Math.min(n,Math.max(0,parseInt($('#ti_pg').value)||0));
+  if(!n||!vp){p.style.display='none';return;}
+  const tot=n*vp,pago=pg*vp;p.style.display='';
+  p.innerHTML=`<div><span>Total</span><b class="num">${brl(tot)}</b></div><div><span>Pago</span><b class="num up">${brl(pago)}</b></div><div><span>Falta</span><b class="num down">${brl(tot-pago)}</b></div>`;
+}
+async function saveTripItem(tripId,id){
+  const sel=window.bpSel||{};const sit=sel.ti_sit||'Parcelado';const tipo=sel.ti_tipo||'Outros';const descricao=$('#ti_desc').value.trim()||null;
+  const p={trip_id:tripId,tipo,descricao};let pagoAgora=0,dataPg=todayISO();
+  if(sit==='Parcelado'){
+    const n=parseInt($('#ti_n').value)||0,vp=numf($('#ti_vp').value);let pg=parseInt($('#ti_pg').value)||0;
+    if(n<1){toast('Informe o nº de parcelas');return;}if(vp<=0){toast('Informe o valor da parcela');return;}if(pg<0)pg=0;if(pg>n){toast('Parcelas pagas maior que o total');return;}
+    Object.assign(p,{forma:'parcelado',parcelas:n,valor_parcela:vp,parcelas_pagas:pg,primeira_parcela:$('#ti_1p').value||null,valor:n*vp,pago:pg>=n,vencimento:null,data_pagamento:null});pagoAgora=pg*vp;
+  }else{
+    const val=numf($('#ti_val').value);if(val<=0){toast('Informe o valor');return;}const pago=sit==='Já pago';
+    if(pago)dataPg=$('#ti_dp').value||todayISO();
+    Object.assign(p,{forma:'avista',valor:val,pago,data_pagamento:pago?dataPg:null,vencimento:pago?null:($('#ti_venc').value||null),parcelas:1,parcelas_pagas:pago?1:0,valor_parcela:val,primeira_parcela:null});pagoAgora=pago?val:0;
+  }
+  const r=id?await sb.from('trip_items').update(p).eq('id',id):await sb.from('trip_items').insert(p);
+  if(r.error){toast('Erro: '+r.error.message);return;}
+  const ck=$('#ti_caixa');
+  if(!id&&ck&&ck.checked&&pagoAgora>0){const tr=(S.trips||[]).find(x=>x.id===tripId);const r2=await sb.from('cash_flow').insert({kind:'retirada',valor:pagoAgora,data:dataPg,nota:'Viagem '+(tr?tr.nome:'')+' · '+(descricao||tipo),categoria:'Viagem'});if(!r2.error)await refresh('cash');}
+  await refresh('trips');closeModal();toast('Custo salvo');render();
+}
+function openTiPay(id){
+  const i=(S.tripItems||[]).find(x=>x.id===id);if(!i)return;const c=tiCalc(i);const tr=(S.trips||[]).find(x=>x.id===i.trip_id);
+  openModal(`<div class="modal-head"><h3>${c.parc?`Pagar parcela ${c.pg+1} de ${c.n}`:'Marcar como pago'}</h3><button class="icon-btn" onclick="closeModal()">${xicon()}</button></div>
+  <div style="font-size:13px;color:var(--text-2)">${esc(i.descricao||i.tipo||'Custo')}${tr?' · '+esc(tr.nome):''}</div>
+  <div class="big num" style="font-size:28px;font-weight:700;margin-top:6px">${brl(c.proxValor)}</div>
+  <div class="field"><label class="lbl">Data do pagamento</label><input class="input" type="date" id="tp_data" value="${todayISO()}"></div>
+  <label class="chk"><input type="checkbox" id="tp_caixa" checked><span>Lançar como saída no caixa</span></label>
+  <div class="modal-foot"><button class="btn btn-primary" onclick="payTi('${i.id}')">Confirmar pagamento</button></div>`);
+}
+async function payTi(id){
+  const i=(S.tripItems||[]).find(x=>x.id===id);if(!i)return;const c=tiCalc(i);const data=$('#tp_data').value||todayISO();const lancar=$('#tp_caixa').checked;
+  let upd,rot;
+  if(c.parc){const pg=c.pg+1;upd={parcelas_pagas:pg,pago:pg>=c.n};rot=' (parcela '+pg+'/'+c.n+')';}
+  else{upd={pago:true,data_pagamento:data,parcelas_pagas:1};rot='';}
+  const r=await sb.from('trip_items').update(upd).eq('id',id);if(r.error){toast('Erro: '+r.error.message);return;}
+  if(lancar&&c.proxValor>0){const tr=(S.trips||[]).find(x=>x.id===i.trip_id);const r2=await sb.from('cash_flow').insert({kind:'retirada',valor:c.proxValor,data,nota:'Viagem '+(tr?tr.nome:'')+' · '+(i.descricao||i.tipo)+rot,categoria:'Viagem'});if(!r2.error)await refresh('cash');}
+  await refresh('trips');closeModal();toast(c.parc?'Parcela paga':'Pagamento registrado');render();
+}
+function delTripItem(id){confirmBox('Excluir custo','O que já foi lançado no caixa continua lá.',async()=>{await sb.from('trip_items').delete().eq('id',id);await refresh('trips');closeModal();toast('Custo excluído');render();});}
+function delTrip(id){const t=(S.trips||[]).find(x=>x.id===id);confirmBox('Excluir viagem',`Excluir “${esc(t?t.nome:'')}” e todos os custos dela? O que já foi lançado no caixa continua lá.`,async()=>{await sb.from('trips').delete().eq('id',id);window.bpTrip=null;await refresh('trips');closeModal();toast('Viagem excluída');render();});}
+Object.assign(window,{openMov,saveMov,rCaixa,bpChips,bpDashFin,bpOpenTrip,openTrip,saveTrip,openTripItem,tiSit,tiPrev,saveTripItem,openTiPay,payTi,delTripItem,delTrip});
 
 
 /* ============ BOOT ============ */
